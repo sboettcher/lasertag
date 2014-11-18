@@ -1,4 +1,3 @@
-# Computervision Makefile
 # memos: $@ file name of the target of the rule
 #	 $^ all dependencies of this rule
 #	 $< the first dependency
