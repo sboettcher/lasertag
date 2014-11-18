@@ -7,25 +7,31 @@
 #include <syslog.h>
 
 #include <mraa.hpp>
-#include "/home/root/code/upm/src/lcd/ssd1327.h"
+#include <ssd1327.h>
 
-#define DEFAULT_IOPIN 8
+#define BUS_NUMBER 0
 
-static int iopin;
 int running = 1;
 
 void sig_handler(int signo) {
   if (signo == SIGINT) {
-    printf("\nclosing IO %d nicely\n", iopin);
+    printf("\nclosing nicely\n");
     running = 0;
   }
 }
 
 int main(int argc, char** argv) {
-
   signal(SIGINT, sig_handler);
 
-  upm::SSD1327 *lcd = new upm::SSD1327(BUS_NUMBER, 0x3C);
+  upm::SSD1327* lcd = new upm::SSD1327(BUS_NUMBER);
+
+  for (uint8_t i = 0; i < 12; ++i) {
+    lcd->setCursor(i, 0);
+    lcd->setGrayLevel(i);
+    lcd->write("Hello World");
+  }
+
+  lcd->close();
 
   return 0;
 }

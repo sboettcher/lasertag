@@ -5,9 +5,9 @@
 #	 .PRECIOUS targets marked with this are not deleted when make is killed
 
 CXX=g++
-CFLAGS=-g -Wall -lmraa -lupm
-COPTS= #`sdl-config --cflags`
-LOPTS= #`sdl-config --libs` -pthread 
+CFLAGS=-g -Wall -lmraa -lupm-i2clcd -I/usr/include/upm -I/usr/include/mraa
+COPTS=#`sdl-config --cflags`
+LOPTS=#`sdl-config --libs` -pthread 
 
 MAIN_BINARIES=$(basename $(wildcard *Main.cpp))
 TEST_BINARIES=$(basename $(wildcard *Test.cpp))
