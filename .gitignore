@@ -27,5 +27,11 @@
 *.out
 *.app
 
+# code composter suff
+msp430Dome/.*
+msp430Dome/Debug
+msp430Dome/targetConfigs
+msp430Dome/lnk_msp430g2553.cmd
+
 # misc
 *~
