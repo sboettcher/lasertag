@@ -1,4 +1,4 @@
-#Lasertag
+#Project Lasertag
 
 Repository for the [Wearable Computing Lab Course 2014](http://praktikum.ese.uni-freiburg.de/)  
 University of Freiburg  
@@ -28,6 +28,8 @@ This keeps the USB device from loading as a network interface.
 14. ~# configure_edison --wifi
 15. ~# reboot
 
+So far the standard WiFi configuration tool in step 14 has worked fine for me. After successful connection you can also log in via ssh.
+
 ###1.2 Package Repositories
 The Edison has no pre-configured package repository. To have access to some basic programs, follow the instructions [here](http://alextgalileo.altervista.org/edison-package-repo-configuration-instructions.html).  
 Afterwards you may install some basic packages, like:
@@ -39,6 +41,8 @@ To get some basic IO functionality in your code, install the mraa library [here]
     echo "src mraa-upm http://iotdk.intel.com/repos/1.1/intelgalactic" > /etc/opkg/mraa-upm.conf
     opkg update
     opkg install libmraa0 upm
+
+A table with pin mappings for the mraa library can be found [here](http://iotdk.intel.com/docs/master/mraa/edison.html).  
 
 You might also have to clone the upm repo and install it from source to compile some of the code here.  
 In the cloned upm repo:
@@ -55,3 +59,9 @@ What I ended up doing was simply limiting the size of the kept logs, after delet
 
     rm -rf /var/log/journal/*
     sed -i '$a SystemMaxUse=25M' /etc/systemd/journald.conf
+
+**Update:** Apparently limiting the maximum log size didn't work, I ran into the same problem again. I just deleted the logs again and changed the first line to
+
+    Storage=none
+
+No logs will be kept but the root partition won't fill up again. Might try to change this to *volatile*, which temporarily saves the current system log in /run/log/journal.
