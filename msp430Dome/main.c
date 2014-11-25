@@ -81,12 +81,13 @@ int main(void) {
 // Port1 isr.
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
   #pragma vector=PORT1_VECTOR
-  __interrupt void PORT_1 (void) {
+  __interrupt void PORT_1 (void)
 #elif defined(__GNUC__)
   void __attribute__ ((interrupt(PORT1_VECTOR))) PORT_1 (void)
 #else
   #error Compiler not supported!
 #endif
+{
   // Falling edge on P1.6 -> start bit detected.
   if (P1IFG & BIT6) {
     IR_START_TIMER
@@ -107,6 +108,7 @@ int main(void) {
 #else
   #error Compiler not supported!
 #endif
+{
   // Read ir input (active low).
   irInput = (~P1IN & BIT6) >> 6;
 
