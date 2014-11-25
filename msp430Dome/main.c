@@ -6,7 +6,6 @@
   #include "laserTagUART.h"
 #endif
 
-volatile char irState = STATE_IDLE;
 volatile char irInput = 0;
 volatile char irBitCount = 0;
 volatile int irDataBuffer = 0;
@@ -17,11 +16,10 @@ void initClocks(void) {
   WDTCTL = WDTPW + WDTHOLD;
 
   // Init MCLK to 16 MHz
-  if (CALBC1_16MHZ ==0xFF || CALDCO_16MHZ == 0xFF)
+  if (CALBC1_1MHZ ==0xFF || CALDCO_1MHZ == 0xFF)
     while(1);
-  BCSCTL1 = CALBC1_16MHZ;
-  DCOCTL  = CALDCO_16MHZ;
-  BCSCTL2 |= DIVS_1;
+  BCSCTL1 = CALBC1_1MHZ;
+  DCOCTL  = CALDCO_1MHZ;
 }
 
 void initIOPins(void) {
@@ -66,17 +64,29 @@ int main(void) {
     // Check the parity and stop bit.
     // TODO(Jan): vielleicht direkt in der timer isr machen.
     if (irBitCount == IR_NUM_BITS) {
-      if (irDataBuffer & IR_MASK_PARITY_STOP == IR_MASK_PARITY_STOP) {
+      if (irDataBuffer & IR_MASK_PARITY_STOP == IR_MASK_PARITY_STOP) { //TODO(Jan): tatsächlich auf parity checken!
         #ifdef DEBUG_UART
-          serialPrint("Success! Received: ")
+          serialPrint("Success! Received: ");
+        #endif
       }
+	#ifdef DEBUG_UART
+  	  serialPrintInt(irDataBuffer);
+  	  serialPrint("\n");
+  	  irBitCount = 0;
+	#endif
     }
   }
 }
 
 // Port1 isr.
-#pragma vector=PORT1_VECTOR
-__interrupt void PORT_1 (void) {
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+  #pragma vector=PORT1_VECTOR
+  __interrupt void PORT_1 (void) {
+#elif defined(__GNUC__)
+  void __attribute__ ((interrupt(PORT1_VECTOR))) PORT_1 (void)
+#else
+  #error Compiler not supported!
+#endif
   // Falling edge on P1.6 -> start bit detected.
   if (P1IFG & BIT6) {
     IR_START_TIMER
@@ -87,9 +97,16 @@ __interrupt void PORT_1 (void) {
   }
 }
 
+
 // Timer A0 interrupt service routine
-#pragma vector=TIMER0_A0_VECTOR
-__interrupt void Timer_A (void) {
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+  #pragma vector=TIMER0_A0_VECTOR
+  __interrupt void Timer_A (void)
+#elif defined(__GNUC__)
+  void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
+#else
+  #error Compiler not supported!
+#endif
   // Read ir input (active low).
   irInput = (~P1IN & BIT6) >> 6;
 
