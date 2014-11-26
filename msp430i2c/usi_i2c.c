@@ -2,17 +2,17 @@
   usi_i2c.c
 
   Copyright (C) 2013 Jan Rychter
-  
+
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
   in the Software without restriction, including without limitation the rights
   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
   copies of the Software, and to permit persons to whom the Software is
   furnished to do so, subject to the following conditions:
-  
+
   The above copyright notice and this permission notice shall be included in all
   copies or substantial portions of the Software.
-  
+
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,6 +35,10 @@ i2c_state_type i2c_state = I2C_IDLE;
 
 static inline void i2c_prepare_stop();
 static inline void i2c_prepare_data_xmit_recv();
+
+inline unsigned int i2c_done() {
+  return(i2c_state == I2C_IDLE);
+}
 
 void i2c_send_sequence(uint16_t *sequence, uint16_t sequence_length, uint8_t *received_data, uint16_t wakeup_sr_bits) {
   while(i2c_state != I2C_IDLE); // we can't start another sequence until the current one is done
@@ -79,8 +83,14 @@ static inline void i2c_prepare_data_xmit_recv() {
   }
 }
 
-#pragma vector = USI_VECTOR
-__interrupt void USI_TXRX(void)
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+  #pragma vector=USI_VECTOR
+  __interrupt void USI_TXRX(void)
+#elif defined(__GNUC__)
+  void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
+#else
+  #error Compiler not supported!
+#endif
 {
   switch(__even_in_range(i2c_state,12)) {
   case I2C_IDLE:

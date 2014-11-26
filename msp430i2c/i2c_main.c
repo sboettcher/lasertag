@@ -32,7 +32,7 @@ int main(void)
 {
   initPins();
   __enable_interrupt();
-  i2c_init();
+  i2c_init(0,0);
 
   #ifdef DEBUG_UART
     serialPrint("MSP430 booted!\n");
