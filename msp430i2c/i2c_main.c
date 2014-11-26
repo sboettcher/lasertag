@@ -1,15 +1,18 @@
 #include <msp430.h>
 #include "usi_i2c.h"
 
-#define DEBUG_UART 1
+#define DEBUG_UART
 #ifdef DEBUG_UART
   #include "laserTagUART.h"
 #endif
 
 void initPins()
 {
-  P1DIR = BIT6;
-  P1OUT = BIT6;
+	WDTCTL = WDTPW | WDTHOLD;               // Stop watchdog timer
+
+	P1DIR = BIT0 | BIT6;
+	P1OUT = BIT0 | BIT3 | BIT6;
+	P1REN = BIT3;
 
   #ifdef DEBUG_UART
     // Activate UART on 1.1 / 1.2
@@ -35,9 +38,18 @@ int main(void)
   i2c_init(0,0);
 
   #ifdef DEBUG_UART
-    serialPrint("MSP430 booted!\n");
+    serialPrint("I2C Initialized!\n");
   #endif
 
   while(1)
-    serialPrint("blubb\n");
+  {
+    if (!(P1IN & BIT3))
+    {
+      P1OUT |= BIT0;
+      serialPrint("Sending to address 0x02\n");
+    }
+    else
+      P1OUT &= ~BIT0;
+  }
+  return 0;
 }

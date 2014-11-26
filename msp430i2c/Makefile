@@ -5,13 +5,14 @@
 #	 .PRECIOUS targets marked with this are not deleted when make is killed
 
 CXX=msp430-elf-gcc
-CFLAGS=-O -Wall -mmcu=msp430g2553
+CFLAGS=-mmcu=msp430g2553
 COPTS=
 LOPTS=
 
-MAIN_BINARIES=$(basename $(wildcard *main.c))
+MAIN_BINARY=$(basename $(wildcard *main.c))
 HEADER=$(wildcard *.h)
 SOURCES=$(wildcard *.c)
+OBJECTS=$(subst .c,.o,$(wildcard *.c))
 
 
 .PRECIOUS: %.o
@@ -19,13 +20,10 @@ SOURCES=$(wildcard *.c)
 all: compile link
 
 compile: $(SOURCES)
-	$(CXX) $(CFLAGS) $(COPTS) -c $^
+	$(CXX) $(CFLAGS) $(COPTS)-c $^
 
-link: $(MAIN_BINARIES)
-
-$(MAIN_BINARIES):	OBJECTS = $(wildcard *.o)
-$(MAIN_BINARIES):
-	$(CXX) $(CFLAGS) -o $@ $(OBJECTS) $(LOPTS)
+link: $(OBJECTS)
+	$(CXX) $(CFLAGS) -o $(MAIN_BINARY) $^ $(LOPTS)
 
 clean:
 	rm -f *.o
