@@ -1,21 +1,21 @@
 //******************************************************************************
 //   MSP430 USCI I2C Transmitter and Receiver with DMA support
 //
-//  Description: This code configures the MSP430's USCI module as 
+//  Description: This code configures the MSP430's USCI module as
 //  I2C master capable of transmitting and receiving bytes. DMA is used for
 //  transmitting and receiving of data.
 //
 //  ***THIS IS THE MASTER CODE***
 //
-//                    Master                   
-//                 MSP430F2619             
-//             -----------------          
-//         /|\|              XIN|-   
-//          | |                 |     
-//          --|RST          XOUT|-    
-//            |                 |        
-//            |                 |        
-//            |                 |       
+//                    Master
+//                 MSP430F2619
+//             -----------------
+//         /|\|              XIN|-
+//          | |                 |
+//          --|RST          XOUT|-
+//            |                 |
+//            |                 |
+//            |                 |
 //            |         SDA/P3.1|------->
 //            |         SCL/P3.2|------->
 //
@@ -39,15 +39,15 @@ unsigned char last;
 unsigned char *save;
 
 //------------------------------------------------------------------------------
-// void TI_USCI_I2C_DMA_receiveinit(unsigned char slave_address, 
+// void TI_USCI_I2C_DMA_receiveinit(unsigned char slave_address,
 //                                  unsigned char prescale)
 //
-// This function initializes the USCI module for master-receive operation. 
+// This function initializes the USCI module for master-receive operation.
 //
 // IN:   unsigned char slave_address   =>  Slave Address
-//       unsigned char prescale        =>  SCL clock adjustment 
+//       unsigned char prescale        =>  SCL clock adjustment
 //------------------------------------------------------------------------------
-void TI_USCI_I2C_DMA_receiveinit(unsigned char slave_address, 
+void TI_USCI_I2C_DMA_receiveinit(unsigned char slave_address,
                                  unsigned char prescale)
 {
   // USCI module initialization
@@ -60,7 +60,7 @@ void TI_USCI_I2C_DMA_receiveinit(unsigned char slave_address,
   UCB0I2CSA = slave_address;                  // set slave address
   UCB0I2CIE = UCNACKIE;
   UCB0CTL1 &= ~UCSWRST;                       // Clear SW reset, resume operation
-  
+
   // DMA initialization
   DMA0CTL = 0;                                // disable DMA channel 0
   DMACTL0 = DMA0TSEL_12;                      // select UCB0RXIFG dma trigger
@@ -68,19 +68,19 @@ void TI_USCI_I2C_DMA_receiveinit(unsigned char slave_address,
   DMA0CTL |= (DMADSTBYTE + DMASRCBYTE);       // byte to byte transfer
   DMA0CTL |= DMAIE;                           // enable dma interrupt
   DMA0SA = (unsigned long) &UCB0RXBUF;        // set DMA dest address register
-  
+
 }
 
 //------------------------------------------------------------------------------
-// void TI_USCI_I2C_DMA_transmitinit(unsigned char slave_address, 
+// void TI_USCI_I2C_DMA_transmitinit(unsigned char slave_address,
 //                                   unsigned char prescale)
 //
-// This function initializes the USCI module for master-transmit operation. 
+// This function initializes the USCI module for master-transmit operation.
 //
 // IN:   unsigned char slave_address   =>  Slave Address
-//       unsigned char prescale        =>  SCL clock adjustment 
+//       unsigned char prescale        =>  SCL clock adjustment
 //------------------------------------------------------------------------------
-void TI_USCI_I2C_DMA_transmitinit( unsigned char slave_address, 
+void TI_USCI_I2C_DMA_transmitinit( unsigned char slave_address,
                                    unsigned char prescale)
 {
   // USCI module initialization
@@ -107,20 +107,20 @@ void TI_USCI_I2C_DMA_transmitinit( unsigned char slave_address,
 //------------------------------------------------------------------------------
 // void TI_USCI_I2C_DMA_receive(unsigned char byteCount, unsigned char *field)
 //
-// This function is used to start an I2C commuincation in master-receiver mode. 
+// This function is used to start an I2C commuincation in master-receiver mode.
 //
 // IN:   unsigned char byteCount  =>  number of bytes that should be read
 //       unsigned char *field     =>  array variable used to store received data
 //------------------------------------------------------------------------------
 void TI_USCI_I2C_DMA_receive(unsigned char byteCount, unsigned char *field)
 {
-  DMA0DA = (unsigned long) field;             // set DMA src address register  
+  DMA0DA = (unsigned long) field;             // set DMA src address register
   if (byteCount > 2){
-    DMA0SZ = byteCount-2;                     // block size 
-    DMA0CTL |= DMAEN;                         // enable DMA channel 0 .... 
+    DMA0SZ = byteCount-2;                     // block size
+    DMA0CTL |= DMAEN;                         // enable DMA channel 0 ....
     last = 2;                                 //..if more than 2 bytes to be rxd
   } else {
-    IE2 |= UCB0RXIE; 
+    IE2 |= UCB0RXIE;
     last = byteCount;
   }
 
@@ -142,26 +142,26 @@ void TI_USCI_I2C_DMA_receive(unsigned char byteCount, unsigned char *field)
 //------------------------------------------------------------------------------
 // void TI_USCI_I2C_DMA_transmit(unsigned char byteCount, unsigned char *field)
 //
-// This function is used to start an I2C commuincation in master-transmit mode. 
+// This function is used to start an I2C commuincation in master-transmit mode.
 //
 // IN:   unsigned char byteCount  =>  number of bytes that should be transmitted
 //       unsigned char *field     =>  array variable. Its content will be sent.
 //------------------------------------------------------------------------------
 void TI_USCI_I2C_DMA_transmit(unsigned char byteCount, unsigned char *field){
-  DMA0SA = (unsigned long) field;             // set DMA src address register  
-  DMA0SZ = byteCount ;                    // block size 
-  DMA0CTL |= DMAEN;                           // enable DMA channel 0  
-  
+  DMA0SA = (unsigned long) field;             // set DMA src address register
+  DMA0SZ = byteCount ;                    // block size
+  DMA0CTL |= DMAEN;                           // enable DMA channel 0
+
   UCB0CTL1 |= UCTR + UCTXSTT;                 // I2C TX, start condition
 }
 
 //------------------------------------------------------------------------------
 // unsigned char TI_USCI_I2C_slave_present(unsigned char slave_address)
 //
-// This function is used to look for a slave address on the I2C bus.  
+// This function is used to look for a slave address on the I2C bus.
 //
 // IN:   unsigned char slave_address  =>  Slave Address
-// OUT:  unsigned char                =>  0: address was not found, 
+// OUT:  unsigned char                =>  0: address was not found,
 //                                        1: address found
 //------------------------------------------------------------------------------
 unsigned char TI_USCI_I2C_slave_present(unsigned char slave_address){
@@ -180,24 +180,30 @@ unsigned char TI_USCI_I2C_slave_present(unsigned char slave_address){
   IE2 = ie2_bak;                              // restore IE2
   UCB0I2CSA = slaveadr_bak;                   // restore old slave address
   UCB0I2CIE = ucb0i2cie;                      // restore old UCB0CTL1
-  return returnValue;                         // return whether or not 
+  return returnValue;                         // return whether or not
                                               // a NACK occured
 }
 
 //------------------------------------------------------------------------------
 // unsigned char TI_USCI_I2C_notready()
 //
-// This function is used to check if there is commuincation in progress. 
+// This function is used to check if there is commuincation in progress.
 //
-// OUT:  unsigned char  =>  0: I2C bus is idle, 
+// OUT:  unsigned char  =>  0: I2C bus is idle,
 //                          1: communication is in progress
 //------------------------------------------------------------------------------
 unsigned char TI_USCI_I2C_notready(){
   return (UCB0STAT & UCBBUSY);
 }
 
-#pragma vector = USCIAB0RX_VECTOR
-__interrupt void USCIAB0RX_ISR(void)
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+  #pragma vector = USCIAB0RX_VECTOR
+  __interrupt void USCIAB0RX_ISR(void)
+#elif defined(__GNUC__)
+  void __attribute__ ((interrupt(USCIAB0RX_VECTOR))) USCIAB0RX_ISR (void)
+#else
+  #error Compiler not supported!
+#endif
 {
   if (UCB0STAT & UCNACKIFG){            // send STOP if slave sends NACK
     UCB0CTL1 |= UCTXSTP;
@@ -206,8 +212,14 @@ __interrupt void USCIAB0RX_ISR(void)
 
 }
 
-#pragma vector = USCIAB0TX_VECTOR
-__interrupt void USCIAB0TX_ISR(void)
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+  #pragma vector = USCIAB0TX_VECTOR
+  __interrupt void USCIAB0TX_ISR(void)
+#elif defined(__GNUC__)
+  void __attribute__ ((interrupt(USCIAB0TX_VECTOR))) USCIAB0TX_ISR (void)
+#else
+  #error Compiler not supported!
+#endif
 {
   if ((IFG2 & UCB0RXIFG) && (DMA0CTL & DMAIE)){
     if (last == 2){
@@ -228,15 +240,20 @@ __interrupt void USCIAB0TX_ISR(void)
 }
 
 // DMA interrupt service routine
-#pragma vector=DMA_VECTOR
-__interrupt void dma (void)
-{ 
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+  #pragma vector=DMA_VECTOR
+  __interrupt void dma (void)
+#elif defined(__GNUC__)
+  void __attribute__ ((interrupt(DMA_VECTOR))) dma (void)
+#else
+  #error Compiler not supported!
+#endif
+{
   DMA0CTL &= ~DMAIFG;
   if (UCB0CTL1 & UCTR)            // wait til next TX-int to send stop condition
     IE2 |= UCB0TXIE;
-  else 
+  else
   {
-    IE2 |= UCB0RXIE;                      // enable RX int to receive last 
+    IE2 |= UCB0RXIE;                      // enable RX int to receive last
   }
 }
-

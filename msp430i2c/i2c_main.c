@@ -1,5 +1,5 @@
 #include <msp430.h>
-#include "usci_i2c.h"
+#include "TI_USCI_I2C_master.h"
 
 #define DEBUG_UART
 #ifdef DEBUG_UART
@@ -10,9 +10,7 @@ void initPins()
 {
 	WDTCTL = WDTPW | WDTHOLD;               // Stop watchdog timer
 
-	P1DIR = BIT0 | BIT6;
-	P1OUT = BIT0 | BIT3 | BIT6;
-	P1REN = BIT3;
+  _EINT();
 
   #ifdef DEBUG_UART
     // Activate UART on 1.1 / 1.2
@@ -33,21 +31,17 @@ void initPins()
  */
 int main(void)
 {
-  //initPins(USIDIV_0, USISSEL_2);
-  __enable_interrupt();
-  i2c_init(0,0);
+  initPins();
 
   #ifdef DEBUG_UART
     serialPrint("I2C Initialized!\n");
   #endif
 
-  while(1)
-  {
-    serialPrint("Sending to address 0x02\n");
-    //i2c_send_sequence(uint16_t *sequence, uint16_t sequence_length, uint8_t *received_data, uint16_t wakeup_sr_bits);
+  TI_USCI_I2C_transmitinit(0x48, 0x3f);
+  while( TI_USCI_I2C_notready() );
+  char data = 0xFF;
+  TI_USCI_I2C_transmit(1, &data);
 
-    __delay_cycles(1000);
-    P1OUT ^= BIT0;
-  }
+
   return 0;
 }
