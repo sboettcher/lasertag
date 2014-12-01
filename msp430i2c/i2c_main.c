@@ -1,5 +1,5 @@
 #include <msp430.h>
-#include "usi_i2c.h"
+#include "usci_i2c.h"
 
 #define DEBUG_UART
 #ifdef DEBUG_UART
@@ -33,7 +33,7 @@ void initPins()
  */
 int main(void)
 {
-  initPins();
+  //initPins(USIDIV_0, USISSEL_2);
   __enable_interrupt();
   i2c_init(0,0);
 
@@ -43,13 +43,11 @@ int main(void)
 
   while(1)
   {
-    if (!(P1IN & BIT3))
-    {
-      P1OUT |= BIT0;
-      serialPrint("Sending to address 0x02\n");
-    }
-    else
-      P1OUT &= ~BIT0;
+    serialPrint("Sending to address 0x02\n");
+    //i2c_send_sequence(uint16_t *sequence, uint16_t sequence_length, uint8_t *received_data, uint16_t wakeup_sr_bits);
+
+    __delay_cycles(1000);
+    P1OUT ^= BIT0;
   }
   return 0;
 }
