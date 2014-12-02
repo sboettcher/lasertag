@@ -1,7 +1,7 @@
 #include <msp430.h>
 #include "TI_USCI_I2C_master.h"
 
-#define DEBUG_UART
+//#define DEBUG_UART
 #ifdef DEBUG_UART
   #include "laserTagUART.h"
 #endif
@@ -11,6 +11,9 @@ void initPins()
 	WDTCTL = WDTPW | WDTHOLD;               // Stop watchdog timer
 
   _EINT();
+
+  P1DIR |= BIT0;
+  P1OUT &= ~BIT0;
 
   #ifdef DEBUG_UART
     // Activate UART on 1.1 / 1.2
@@ -33,14 +36,24 @@ int main(void)
 {
   initPins();
 
+
   #ifdef DEBUG_UART
     serialPrint("I2C Initialized!\n");
   #endif
 
-  TI_USCI_I2C_transmitinit(0x48, 0x3f);
-  while( TI_USCI_I2C_notready() );
-  char data = 0xFF;
-  TI_USCI_I2C_transmit(1, &data);
+  unsigned char data[] = {0x1, 0x2, 0x3, 0x4, 0x5};
+
+  while(1)
+  {
+    TI_USCI_I2C_transmitinit(0x43, 0x02);
+    while(TI_USCI_I2C_notready());
+    TI_USCI_I2C_transmit(5, data);
+
+    P1OUT ^= BIT0;
+
+    __delay_cycles(500000);
+  }
+
 
 
   return 0;

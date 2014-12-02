@@ -143,7 +143,6 @@ int serialReadInt(void)
 #else
   #error Compiler not supported!
 #endif
-
 {
   // Store received byte in ringbuffer
   rxBuffer[rxBufferEnd++] = UCA0RXBUF;
