@@ -33,5 +33,9 @@ msp430Dome/Debug
 msp430Dome/targetConfigs
 msp430Dome/lnk_msp430g2553.cmd
 
+# Vim
+*.swp
+*.swo
+
 # misc
 *~
