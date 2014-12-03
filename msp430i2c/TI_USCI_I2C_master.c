@@ -32,11 +32,16 @@
 //#include "msp430xG46x.h"
 // ...                                         // more devices are possible
 
-#include "TI_USCI_I2C_master.h"
+//#include "TI_USCI_I2C_master.h"
+#define SDA_PIN BIT7                                  // msp430g2553 UCB0SDA pin
+#define SCL_PIN BIT6                                  // msp430g2553 UCB0SCL pin
+
 
 signed char byteCtr;
 unsigned char *TI_receive_field;
 unsigned char *TI_transmit_field;
+unsigned char restrt = 0;
+unsigned char finishedWoStop = 0;
 
 //------------------------------------------------------------------------------
 // void TI_USCI_I2C_receiveinit(unsigned char slave_address,
@@ -118,9 +123,10 @@ void TI_USCI_I2C_receive(unsigned char byteCount, unsigned char *field){
 // IN:   unsigned char byteCount  =>  number of bytes that should be transmitted
 //       unsigned char *field     =>  array variable. Its content will be sent.
 //------------------------------------------------------------------------------
-void TI_USCI_I2C_transmit(unsigned char byteCount, unsigned char *field){
+void TI_USCI_I2C_transmit(unsigned char byteCount, unsigned char *field, unsigned char restart){
   TI_transmit_field = field;
   byteCtr = byteCount;
+  restrt = restart;
   UCB0CTL1 |= UCTR + UCTXSTT;                 // I2C TX, start condition
 }
 
@@ -155,15 +161,21 @@ unsigned char TI_USCI_I2C_slave_present(unsigned char slave_address){
 }
 
 //------------------------------------------------------------------------------
-// unsigned char TI_USCI_I2C_notready()
+// unsigned char TI_USCI_I2C_ready()
 //
 // This function is used to check if there is commuincation in progress.
 //
 // OUT:  unsigned char  =>  0: I2C bus is idle,
 //                          1: communication is in progress
 //------------------------------------------------------------------------------
-unsigned char TI_USCI_I2C_notready(){
-  return (UCB0STAT & UCBBUSY);
+unsigned char TI_USCI_I2C_ready(){
+  if (finishedWoStop)
+  {
+    finishedWoStop = 0;
+    return 1;
+  }
+  else
+    return !(UCB0STAT & UCBBUSY);
 }
 
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
@@ -204,7 +216,10 @@ unsigned char TI_USCI_I2C_notready(){
   }
   else {
     if (byteCtr == 0){
-      UCB0CTL1 |= UCTXSTP;                    // I2C stop condition
+      if (restrt)
+        finishedWoStop = 1;
+      else
+        UCB0CTL1 |= UCTXSTP;                    // I2C stop condition
       IFG2 &= ~UCB0TXIFG;                     // Clear USCI_B0 TX int flag
     }
     else {
