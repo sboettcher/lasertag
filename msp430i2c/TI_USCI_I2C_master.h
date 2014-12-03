@@ -6,9 +6,8 @@
 #define SDA_PIN BIT7                                  // msp430g2553 UCB0SDA pin
 #define SCL_PIN BIT6                                  // msp430g2553 UCB0SCL pin
 
-
-void TI_USCI_I2C_receiveinit(unsigned char slave_address, unsigned char prescale);
-void TI_USCI_I2C_transmitinit(unsigned char slave_address, unsigned char prescale);
+void TI_USCI_I2C_receiveinit(unsigned char slave_address, unsigned int prescale);
+void TI_USCI_I2C_transmitinit(unsigned char slave_address, unsigned int prescale);
 
 
 void TI_USCI_I2C_receive(unsigned char byteCount, unsigned char *field);

@@ -48,14 +48,14 @@ unsigned char *TI_transmit_field;
 //       unsigned char prescale        =>  SCL clock adjustment
 //-----------------------------------------------------------------------------
 void TI_USCI_I2C_receiveinit(unsigned char slave_address,
-                             unsigned char prescale){
+                             unsigned int prescale){
   P1SEL |= SDA_PIN + SCL_PIN;                 // Assign I2C pins to USCI_B0
   P1SEL2 |= SDA_PIN + SCL_PIN;
   UCB0CTL1 = UCSWRST;                        // Enable SW reset
   UCB0CTL0 = UCMST + UCMODE_3 + UCSYNC;       // I2C Master, synchronous mode
   UCB0CTL1 = UCSSEL_2 + UCSWRST;              // Use SMCLK, keep SW reset
-  UCB0BR0 = prescale;                         // set prescaler
-  UCB0BR1 = 0;
+  UCB0BR0 = (unsigned char)(prescale & 0xFF); // set prescaler
+  UCB0BR1 = (unsigned char)((prescale >> 8) & 0xFF);
   UCB0I2CSA = slave_address;                  // set slave address
   UCB0CTL1 &= ~UCSWRST;                       // Clear SW reset, resume operation
   UCB0I2CIE = UCNACKIE;
@@ -72,14 +72,14 @@ void TI_USCI_I2C_receiveinit(unsigned char slave_address,
 //       unsigned char prescale        =>  SCL clock adjustment
 //------------------------------------------------------------------------------
 void TI_USCI_I2C_transmitinit(unsigned char slave_address,
-                          unsigned char prescale){
+                          unsigned int prescale){
   P1SEL |= SDA_PIN + SCL_PIN;                 // Assign I2C pins to USCI_B0
   P1SEL2 |= SDA_PIN + SCL_PIN;
   UCB0CTL1 = UCSWRST;                        // Enable SW reset
   UCB0CTL0 = UCMST + UCMODE_3 + UCSYNC;       // I2C Master, synchronous mode
   UCB0CTL1 = UCSSEL_2 + UCSWRST;              // Use SMCLK, keep SW reset
-  UCB0BR0 = prescale;                         // set prescaler
-  UCB0BR1 = 0;
+  UCB0BR0 = (unsigned char)(prescale & 0xFF); // set prescaler
+  UCB0BR1 = (unsigned char)((prescale >> 8) & 0xFF);
   UCB0I2CSA = slave_address;                  // Set slave address
   UCB0CTL1 &= ~UCSWRST;                       // Clear SW reset, resume operation
   UCB0I2CIE = UCNACKIE;
@@ -175,12 +175,10 @@ unsigned char TI_USCI_I2C_notready(){
   #error Compiler not supported!
 #endif
 {
-  /*
   if (UCB0STAT & UCNACKIFG){            // send STOP if slave sends NACK
     UCB0CTL1 |= UCTXSTP;
     UCB0STAT &= ~UCNACKIFG;
   }
-  */
 }
 
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
