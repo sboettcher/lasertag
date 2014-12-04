@@ -1,10 +1,15 @@
 #include <msp430.h> 
 #include "laserTagIR.h"
 
-#define DEBUG_UART 1
+#define DEBUG_UART
 #ifdef DEBUG_UART
   #include "laserTagUART.h"
 #endif
+
+// LED pins on Port 1
+#define LED_RED = BIT3
+#define LED_GREEN = BIT4
+#define LED_BLUE = BIT5
 
 volatile char irInput = 0;
 volatile char irBitCount = 0;
@@ -15,8 +20,8 @@ void initClocks(void) {
   // Stop Watchdog Timer
   WDTCTL = WDTPW + WDTHOLD;
 
-  // Init MCLK to 16 MHz
-  if (CALBC1_1MHZ ==0xFF || CALDCO_1MHZ == 0xFF)
+  // Init MCLK to 1 MHz
+  if (CALBC1_1MHZ == 0xFF || CALDCO_1MHZ == 0xFF)
     while(1);
   BCSCTL1 = CALBC1_1MHZ;
   DCOCTL  = CALDCO_1MHZ;
@@ -26,7 +31,7 @@ void initIOPins(void) {
   P1SEL = 0x00;
   P1SEL2 = 0x00;
   // Set P1.x as input.
-  P1DIR = 0x00 | BIT0;   // debugging led
+  P1DIR = 0x00 | LED_RED | LED_GREEN | LED_BLUE ;
   P1REN = 0x00;
   P1OUT = 0x00;
   // Enable interrupt on P1.6 on falling edge.
@@ -44,7 +49,7 @@ void initIOPins(void) {
     UCA0MCTL = UCBRS0;                        // Modulation UCBRSx = 1
     UCA0CTL1 &= ~UCSWRST;                     // Initialize USCI state machine
     IE2 |= UCA0RXIE;                          // Enable USCI_A0 RX interrupt
-    P1OUT = 0x00 | BIT0; // enable led1 in debug mode.
+    P1DIR |= BIT0; P1OUT |= BIT0; // enable led1 in debug mode.
   #endif
 }
 
@@ -61,19 +66,20 @@ int main(void) {
   #endif
 
   while (1) {
-    // Check the parity and stop bit.
     // TODO(Jan): vielleicht direkt in der timer isr machen.
     if (irBitCount == IR_NUM_BITS) {
-      if (irDataBuffer & IR_MASK_PARITY_STOP == IR_MASK_PARITY_STOP) { //TODO(Jan): tatsächlich auf parity checken!
+      // Check the parity and stop bit.
+      // If irParityCheck is 1, the parity bit is wrong.
+      if (irDataBuffer & 0x01 && ~irParityCheck & 0x01) {
         #ifdef DEBUG_UART
           serialPrint("Success! Received: ");
         #endif
       }
-	#ifdef DEBUG_UART
-  	  serialPrintInt(irDataBuffer);
-  	  serialPrint("\n");
-  	  irBitCount = 0;
-	#endif
+    	#ifdef DEBUG_UART
+    	  serialPrintInt(irDataBuffer);
+    	  serialPrint("\n");
+    	#endif
+      irBitCount = 0;
     }
   }
 }
@@ -114,15 +120,16 @@ int main(void) {
 
   // shift ir input into the buffer and count 1s for parity check.
   irDataBuffer = (irDataBuffer << 1) | irInput;
-  irParityCheck += irInput;
   irBitCount++;
 
   // If transmission is complete, stop the timer and enable the P1.6 interrupt.
-  // TODO(Jan): vielleicht interrutpt erst wieder aktivieren, wenn übertragung erfolgreich war.
   if (irBitCount == IR_NUM_BITS) {
     // Transmission finished. Stop timer and go back to idle state.
     IR_STOP_TIMER
     IR_ENABLE_INTERRUPT
+  } else if (irBitCount < IR_NUM_BITS) {
+    // Data or parity bit transmitted. Update parity check. 
+    irParityCheck ^= irInput;
   }
   
   TA0CCTL0 &= ~CCIFG;

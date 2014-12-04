@@ -1,10 +1,8 @@
 
 
-
 // IR protocol definitions.
 #define IR_BIT_LENGTH_US 10000
 #define IR_NUM_BITS (8 + 2)
-#define IR_MASK_PARITY_STOP 0x03
 
 // TODO(Jan): evtl wegen UART auf T1 wechseln.
 // Initialize timer 0 to count to 10000 (10ms) in up-mode (MC_1) and enable compare interrupt.
