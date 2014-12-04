@@ -1,5 +1,5 @@
 #include <msp430.h>
-//#include "TI_USCI_I2C_master.h"
+#include "i2c_master.h"
 
 
 void initPins()
@@ -28,10 +28,10 @@ int main(void)
     //while(!TI_USCI_I2C_ready());
     */
 
-    TI_USCI_I2C_receiveinit(0x68, 10);
-    while(!TI_USCI_I2C_ready());
-    TI_USCI_I2C_receive(4, indata, 1);
-    while(!TI_USCI_I2C_ready());
+    master_i2c_receive_init(0x68, 100);
+    while(!i2c_ready());
+    master_i2c_receive(4, indata);
+    while(!i2c_ready());
 
 
   }
