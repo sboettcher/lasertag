@@ -7,16 +7,16 @@
 #endif
 
 // LED pins on Port 1
-#define LED_RED = BIT3
-#define LED_GREEN = BIT4
-#define LED_BLUE = BIT5
+#define LED_RED BIT3
+#define LED_GREEN BIT4
+#define LED_BLUE BIT5
 
 volatile char irInput = 0;
 volatile char irBitCount = 0;
 volatile int irDataBuffer = 0;
 volatile char irParityCheck = 0;
 
-void initClocks(void) {
+void initClocks (void) {
   // Stop Watchdog Timer
   WDTCTL = WDTPW + WDTHOLD;
 
@@ -27,11 +27,11 @@ void initClocks(void) {
   DCOCTL  = CALDCO_1MHZ;
 }
 
-void initIOPins(void) {
+void initIOPins (void) {
   P1SEL = 0x00;
   P1SEL2 = 0x00;
   // Set P1.x as input.
-  P1DIR = 0x00 | LED_RED | LED_GREEN | LED_BLUE ;
+  P1DIR = 0x00 | LED_RED | LED_GREEN | LED_BLUE;
   P1REN = 0x00;
   P1OUT = 0x00;
   // Enable interrupt on P1.6 on falling edge.
@@ -53,6 +53,18 @@ void initIOPins(void) {
   #endif
 }
 
+void flashHitLed (void) {
+  P1OUT |= LED_RED;
+  __delay_cycles(1000000);
+  P1OUT &= ~LED_RED;
+  P1OUT |= LED_GREEN;
+  __delay_cycles(1000000);
+  P1OUT &= ~LED_GREEN;
+  P1OUT |= LED_BLUE;
+  __delay_cycles(1000000);
+  P1OUT &= ~LED_BLUE;
+}
+
 /*
  * main.c
  */
@@ -65,6 +77,8 @@ int main(void) {
     serialPrint("MSP430 booted!\n");
   #endif
 
+  flashHitLed();
+
   while (1) {
     // TODO(Jan): vielleicht direkt in der timer isr machen.
     if (irBitCount == IR_NUM_BITS) {
@@ -74,6 +88,7 @@ int main(void) {
         #ifdef DEBUG_UART
           serialPrint("Success! Received: ");
         #endif
+        flashHitLed();
       }
     	#ifdef DEBUG_UART
     	  serialPrintInt(irDataBuffer);
