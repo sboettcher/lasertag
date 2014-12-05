@@ -27,7 +27,7 @@ void receive_cb(unsigned char value)
 int main(void)
 {
   initPins();
-  TI_USCI_I2C_slaveinit(start_cb, transmit_cb, receive_cb, 0x02);
+  slave_i2c_init(start_cb, transmit_cb, receive_cb, 0x02);
 
   return 0;
 }

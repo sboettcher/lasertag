@@ -8,12 +8,12 @@
 #include "msp430g2553.h"                        // device specific header
 #include "i2c_slave.h"
 
-void (*TI_receive_callback)(unsigned char receive);
-void (*TI_transmit_callback)(unsigned char volatile *send_next);
-void (*TI_start_callback)(void);
+void (*i2c_receive_callback)(unsigned char receive);
+void (*i2c_transmit_callback)(unsigned char volatile *send_next);
+void (*i2c_start_callback)(void);
 
 
-void TI_USCI_I2C_slaveinit(void (*SCallback)(), void (*TCallback)(unsigned char volatile *value), void (*RCallback)(unsigned char value), unsigned char slave_address)
+void slave_i2c_init(void (*SCallback)(), void (*TCallback)(unsigned char volatile *value), void (*RCallback)(unsigned char value), unsigned char slave_address)
 {
   P1SEL |= SDA_PIN + SCL_PIN; // Assign I2C pins to USCI_B0
   P1SEL2 |= SDA_PIN + SCL_PIN; // Assign I2C pins to USCI_B0
@@ -23,12 +23,10 @@ void TI_USCI_I2C_slaveinit(void (*SCallback)(), void (*TCallback)(unsigned char 
   UCB0CTL1 &= ~UCSWRST; // Clear SW reset, resume operation
   IE2 |= UCB0TXIE + UCB0RXIE; // Enable TX interrupt
   UCB0I2CIE |= UCSTTIE; // Enable STT interrupt
-  TI_start_callback = SCallback;
-  TI_receive_callback = RCallback;
-  TI_transmit_callback = TCallback;
+  i2c_start_callback = SCallback;
+  i2c_receive_callback = RCallback;
+  i2c_transmit_callback = TCallback;
 }
-
-// USCI_B0 Data ISR
 
 
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
@@ -41,12 +39,11 @@ void TI_USCI_I2C_slaveinit(void (*SCallback)(), void (*TCallback)(unsigned char 
 #endif
 {
   if (IFG2 & UCB0TXIFG)
-    TI_transmit_callback(&UCB0TXBUF);
+    i2c_transmit_callback(&UCB0TXBUF);
   else
-    TI_receive_callback(UCB0RXBUF);
+    i2c_receive_callback(UCB0RXBUF);
 }
 
-// USCI_B0 State ISR
 
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
   #pragma vector = USCIAB0RX_VECTOR
@@ -58,5 +55,5 @@ void TI_USCI_I2C_slaveinit(void (*SCallback)(), void (*TCallback)(unsigned char 
 #endif
 {
   UCB0STAT &= ~UCSTTIFG; // Clear start condition int flag
-  TI_start_callback();
+  i2c_start_callback();
 }
