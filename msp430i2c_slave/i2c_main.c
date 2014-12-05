@@ -1,12 +1,24 @@
 #include <msp430.h>
 #include "i2c_slave.h"
 
-
 void initPins()
 {
 	WDTCTL = WDTPW + WDTHOLD;               // Stop watchdog timer
 
   _EINT();
+}
+
+void start_cb()
+{
+}
+
+void transmit_cb(unsigned char volatile *value)
+{
+  *value = 0x42;
+}
+
+void receive_cb(unsigned char value)
+{
 }
 
 /*
@@ -15,26 +27,7 @@ void initPins()
 int main(void)
 {
   initPins();
-
-  unsigned char data[] = {0x3B};
-  unsigned char indata[10];
-
-  while(1)
-  {
-    /*
-    TI_USCI_I2C_transmitinit(0x68, 10);
-    while(!TI_USCI_I2C_ready());
-    TI_USCI_I2C_transmit(1, data, 1);
-    //while(!TI_USCI_I2C_ready());
-    */
-
-    slave_i2c_receive_init(0x02, 10);
-    while(!i2c_ready());
-    //slave_i2c_receive(4, indata);
-    //while(!i2c_ready());
-
-
-  }
+  TI_USCI_I2C_slaveinit(start_cb, transmit_cb, receive_cb, 0x02);
 
   return 0;
 }
