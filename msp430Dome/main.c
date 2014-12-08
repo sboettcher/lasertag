@@ -20,11 +20,14 @@ void initClocks (void) {
   // Stop Watchdog Timer
   WDTCTL = WDTPW + WDTHOLD;
 
-  // Init MCLK to 1 MHz
-  if (CALBC1_1MHZ == 0xFF || CALDCO_1MHZ == 0xFF)
+  // Init MCLK to 16 MHz
+  if (CALBC1_16MHZ == 0xFF || CALDCO_16MHZ == 0xFF)
     while(1);
-  BCSCTL1 = CALBC1_1MHZ;
-  DCOCTL  = CALDCO_1MHZ;
+  BCSCTL1 = CALBC1_16MHZ;
+  DCOCTL  = CALDCO_16MHZ;
+
+  // Devide SMCLK by 2 (DIVS_1) for 8MHz clock (timer devides by 8 to count microseconds).
+  BCSCTL2 = DIVS_1;
 }
 
 void initIOPins (void) {
@@ -44,24 +47,23 @@ void initIOPins (void) {
     P1SEL = BIT1 + BIT2;                      // P1.1 = RXD, P1.2=TXD
     P1SEL2 = BIT1 + BIT2;                     // P1.1 = RXD, P1.2=TXD
     UCA0CTL1 |= UCSSEL_2;                     // SMCLK
-    UCA0BR0 = 104;                            // 1MHz 9600
-    UCA0BR1 = 0;                              // 1MHz 9600
+    UCA0BR0 = (833 & 0xFF);                   // 8MHz 9600
+    UCA0BR1 = (833 >> 8);                     // 8MHz 9600
     UCA0MCTL = UCBRS0;                        // Modulation UCBRSx = 1
     UCA0CTL1 &= ~UCSWRST;                     // Initialize USCI state machine
     IE2 |= UCA0RXIE;                          // Enable USCI_A0 RX interrupt
-    P1DIR |= BIT0; P1OUT |= BIT0; // enable led1 in debug mode.
   #endif
 }
 
 void flashHitLed (void) {
   P1OUT |= LED_RED;
-  __delay_cycles(1000000);
+  __delay_cycles(1600000);
   P1OUT &= ~LED_RED;
   P1OUT |= LED_GREEN;
-  __delay_cycles(1000000);
+  __delay_cycles(1600000);
   P1OUT &= ~LED_GREEN;
   P1OUT |= LED_BLUE;
-  __delay_cycles(1000000);
+  __delay_cycles(1600000);
   P1OUT &= ~LED_BLUE;
 }
 
