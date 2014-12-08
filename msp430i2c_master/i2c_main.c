@@ -7,6 +7,10 @@ void initPins()
 	WDTCTL = WDTPW + WDTHOLD;               // Stop watchdog timer
 
   _EINT();
+
+  BCSCTL1 = CALBC1_16MHZ;
+  DCOCTL  = CALDCO_16MHZ;
+
 }
 
 /*
@@ -28,7 +32,7 @@ int main(void)
     //while(!TI_USCI_I2C_ready());
     */
 
-    master_i2c_receive_init(0x68, 100);
+    master_i2c_receive_init(0x68, 32);
     while(!i2c_ready());
     master_i2c_receive(4, indata);
     while(!i2c_ready());
