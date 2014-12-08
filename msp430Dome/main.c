@@ -11,10 +11,12 @@
 #define LED_GREEN BIT4
 #define LED_BLUE BIT5
 
+// Variables for ir receiver.
 volatile char irInput = 0;
 volatile char irBitCount = 0;
 volatile int irDataBuffer = 0;
 volatile char irParityCheck = 0;
+volatile char irValid = 0;
 
 void initClocks (void) {
   // Stop Watchdog Timer
@@ -83,7 +85,7 @@ int main(void) {
 
   while (1) {
     // TODO(Jan): vielleicht direkt in der timer isr machen.
-    if (irBitCount == IR_NUM_BITS) {
+    if (irValid) {
       // Check the parity and stop bit.
       // If irParityCheck is 1, the parity bit is wrong.
       if (irDataBuffer & 0x01 && ~irParityCheck & 0x01) {
@@ -96,7 +98,8 @@ int main(void) {
     	  serialPrintInt(irDataBuffer);
     	  serialPrint("\n");
     	#endif
-      irBitCount = 0;
+      irValid = 0;
+      IR_ENABLE_INTERRUPT
     }
   }
 }
@@ -118,6 +121,13 @@ int main(void) {
     irBitCount = 0;
     irDataBuffer = 0;
     irParityCheck = 0;
+  }
+  // wait for 1 ms and check again if start bit was long enough.
+  __delay_cycles(16000);
+  if (P1IN & BIT6) {
+    // If pin is 1 start bit was too short.
+    IR_STOP_TIMER
+    IR_ENABLE_INTERRUPT
   }
 }
 
@@ -143,7 +153,7 @@ int main(void) {
   if (irBitCount == IR_NUM_BITS) {
     // Transmission finished. Stop timer and go back to idle state.
     IR_STOP_TIMER
-    IR_ENABLE_INTERRUPT
+    irValid = 1;
   } else if (irBitCount < IR_NUM_BITS) {
     // Data or parity bit transmitted. Update parity check. 
     irParityCheck ^= irInput;
