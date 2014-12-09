@@ -94,10 +94,10 @@ int main(void) {
         #endif
         flashHitLed();
       }
-    	#ifdef DEBUG_UART
-    	  serialPrintInt(irDataBuffer);
-    	  serialPrint("\n");
-    	#endif
+      #ifdef DEBUG_UART
+        serialPrintInt(irDataBuffer);
+        serialPrint("\n");
+      #endif
       irValid = 0;
       IR_ENABLE_INTERRUPT
     }
@@ -132,12 +132,12 @@ int main(void) {
 }
 
 
-// Timer A0 interrupt service routine
+// Timer A1 interrupt service routine
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
-  #pragma vector=TIMER0_A0_VECTOR
+  #pragma vector=TIMER1_A0_VECTOR
   __interrupt void Timer_A (void)
 #elif defined(__GNUC__)
-  void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
+  void __attribute__ ((interrupt(TIMER1_A0_VECTOR))) Timer_A (void)
 #else
   #error Compiler not supported!
 #endif
@@ -159,5 +159,5 @@ int main(void) {
     irParityCheck ^= irInput;
   }
   
-  TA0CCTL0 &= ~CCIFG;
+  TA1CCTL0 &= ~CCIFG;
 }
