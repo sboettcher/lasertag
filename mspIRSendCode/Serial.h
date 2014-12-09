@@ -124,10 +124,11 @@ void SerialBegin(int baudRate, int clkSpeed) {
 	P1SEL2 = BIT1 + BIT2;                     // P1.1 = RXD, P1.2=TXD
 	UCA0CTL1 |= UCSSEL_2;
 
-	UCA0BR0 = (int)((float)clkSpeed*(float)1000000.0/(float)baudRate);
+  int clockDevider = (int)((float)clkSpeed*(float)1000000.0/(float)baudRate);
+	UCA0BR0 = clockDevider & 0xFF;
 	//UCA0BR0 = 104;
 		// 1MHz 9600
-	UCA0BR1 = 0;
+	UCA0BR1 = clockDevider >> 8;
 
 	UCA0MCTL = UCBRS0;                        // Modulation UCBRSx = 1
 	UCA0CTL1 &= ~UCSWRST;                     // Initialize USCI state machine

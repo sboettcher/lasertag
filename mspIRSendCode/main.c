@@ -7,11 +7,8 @@
 #ifdef DEBUG
  #include "Serial.h"
 #endif
-
-// Time for one Bit
-#define BITTIME 10000
-// LSB (1) or MSB (0) first 
-#define LSBFIRST 1
+ 
+#define LSBFIRST 0
 // The Speed of the UARRT connection
 #define SERIALSPEED 9600
 // The code that is send over IR
@@ -19,7 +16,10 @@
 // Smallest delay between two transmissions 
 #define DELAY_BETWEEN_TWO_SENDS 100000
 // The clockSpeed in MHZ (CAUSION: needs to be changed in main as well)
-#define CLK_SPEED 1
+#define CLK_SPEED 16
+// Time for one Bit
+#define BITTIME (CLK_SPEED * 10000)
+// LSB (1) or MSB (0) first
 // The PWM frequency in kHz
 #define PWM_FREQUZENCY 38
 // The PWM periode
