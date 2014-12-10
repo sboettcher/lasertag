@@ -1,5 +1,8 @@
 
 
+// IR receiver input pin.
+#define IR_RECEIVER_PIN BIT0
+
 // IR protocol definitions.
 #define IR_BIT_LENGTH_US 1000
 #define IR_NUM_BITS (8 + 2)
@@ -13,5 +16,5 @@
 #define IR_STOP_TIMER TA1CTL = TACLR;
 
 // Enable / disable the interrupt on P1.6 which detects the start bit.
-#define IR_ENABLE_INTERRUPT P1IE |= BIT6; P1IES |= BIT6; P1IFG = 0x00;
-#define IR_DISABLE_INTERRUPT P1IE &= ~BIT6; P1IES &= ~BIT6; P1IFG = 0x00;
+#define IR_ENABLE_INTERRUPT P1IE |= IR_RECEIVER_PIN; P1IES |= IR_RECEIVER_PIN; P1IFG = 0x00;
+#define IR_DISABLE_INTERRUPT P1IE &= ~IR_RECEIVER_PIN; P1IES &= ~IR_RECEIVER_PIN; P1IFG = 0x00;

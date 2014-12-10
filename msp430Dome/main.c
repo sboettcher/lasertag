@@ -114,8 +114,8 @@ int main(void) {
   #error Compiler not supported!
 #endif
 {
-  // Falling edge on P1.6 -> start bit detected.
-  if (P1IFG & BIT6) {
+  // Falling edge on IR_RECEIVER_PIN -> start bit detected.
+  if (P1IFG & IR_RECEIVER_PIN) {
     IR_START_TIMER
     IR_DISABLE_INTERRUPT
     irBitCount = 0;
@@ -124,7 +124,7 @@ int main(void) {
   }
   // wait for 1 ms and check again if start bit was long enough.
   __delay_cycles(16000);
-  if (P1IN & BIT6) {
+  if (P1IN & IR_RECEIVER_PIN) {
     // If pin is 1 start bit was too short.
     IR_STOP_TIMER
     IR_ENABLE_INTERRUPT
@@ -143,7 +143,7 @@ int main(void) {
 #endif
 {
   // Read ir input (active low).
-  irInput = (~P1IN & BIT6) >> 6;
+  irInput = (~P1IN & IR_RECEIVER_PIN);
 
   // shift ir input into the buffer and count 1s for parity check.
   irDataBuffer = (irDataBuffer << 1) | irInput;
