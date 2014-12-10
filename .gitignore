@@ -28,10 +28,14 @@
 *.app
 
 # code composter suff
-msp430Dome/.*
-msp430Dome/Debug
-msp430Dome/targetConfigs
-msp430Dome/lnk_msp430g2553.cmd
+msp*/.ccsproject
+msp*/.cproject
+msp*/.launches
+msp*/.project
+msp*/.settings
+msp*/Debug
+msp*/targetConfigs
+msp*/lnk_msp430g2553.cmd
 
 # Vim
 *.swp
