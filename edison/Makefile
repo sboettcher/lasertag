@@ -8,19 +8,16 @@ CFLAGS=-g -Wall -lmraa -lupm-i2clcd -I/usr/include/upm -I/usr/include/mraa
 COPTS=#`sdl-config --cflags`
 LOPTS=#`sdl-config --libs` -pthread 
 
+SOURCES=bt_serial.cpp
 MAIN_BINARIES=$(basename $(wildcard *Main.cpp))
-TEST_BINARIES=$(basename $(wildcard *Test.cpp))
 HEADER=$(wildcard *.h)
-OBJECTS=
+OBJECTS=$(SOURCES:.cpp=.o)
 
 .PRECIOUS: %.o
 
-all: compile test checkstyle
+all: compile checkstyle
 
-compile: $(MAIN_BINARIES) $(TEST_BINARIES)
-
-test: $(TEST_BINARIES)
-	for T in $(TEST_BINARIES); do ./$$T; done
+compile: $(SOURCES) $(MAIN_BINARIES)
 
 checkstyle:
 	python2 cpplint.py --filter=-runtime/references,-whitespace/comments,-readability/streams --linelength=200 *.cpp
@@ -29,13 +26,9 @@ clean:
 	rm -f *.o
 	rm -f *~
 	rm -f $(MAIN_BINARIES)
-	rm -f $(TEST_BINARIES)
 
 %Main: %Main.o $(OBJECTS)
 	$(CXX) $(CFLAGS) -o $@ $^ $(LOPTS)
-
-%Test: %Test.o $(OBJECTS)
-	$(CXX) $(CFLAGS) $(LOPTS) -o $@ $^ -lgtest -lgtest_main
 
 %.o: %.cpp $(HEADER)
 	$(CXX) $(CFLAGS) $(COPTS) -c $<
