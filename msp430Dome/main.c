@@ -40,7 +40,7 @@ void initIOPins (void) {
   P1DIR = 0x00 | LED_RED | LED_GREEN | LED_BLUE;
   P1REN = 0x00;
   P1OUT = 0x00;
-  // Enable interrupt on P1.6 on falling edge.
+  // Enable interrupt on IR_RECEIVER_PIN on falling edge.
   IR_ENABLE_INTERRUPT
 
 
@@ -78,6 +78,7 @@ void start_cb() {}
 void transmit_cb(unsigned char volatile *value)
 {
   *value = i2cBuffer;
+  i2cBuffer = 0;
 }
 
 void receive_cb(unsigned char value) {}

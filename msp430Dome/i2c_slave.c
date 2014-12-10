@@ -31,7 +31,7 @@ void slave_i2c_init(void (*SCallback)(), void (*TCallback)(unsigned char volatil
 
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
   #pragma vector = USCIAB0TX_VECTOR
-  __interrupt void usci_i2c_data_isr(void)
+  __interrupt void usci_i2c_data_isr (void)
 #elif defined(__GNUC__)
   void __attribute__ ((interrupt(USCIAB0TX_VECTOR))) usci_i2c_data_isr (void)
 #else
