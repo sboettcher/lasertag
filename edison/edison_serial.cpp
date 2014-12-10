@@ -1,23 +1,24 @@
 // Copyright 2014 Sebastian Boettcher
 
 #include <string>
-#include "./bt_serial.h"
+#include "./edison_serial.h"
 
 
-bt_serial::bt_serial(std::string port)
-  : m_port("/dev/ttyMFD1"), m_fd(0) {
+edison_serial::edison_serial(std::string port)
+  : m_port("/dev/ttyMFD1"), m_fd(0), m_port_ready(false) {
   m_port = port;
   if (open_port()) {
     configure_port();
+    m_port_ready = true;
   }
 }
 
-bt_serial::~bt_serial() {
+edison_serial::~edison_serial() {
   close(m_fd);
   printf("Closed port %s.\n", m_port.c_str());
 }
 
-bool bt_serial::open_port() {
+bool edison_serial::open_port() {
   // open, ReadWrite + never controlling + non-blocking
   m_fd = open(m_port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
 
@@ -32,7 +33,7 @@ bool bt_serial::open_port() {
   return true;
 }
 
-void bt_serial::configure_port() {
+void edison_serial::configure_port() {
   // struct to store settings
   struct termios port_settings;
 
@@ -40,7 +41,7 @@ void bt_serial::configure_port() {
   cfsetispeed(&port_settings, B38400);
   cfsetospeed(&port_settings, B38400);
 
-  // set parity, stop bits, data bits
+  // no parity, one stop bit, 8 data bits
   port_settings.c_cflag &= ~PARENB;
   port_settings.c_cflag &= ~CSTOPB;
   port_settings.c_cflag &= ~CSIZE;
@@ -53,20 +54,30 @@ void bt_serial::configure_port() {
 }
 
 
-void bt_serial::init() {
-  bt_write("\r\n+STWMOD=0\r\n");
-  bt_write("\r\n+STNA=EdisonBTSlave\r\n");
-  bt_write("\r\n+STPIN=0000\r\n");
-  bt_write("\r\n+STOAUT=1\r\n");
-  bt_write("\r\n+STAUTO=0\r\n");
+void edison_serial::bt_slave_init(std::string name) {
+  if (!m_port_ready) {
+    printf("Serial port not ready.\n");
+    return;
+  }
+
+  serial_write("\r\n+STWMOD=0\r\n");
+  serial_write("\r\n+STNA=" + name + "\r\n");
+  serial_write("\r\n+STPIN=0000\r\n");
+  serial_write("\r\n+STOAUT=1\r\n");
+  serial_write("\r\n+STAUTO=0\r\n");
   usleep(2000000);
-  bt_write("\r\n+INQ=1\r\n");
+  serial_write("\r\n+INQ=1\r\n");
   usleep(2000000);
   printf("Slave running and inquirable.\n");
 }
 
 
-bool bt_serial::available(int timeout) {
+bool edison_serial::available(int timeout) {
+  if (!m_port_ready) {
+    printf("Serial port not ready.\n");
+    return false;
+  }
+
   int retval;
   fd_set rfds;
   struct timeval tv;
@@ -95,18 +106,28 @@ bool bt_serial::available(int timeout) {
 }
 
 
-char bt_serial::bt_read() {
+char edison_serial::serial_read() {
+  if (!m_port_ready) {
+    printf("Serial port not ready.\n");
+    return 0;
+  }
+
   char c;
   read(m_fd, &c, 1);
   return c;
 }
 
-void bt_serial::bt_write(std::string s) {
+void edison_serial::serial_write(std::string s) {
+  if (!m_port_ready) {
+    printf("Serial port not ready.\n");
+    return;
+  }
+
   write(m_fd, s.c_str(), s.length());
 }
 
 
-int bt_serial::get_serial_fd() {
+int edison_serial::get_serial_fd() {
   return m_fd;
 }
 

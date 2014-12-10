@@ -10,7 +10,7 @@
 
 #include <string>
 
-#include "./bt_serial.h"
+#include "./edison_serial.h"
 
 int running = 1;
 
@@ -23,13 +23,13 @@ void sig_handler(int signo) {
 int main(int argc, char** argv) {
   signal(SIGINT, sig_handler);
 
-  bt_serial bluetooth("/dev/ttyMFD1");
+  edison_serial bluetooth("/dev/ttyMFD1");
 
-  bluetooth.init();
+  bluetooth.bt_slave_init("EdisonBTSlave");
 
   while (running == 1) {
     if (bluetooth.available(1)) {
-      printf("%c", bluetooth.bt_read());
+      printf("%c", bluetooth.serial_read());
     }
   }
 
