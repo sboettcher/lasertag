@@ -1,7 +1,8 @@
 #include <msp430.h> 
 #include "laserTagIR.h"
+#include "i2c_slave.h"
 
-#define DEBUG_UART
+//#define DEBUG_UART
 #ifdef DEBUG_UART
   #include "laserTagUART.h"
 #endif
@@ -12,11 +13,11 @@
 #define LED_BLUE BIT5
 
 // Variables for ir receiver.
-volatile char irInput = 0;
-volatile char irBitCount = 0;
-volatile int irDataBuffer = 0;
-volatile char irParityCheck = 0;
-volatile char irValid = 0;
+volatile unsigned char irInput = 0;
+volatile unsigned char irBitCount = 0;
+volatile unsigned int irDataBuffer = 0;
+volatile unsigned char irParityCheck = 0;
+volatile unsigned char irValid = 0;
 
 void initClocks (void) {
   // Stop Watchdog Timer
@@ -69,6 +70,18 @@ void flashHitLed (void) {
   P1OUT &= ~LED_BLUE;
 }
 
+// I2C callback functions.
+volatile unsigned char i2cBuffer; // TODO durch ringbuffer ersetzen.
+
+void start_cb() {}
+
+void transmit_cb(unsigned char volatile *value)
+{
+  *value = i2cBuffer;
+}
+
+void receive_cb(unsigned char value) {}
+
 /*
  * main.c
  */
@@ -81,6 +94,7 @@ int main(void) {
     serialPrint("MSP430 booted!\n");
   #endif
 
+  slave_i2c_init(start_cb, transmit_cb, receive_cb, 0x68);
   flashHitLed();
 
   while (1) {
@@ -92,6 +106,7 @@ int main(void) {
         #ifdef DEBUG_UART
           serialPrint("Success! Received: ");
         #endif
+        i2cBuffer = irDataBuffer >> 2;
         flashHitLed();
       }
       #ifdef DEBUG_UART
