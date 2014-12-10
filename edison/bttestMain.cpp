@@ -7,10 +7,20 @@
 #include <errno.h>
 #include <termios.h>
 #include <time.h>
+#include <signal.h>
+#include <syslog.h>
 
 #include <mraa.hpp>
 
 #include <string>
+
+int running = 1;
+
+void sig_handler(int signo) {
+  if (signo == SIGINT) {
+    running = 0;
+  }
+}
 
 int open_port(std::string port) {
   int fd; // file description for serial port
@@ -85,7 +95,7 @@ bool bt_available(int fd, int timeout) {
   if (retval == -1) {
     perror("select() failed\n");
   } else if (retval) {
-    printf("Data available.\n");
+    // printf("Data available.\n");
     return true;
   } else {
     printf("Timeout, no data.\n");
@@ -94,10 +104,24 @@ bool bt_available(int fd, int timeout) {
   return false;
 }
 
+char bt_read(int fd) {
+  char c;
+  read(fd, &c, 1);
+  return c;
+}
+
 int main(int argc, char** argv) {
+  signal(SIGINT, sig_handler);
+
   int bt_serial = open_port("/dev/ttyMFD1");
   configure_port(bt_serial);
   bt_setup(bt_serial);
+
+  while (running == 1) {
+    if (bt_available(bt_serial, 1)) {
+      printf("%c", bt_read(bt_serial));
+    }
+  }
 
   close(bt_serial);
   printf("Closed.\n");

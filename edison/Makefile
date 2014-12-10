@@ -27,6 +27,7 @@ checkstyle:
 
 clean:
 	rm -f *.o
+	rm -f *~
 	rm -f $(MAIN_BINARIES)
 	rm -f $(TEST_BINARIES)
 
