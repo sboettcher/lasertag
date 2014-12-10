@@ -1,7 +1,7 @@
 
 
 // IR protocol definitions.
-#define IR_BIT_LENGTH_US 10000
+#define IR_BIT_LENGTH_US 1000
 #define IR_NUM_BITS (8 + 2)
 
 // TODO(Jan): evtl wegen UART auf T1 wechseln.
