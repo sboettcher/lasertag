@@ -116,7 +116,7 @@ void serialPrintln(char* tx)
 
 
 
-void SerialBegin(int baudRate, int clkSpeed) {
+void serialBegin(int baudRate, int clkSpeed) {
 	// Activate UART on 1.1 / 1.2
 	// Fixed connection to PC, shows up there as COMx
 
@@ -124,11 +124,11 @@ void SerialBegin(int baudRate, int clkSpeed) {
 	P1SEL2 = BIT1 + BIT2;                     // P1.1 = RXD, P1.2=TXD
 	UCA0CTL1 |= UCSSEL_2;
 
-  int clockDevider = (int)((float)clkSpeed*(float)1000000.0/(float)baudRate);
-	UCA0BR0 = clockDevider & 0xFF;
-	//UCA0BR0 = 104;
+	//UCA0BR0 = (int)((float)clkSpeed*(float)1000000.0/(float)baudRate);
+	int baud = 104*clkSpeed;
+	UCA0BR0 = 0xff & baud;
 		// 1MHz 9600
-	UCA0BR1 = clockDevider >> 8;
+	UCA0BR1 = baud >> 8;
 
 	UCA0MCTL = UCBRS0;                        // Modulation UCBRSx = 1
 	UCA0CTL1 &= ~UCSWRST;                     // Initialize USCI state machine
