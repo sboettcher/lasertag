@@ -25,10 +25,10 @@ int main(int argc, char** argv) {
 
   bt_serial bluetooth("/dev/ttyMFD1");
 
-  bluetooth.bt_setup();
+  bluetooth.init();
 
   while (running == 1) {
-    if (bluetooth.bt_available(1)) {
+    if (bluetooth.available(1)) {
       printf("%c", bluetooth.bt_read());
     }
   }

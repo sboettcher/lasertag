@@ -53,7 +53,7 @@ void bt_serial::configure_port() {
 }
 
 
-void bt_serial::bt_setup() {
+void bt_serial::init() {
   bt_write("\r\n+STWMOD=0\r\n");
   bt_write("\r\n+STNA=EdisonBTSlave\r\n");
   bt_write("\r\n+STPIN=0000\r\n");
@@ -66,7 +66,7 @@ void bt_serial::bt_setup() {
 }
 
 
-bool bt_serial::bt_available(int timeout) {
+bool bt_serial::available(int timeout) {
   int retval;
   fd_set rfds;
   struct timeval tv;
@@ -103,5 +103,10 @@ char bt_serial::bt_read() {
 
 void bt_serial::bt_write(std::string s) {
   write(m_fd, s.c_str(), s.length());
+}
+
+
+int bt_serial::get_serial_fd() {
+  return m_fd;
 }
 

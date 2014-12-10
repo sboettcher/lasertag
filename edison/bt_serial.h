@@ -17,10 +17,12 @@ class bt_serial {
     bt_serial(std::string port);
     ~bt_serial();
 
-    void bt_setup();
-    bool bt_available(int timeout);
+    void init();
+    bool available(int timeout);
     char bt_read();
     void bt_write(std::string s);
+
+    int get_serial_fd();
 
   private:
     bool open_port();
