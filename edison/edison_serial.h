@@ -19,6 +19,8 @@ class edison_serial {
 
     // send bt slave initiation
     void bt_slave_init(std::string name);
+    // send bt master initiation and inquire for given slave
+    void bt_master_init(std::string name, std::string slave);
 
     // wait for available data on port, false if timeout (sec) or error
     bool available(int timeout);

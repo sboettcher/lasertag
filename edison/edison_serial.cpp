@@ -71,6 +71,61 @@ void edison_serial::bt_slave_init(std::string name) {
   printf("Slave running and inquirable.\n");
 }
 
+void edison_serial::bt_master_init(std::string name, std::string slave) {
+  if (!m_port_ready) {
+    printf("Serial port not ready.\n");
+    return;
+  }
+
+  serial_write("\r\n+STWMOD=1\r\n");
+  serial_write("\r\n+STNA=" + name + "\r\n");
+  serial_write("\r\n+STPIN=0000\r\n");
+  serial_write("\r\n+STAUTO=0\r\n");
+  usleep(2000000);
+  serial_write("\r\n+INQ=1\r\n");
+  usleep(2000000);
+  printf("Master running and inquiring.\n");
+
+  // find target slave
+  std::string buf;
+  std::string slaveAddr;
+  int nameIndex = 0;
+  int addrIndex = 0;
+
+  while (true) {
+    if (available(1)) {
+      buf += serial_read();
+      nameIndex = buf.find(";" + slave);
+      if (nameIndex != -1) {
+        addrIndex = buf.find("+RTINQ=") + 7;
+        slaveAddr = buf.substr(addrIndex, nameIndex);
+        break;
+      }
+    }
+  }
+
+  // connect to slave
+  bool connected = false;
+  buf = "";
+  while (!connected) {
+    printf("Connecting to slave: %s @ %s\n", slave.c_str(), slaveAddr.c_str());
+    serial_write("\r\n+CONN=" + slaveAddr + "\r\n");
+    while (true) {
+      if (available(1)) {
+        buf += serial_read();
+        if (buf.find("CONNECT:OK") != std::string::npos) {
+          connected = true;
+          printf("Connected!\n");
+          break;
+        } else if (buf.find("CONNECT:FAIL") != std::string::npos) {
+          printf("Connect failed, trying again.\n");
+          break;
+        }
+      }
+    }
+  }
+}
+
 
 bool edison_serial::available(int timeout) {
   if (!m_port_ready) {
