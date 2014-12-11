@@ -182,7 +182,4 @@ void edison_serial::serial_write(std::string s) {
 }
 
 
-int edison_serial::get_serial_fd() {
-  return m_fd;
-}
 

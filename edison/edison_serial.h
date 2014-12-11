@@ -29,7 +29,9 @@ class edison_serial {
     // write the given string to port
     void serial_write(std::string s);
 
-    int get_serial_fd();
+    int get_serial_fd() {
+      return m_fd;
+    }
 
   private:
     // open and configure given port
