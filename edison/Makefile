@@ -8,7 +8,7 @@ CFLAGS=-g -Wall -lmraa -lupm-i2clcd -I/usr/include/upm -I/usr/include/mraa
 COPTS=#`sdl-config --cflags`
 LOPTS=#`sdl-config --libs` -pthread 
 
-SOURCES=edison_serial.cpp
+SOURCES=edison_serial.cpp lasertag.cpp
 MAIN_BINARIES=$(basename $(wildcard *Main.cpp))
 HEADER=$(wildcard *.h)
 OBJECTS=$(SOURCES:.cpp=.o)
