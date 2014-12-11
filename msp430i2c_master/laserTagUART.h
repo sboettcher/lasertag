@@ -1,4 +1,4 @@
-
+/*
 
 // RX uses a ringbuffer. This defines it's size.
 #define RXBUFFERSIZE 32
@@ -156,3 +156,4 @@ int serialReadInt(void)
   if (rxBufferStart == rxBufferEnd)
     rxBufferError = 1;
 }
+*/
