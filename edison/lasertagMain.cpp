@@ -18,6 +18,10 @@ int main(int argc, char** argv) {
   signal(SIGINT, sig_handler);
 
   lasertag lt;
+  lt.init();
+  lt.active(true);
+
+  lt.i2c()->address(0x68);
 
   uint8_t i = 2;
 
@@ -34,6 +38,5 @@ int main(int argc, char** argv) {
     usleep(1000);
   }
 
-  printf("\nDone.\n");
   return 0;
 }
