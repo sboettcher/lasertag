@@ -1,4 +1,7 @@
-
+/*
+ * Benjamin Völker, University of Freiburg
+ * mail: voelkerb@me.com
+ */
 
 #include <msp430.h> 
 
@@ -12,16 +15,23 @@
 
 // Time for one Bit
 #define BITTIME 1000
-// LSB (1) or MSB (0) first 
+// IR TX PIN
+#define IR_TX_PIN BIT6
+// Push Button Pin
+#define BUTTON_PIN BIT3
+// LED Pin
+#define LED_PIN BIT0
+// LSB (1) or MSB (0) first
 #define LSBFIRST 0
 // The Speed of the UARRT connection
 #define SERIALSPEED 9600
 // The code that is send over IR
 #define CODE 240
-// Smallest delay between two transmissions 
+// Smallest delay between two transmissions
 #define DELAY_BETWEEN_TWO_SENDS_MS 100
 // The clockSpeed in MHZ (CAUSION: needs to be changed in main as well)
 #define CLK_SPEED 16
+#define INIT_CLK() BCSCTL1 = CALBC1_16MHZ; DCOCTL = CALDCO_16MHZ;
 // The PWM frequency in kHz
 #define PWM_FREQUZENCY 38
 // The PWM periode
@@ -37,20 +47,20 @@
  */
 void initPorts() {
 	// Set LED1 to OUTPUT and to 0
-	P1DIR |= BIT0;
-	P1OUT &= ~BIT0;
-	
+	P1DIR |= LED_PIN;
+	P1OUT &= ~LED_PIN;
+
 	// Set Push Button to INPUT and enable PULLUPS
-	P1DIR &= ~BIT3;
-	P1REN |= BIT3;
-	P1OUT |= BIT3;
-	
-	// Set IROutput PIN to Ouput and disable 
-	P1DIR |= BIT6;
+	P1DIR &= ~BUTTON_PIN;
+	P1REN |= BUTTON_PIN;
+	P1OUT |= BUTTON_PIN;
+
+	// Set IROutput PIN to Ouput and disable
+	P1DIR |= IR_TX_PIN;
 	// Set output source to timer A
-	P1SEL |= BIT6;
-	P1OUT &= ~BIT6;
-	
+	P1SEL |= IR_TX_PIN;
+	P1OUT &= ~IR_TX_PIN;
+
 	// PWM setup
 	// Set the PWM periode to 38kHz
 	TA0CCR0 = PWM_PERIODE;
@@ -72,56 +82,87 @@ void sendCode(int Byte) {
 	int i = 0;
 	int j = 0;
 	// Latch in Byte so it can be safely modified
-	int code = 0;
+	int code = Byte;
 	// Boolean used for parity check
 	int parity = 0;
-	if (LSBFIRST) {
-		code = Byte;
-	} else {
-		code = ~Byte;
-	}
 
 	// Send start Bit
-	P1SEL |= BIT6;
+	P1SEL |= IR_TX_PIN;
 	for (j = 0; j < CLK_SPEED; j++) {
 		_delay_cycles(BITTIME/2);
 	}
 
 	if (DEBUG) serialPrintInt(1);
-	
-	// Loop over all Bits
-	for (i = 0; i < 8; i++) {
-		// If code and Mask not 0
-		if ((code & BIT0) != 0) {
-			// Send a logical 1
-			P1SEL |= BIT6;
-			if (DEBUG) {
-				serialPrint("\t BIT");
-				serialPrintInt(i);
-				serialPrint(": ");
-				serialPrintInt(code & BIT0);
+
+	// If we want to send LSB First
+	if (LSBFIRST) {
+		// Loop over all Bits
+		for (i = 0; i < 8; i++) {
+			// If code and Mask not 0
+			if ((code & BIT0) != 0) {
+				// Send a logical 1
+				P1SEL |= IR_TX_PIN;
+				if (DEBUG) {
+					serialPrint("\t BIT");
+					serialPrintInt(i);
+					serialPrint(": ");
+					serialPrintInt(code & BIT0);
+				}
+				// Xor of the Parity Bit
+				parity ^= BIT0;
+			} else {
+				// Send a logical 0
+				if (DEBUG) {
+					serialPrint("\t BIT");
+					serialPrintInt(i);
+					serialPrint(": ");
+					serialPrintInt(code & BIT0);
+				}
+				P1SEL &= ~IR_TX_PIN;
+				P1OUT &= ~IR_TX_PIN;
 			}
-			// Xor of the Parity Bit
-			parity ^= BIT0;
-		} else {
-			// Send a logical 0
-			if (DEBUG) {
-				serialPrint("\t BIT");
-				serialPrintInt(i);
-				serialPrint(": ");
-				serialPrintInt(code & BIT0);
+			// Shift the Bit to send
+			code = code >> 1;
+			// Wait a Bitlength
+			for (j = 0; j < CLK_SPEED; j++) {
+				_delay_cycles(BITTIME);
 			}
-			P1SEL &= ~BIT6;
-			P1OUT &= ~BIT6;
 		}
-		// Shift the Bit to send
-		code = code >> 1;
-		// Wait a Bitlength
-		for (j = 0; j < CLK_SPEED; j++) {
-			_delay_cycles(BITTIME);
+	// If we want to send MSB First
+	} else {
+		// Loop over all Bits
+		for (i = 0; i < 8; i++) {
+			// If code and Mask not 0
+			if ((code & BIT7) != 0) {
+				// Send a logical 1
+				P1SEL |= IR_TX_PIN;
+				if (DEBUG) {
+					serialPrint("\t BIT");
+					serialPrintInt(i);
+					serialPrint(": ");
+					serialPrintInt((code & BIT7) >> 7);
+				}
+				// Xor of the Parity Bit
+				parity ^= BIT0;
+			} else {
+				// Send a logical 0
+				if (DEBUG) {
+					serialPrint("\t BIT");
+					serialPrintInt(i);
+					serialPrint(": ");
+					serialPrintInt((code & BIT7) >> 7);
+				}
+				P1SEL &= ~IR_TX_PIN;
+				P1OUT &= ~IR_TX_PIN;
+			}
+			// Shift the Bit to send
+			code = code << 1;
+			// Wait a Bitlength
+			for (j = 0; j < CLK_SPEED; j++) {
+				_delay_cycles(BITTIME);
+			}
 		}
 	}
-
 	if (DEBUG) {
 		serialPrint("\t Parity:");
 		serialPrintInt(parity);
@@ -129,11 +170,11 @@ void sendCode(int Byte) {
 	// If it was an odd number of 1s
 	if (parity) {
 		// send parity 1
-		P1SEL |= BIT6;
+		P1SEL |= IR_TX_PIN;
 	} else {
 		// else 0
-		P1SEL &= ~BIT6;
-		P1OUT &= ~BIT6;
+		P1SEL &= ~IR_TX_PIN;
+		P1OUT &= ~IR_TX_PIN;
 	}
 	// Send stop bit
 	for (j = 0; j < CLK_SPEED; j++) {
@@ -143,13 +184,13 @@ void sendCode(int Byte) {
 		serialPrint("\t STOPBIT:");
 		serialPrintInt(1);
 	}
-	P1SEL |= BIT6;	// Send stop bit
+	P1SEL |= IR_TX_PIN;	// Send stop bit
 	for (j = 0; j < CLK_SPEED; j++) {
 		_delay_cycles(BITTIME);
 	}
 	// Disable PWM on line
-	P1SEL &= ~BIT6;
-	P1OUT &= ~BIT6;
+	P1SEL &= ~IR_TX_PIN;
+	P1OUT &= ~IR_TX_PIN;
 	if (DEBUG) serialPrintln("");
 }
 
@@ -157,14 +198,13 @@ void sendCode(int Byte) {
 int main(void) {
 	// Stop whatchdog
     WDTCTL = WDTPW + WDTHOLD;
-	
+
 	// Set clock to 1 MHz
-	BCSCTL1 = CALBC1_16MHZ;
-	DCOCTL = CALDCO_16MHZ;
+	INIT_CLK()
 	
 
     if (DEBUG) serialBegin(SERIALSPEED, CLK_SPEED);
-    
+
 	// Init the Ports and the timers
     initPorts();
 
@@ -184,20 +224,19 @@ int main(void) {
 	// Do forever and for always
     while(1) {
 		// If Push Button pressed
-    	if (!(P1IN & BIT3)) {
+    	if (!(P1IN & BUTTON_PIN)) {
 			// Send specifid Code
     		sendCode(CODE);
 			// Display sending with LED on
-			P1OUT |= BIT0;
+			P1OUT |= LED_PIN;
 			// Wait so that no Burst can be sended
-			int i = 0;
 			int millis = 0;
 			for (millis = 0; millis < DELAY_BETWEEN_TWO_SENDS_MS; millis++) {
 		   		_delay_cycles(CLK_SPEED*1000);
 			}
 		} else {
 			// Turn LED off
-			P1OUT &= ~BIT0;
+			P1OUT &= ~LED_PIN;
 		}
     }
 }
