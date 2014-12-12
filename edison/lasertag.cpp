@@ -1,30 +1,43 @@
 // Copyright 2014 Sebastian Boettcher
 
+#include <string>
+
 #include "./lasertag.h"
 
 lasertag::lasertag()
   : m_ammo(75), m_active(false),
   m_lcd(NULL), m_i2c(NULL) {
-  printf("init display... ");
-  fflush(stdout);
-  m_lcd = new upm::SSD1327(I2C_BUS);
-  printf("Done.\n");
-  fflush(stdout);
-
   m_i2c = new mraa::I2c(I2C_BUS);
 }
 
 lasertag::~lasertag() {
   m_lcd->close();
   printf("\nLCD closed.\n");
+  delete m_i2c;
 }
 
-void lasertag::init() {
+void lasertag::re_i2c() {
+  delete m_i2c;
+  m_i2c = new mraa::I2c(I2C_BUS);
+}
+
+void lasertag::init_dsp() {
+  printf("init display... ");
+  fflush(stdout);
+  m_lcd = new upm::SSD1327(I2C_BUS);
+  printf("Done.\n");
+  fflush(stdout);
+
   m_lcd->setGrayLevel(255);
   write_status();
   m_lcd->setCursor(AMMO_X, 0);
   m_lcd->write("ammo: ");
   write_ammo();
+}
+
+void lasertag::lcd_write(std::string s, int x, int y) {
+  m_lcd->setCursor(x, y);
+  m_lcd->write(s);
 }
 
 void lasertag::lcd_write_int(int i, int x, int y) {

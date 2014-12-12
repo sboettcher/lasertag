@@ -21,9 +21,11 @@ class lasertag {
     // destructor, closes lcd
     ~lasertag();
 
-    // initializes some stuff, writes to lcd
-    void init();
+    // initializes some stuff (display), writes to lcd
+    void init_dsp();
 
+    // writes a string to the given position
+    void lcd_write(std::string s, int x, int y);
     // writes an int as a string to the given position
     void lcd_write_int(int i, int x, int y);
     // writes the current ammo to lcd
@@ -47,6 +49,11 @@ class lasertag {
     mraa::I2c* i2c() {
       return m_i2c;
     }
+    upm::SSD1327* lcd() {
+      return m_lcd;
+    }
+
+    void re_i2c();
 
   private:
     uint8_t m_ammo;
