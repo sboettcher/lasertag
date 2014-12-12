@@ -42,16 +42,16 @@ void serialWrite(char tx)
 void serialPrintInt(int i)
 {
   int j = i;
-  if (j > 10000)
+  if (j >= 10000)
     serialWrite(0x30 + i/10000);
   i = i % 10000;
-  if (j > 1000)
+  if (j >= 1000)
     serialWrite(0x30 + i/1000);
   i = i % 1000;
-  if (j > 100)
+  if (j >= 100)
     serialWrite(0x30 + i/100);
   i = i % 100;
-  if (j > 10)
+  if (j >= 10)
     serialWrite(0x30 + i/10);
   i = i % 10;
   serialWrite(0x30 + i/1);
