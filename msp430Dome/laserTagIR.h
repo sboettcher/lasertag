@@ -6,6 +6,7 @@
 // IR protocol definitions.
 #define IR_BIT_LENGTH_US 1000
 #define IR_NUM_BITS (8 + 2)
+#define IR_START_BIT_SECURIT_LENGTH 16 * IR_BIT_LENGTH_US / 10
 
 // TODO(Jan): evtl wegen UART auf T1 wechseln.
 // Initialize timer 0 to count to 10000 (10ms) in up-mode (MC_1) and enable compare interrupt.

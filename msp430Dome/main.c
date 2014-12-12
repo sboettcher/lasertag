@@ -2,7 +2,7 @@
 #include "laserTagIR.h"
 #include "i2c_slave.h"
 
-//#define DEBUG_UART
+#define DEBUG_UART
 #ifdef DEBUG_UART
   #include "laserTagUART.h"
 #endif
@@ -139,7 +139,7 @@ int main(void) {
     irParityCheck = 0;
   }
   // wait for 1 ms and check again if start bit was long enough.
-  __delay_cycles(16000);
+  __delay_cycles(IR_START_BIT_SECURIT_LENGTH);
   if (P1IN & IR_RECEIVER_PIN) {
     // If pin is 1 start bit was too short.
     IR_STOP_TIMER
@@ -176,4 +176,33 @@ int main(void) {
   }
   
   TA1CCTL0 &= ~CCIFG;
+}
+
+// USCI RX interrupt for uart and i2c.
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+  #pragma vector=USCIAB0RX_VECTOR
+  __interrupt void USCI0RX_ISR(void)
+#elif defined(__GNUC__)
+  void __attribute__ ((interrupt(USCIAB0RX_VECTOR))) USCIORX_ISR (void)
+#else
+  #error Compiler not supported!
+#endif
+{
+  i2cRxInterrupt();
+  #ifdef DEBUG_UART
+    serialInterrupt();
+  #endif
+}
+
+// USCI TX interrupt for i2c.
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+  #pragma vector = USCIAB0TX_VECTOR
+  __interrupt void usci_i2c_data_isr (void)
+#elif defined(__GNUC__)
+  void __attribute__ ((interrupt(USCIAB0TX_VECTOR))) usci_i2c_data_isr (void)
+#else
+  #error Compiler not supported!
+#endif
+{
+  i2cTxInterrupt();
 }
