@@ -6,8 +6,21 @@
 
 lasertag::lasertag()
   : m_ammo(75), m_active(false),
-  m_lcd(NULL), m_i2c(NULL) {
-  m_i2c = new mraa::I2c(I2C_BUS);
+  m_lcd(NULL), m_i2c(NULL), m_i2c_bus(6)
+{
+  m_i2c = new mraa::I2c(m_i2c_bus);
+}
+
+lasertag::lasertag(int bus)
+  : m_ammo(75), m_active(false),
+  m_lcd(NULL), m_i2c(NULL), m_i2c_bus(6)
+{
+  if (bus != 1 && bus != 6) {
+    printf("\nWrong i2c bus number!. Using bus 6.\n");
+  } else {
+    m_i2c_bus = bus;
+  }
+  m_i2c = new mraa::I2c(m_i2c_bus);
 }
 
 lasertag::~lasertag() {
@@ -18,13 +31,13 @@ lasertag::~lasertag() {
 
 void lasertag::re_i2c() {
   delete m_i2c;
-  m_i2c = new mraa::I2c(I2C_BUS);
+  m_i2c = new mraa::I2c(m_i2c_bus);
 }
 
 void lasertag::init_dsp() {
-  printf("init display... ");
+  printf("init display on bus %d... ", m_i2c_bus);
   fflush(stdout);
-  m_lcd = new upm::SSD1327(I2C_BUS);
+  m_lcd = new upm::SSD1327(m_i2c_bus);
   printf("Done.\n");
   fflush(stdout);
 

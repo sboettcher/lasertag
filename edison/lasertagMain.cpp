@@ -17,26 +17,24 @@ void sig_handler(int signo) {
 int main(int argc, char** argv) {
   signal(SIGINT, sig_handler);
 
-  lasertag lt;
-  lt.init_dsp();
-  lt.active(true);
+  lasertag lt(6);
+  lasertag dsp(1);
 
   lt.i2c()->address(0x68);
+
+  dsp.init_dsp();
+  dsp.active(true);
 
   uint8_t i = 2;
 
   while (running == 1) {
-    //lt.re_i2c();
-    //lt.i2c()->address(0x68);
     int rec = lt.i2c()->read();
     if (rec != 0) {
       printf("%d\n", rec);
       fflush(stdout);
-
-      if (rec == 255)
-        lt.lcd_write("E", i++, 0);
-      else
-        lt.lcd_write_int(rec, i++, 0);
+    }
+    if (rec != 0 && rec != 255) {
+      dsp.lcd_write_int(rec, i++, 0);
       if (i > 10)
         i = 2;
     }

@@ -16,8 +16,10 @@
 
 class lasertag {
   public:
-    // standard constructor, instantiates lcd and i2c
+    // standard constructor, instantiates lcd and i2c on bus 6
     lasertag();
+    // constructor that specifies a i2c bus
+    lasertag(int bus);
     // destructor, closes lcd
     ~lasertag();
 
@@ -60,4 +62,5 @@ class lasertag {
     bool m_active;
     upm::SSD1327* m_lcd;
     mraa::I2c* m_i2c;
+    int m_i2c_bus;
 };

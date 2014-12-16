@@ -15,7 +15,7 @@ OBJECTS=$(SOURCES:.cpp=.o)
 
 .PRECIOUS: %.o
 
-all: compile checkstyle
+all: compile
 
 compile: $(SOURCES) $(MAIN_BINARIES)
 
