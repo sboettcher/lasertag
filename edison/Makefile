@@ -4,31 +4,38 @@
 #	 .PRECIOUS targets marked with this are not deleted when make is killed
 
 CXX=g++
-CFLAGS=-g -Wall -lmraa -lupm-i2clcd -I/usr/include/upm -I/usr/include/mraa
+CFLAGS=-g -Wall -lmraa -lupm-i2clcd -Iinclude -I/usr/include/upm -I/usr/include/mraa
 COPTS=#`sdl-config --cflags`
 LOPTS=#`sdl-config --libs` -pthread 
 
-SOURCES=edison_serial.cpp lasertag.cpp
-MAIN_BINARIES=$(basename $(wildcard *Main.cpp))
-HEADER=$(wildcard *.h)
-OBJECTS=$(SOURCES:.cpp=.o)
+SOURCES = src/edison_serial.cpp \
+					src/lasertag.cpp
 
-.PRECIOUS: %.o
+MAIN_BINARIES=$(addprefix bin/,$(basename $(notdir $(wildcard src/*Main.cpp))))
+OBJECTS = $(subst src/,build/,$(subst .cpp,.o,$(SOURCES)))
+
+.PRECIOUS: build/%.o
 
 all: compile
 
-compile: $(SOURCES) $(MAIN_BINARIES)
+compile: dirs $(SOURCES) $(MAIN_BINARIES)
+
+bin/%Main: $(OBJECTS) build/%Main.o
+	$(CXX) $(CFLAGS) -o $@ $^ $(LOPTS)
+
+build/%.o: src/%.cpp
+	$(CXX) $(CFLAGS) -c $< -o $@ $(COPTS)
+
+dirs:
+	mkdir -p bin build
 
 checkstyle:
 	python2 cpplint.py --filter=-runtime/references,-whitespace/comments,-readability/streams --linelength=200 *.cpp
 
+.PHONY:
+	clean
+
 clean:
-	rm -f *.o
+	rm -rf bin build
 	rm -f *~
-	rm -f $(MAIN_BINARIES)
-
-%Main: %Main.o $(OBJECTS)
-	$(CXX) $(CFLAGS) -o $@ $^ $(LOPTS)
-
-%.o: %.cpp $(HEADER)
-	$(CXX) $(CFLAGS) $(COPTS) -c $<
+	rm -f */*~
