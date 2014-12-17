@@ -10,10 +10,12 @@ LOPTS=#`sdl-config --libs` -pthread
 
 SOURCES = src/edison_serial.cpp \
 					src/lasertag.cpp \
-					src/TFT_22_ILI9225.cpp
+					src/TFT_22_ILI9225.cpp \
+					src/DefaultFonts.cpp
 
 MAIN_BINARIES=$(addprefix bin/,$(basename $(notdir $(wildcard src/*Main.cpp))))
 OBJECTS = $(subst src/,build/,$(subst .cpp,.o,$(SOURCES)))
+
 
 .PRECIOUS: build/%.o
 
@@ -26,6 +28,8 @@ bin/%Main: $(OBJECTS) build/%Main.o
 
 build/%.o: src/%.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@ $(COPTS)
+
+
 
 dirs:
 	mkdir -p bin build
