@@ -24,12 +24,12 @@ class lasertag {
     ~lasertag();
 
     // initializes some stuff (display), writes to lcd
-    void init_dsp();
+    void init_groveOLED();
 
     // writes a string to the given position
-    void lcd_write(std::string s, int x, int y);
+    void groveOLED_write(std::string s, int x, int y);
     // writes an int as a string to the given position
-    void lcd_write_int(int i, int x, int y);
+    void groveOLED_write_int(int i, int x, int y);
     // writes the current ammo to lcd
     void write_ammo();
     // writes the current status to lcd
@@ -51,8 +51,8 @@ class lasertag {
     mraa::I2c* i2c() {
       return m_i2c;
     }
-    upm::SSD1327* lcd() {
-      return m_lcd;
+    upm::SSD1327* groveOLED() {
+      return m_groveOLED;
     }
 
     void re_i2c();
@@ -60,7 +60,10 @@ class lasertag {
   private:
     uint8_t m_ammo;
     bool m_active;
-    upm::SSD1327* m_lcd;
+
+    upm::SSD1327* m_groveOLED;
     mraa::I2c* m_i2c;
     int m_i2c_bus;
+
+    bool m_groveOLED_init;
 };

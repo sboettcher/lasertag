@@ -22,8 +22,7 @@ int main(int argc, char** argv) {
 
   lt.i2c()->address(0x68);
 
-  dsp.init_dsp();
-  dsp.active(true);
+  dsp.init_groveOLED();
 
   uint8_t i = 2;
 
@@ -34,7 +33,7 @@ int main(int argc, char** argv) {
       fflush(stdout);
     }
     if (rec != 0 && rec != 255) {
-      dsp.lcd_write_int(rec, i++, 0);
+      dsp.groveOLED_write_int(rec, i++, 0);
       if (i > 10)
         i = 2;
     }
