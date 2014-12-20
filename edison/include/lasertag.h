@@ -7,12 +7,17 @@
 #include <mraa.hpp>
 #include <ssd1327.h>
 
+#include "./TFT_22_ILI9225.h"
+
 #include <string>
 #include <sstream>
 
 #define I2C_BUS 6
 #define AMMO_X 1
 #define STATUS_X 0
+#define TFT_LED_PIN 31
+#define TFT_RST_PIN 32
+#define TFT_RS_PIN 33
 
 class lasertag {
   public:
@@ -25,6 +30,7 @@ class lasertag {
 
     // initializes some stuff (display), writes to lcd
     void init_groveOLED();
+    void init_ILI9225();
 
     // writes a string to the given position
     void groveOLED_write(std::string s, int x, int y);
@@ -62,6 +68,7 @@ class lasertag {
     bool m_active;
 
     upm::SSD1327* m_groveOLED;
+    TFT_22_ILI9225* m_ILI9225;
     mraa::I2c* m_i2c;
     int m_i2c_bus;
 

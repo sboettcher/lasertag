@@ -6,7 +6,7 @@
 
 lasertag::lasertag()
   : m_ammo(75), m_active(false),
-  m_groveOLED(NULL), m_i2c(NULL),
+  m_groveOLED(NULL), m_ILI9225(NULL), m_i2c(NULL),
   m_i2c_bus(6), m_groveOLED_init(false)
 {
   m_i2c = new mraa::I2c(m_i2c_bus);
@@ -14,7 +14,7 @@ lasertag::lasertag()
 
 lasertag::lasertag(int bus)
   : m_ammo(75), m_active(false),
-  m_groveOLED(NULL), m_i2c(NULL),
+  m_groveOLED(NULL), m_ILI9225(NULL), m_i2c(NULL),
   m_i2c_bus(6), m_groveOLED_init(false)
 {
   if (bus != 1 && bus != 6) {
@@ -39,7 +39,7 @@ void lasertag::re_i2c() {
 }
 
 void lasertag::init_groveOLED() {
-  printf("init display on bus %d... ", m_i2c_bus);
+  printf("init grove OLED on bus %d... ", m_i2c_bus);
   fflush(stdout);
   m_groveOLED = new upm::SSD1327(m_i2c_bus);
   printf("Done.\n");
@@ -52,6 +52,15 @@ void lasertag::init_groveOLED() {
   // m_groveOLED->setCursor(AMMO_X, 0);
   // m_groveOLED->write("ammo: ");
   // write_ammo();
+}
+
+void lasertag::init_ILI9225() {
+  printf("init ILI9225... ");
+  fflush(stdout);
+  m_ILI9225 = new TFT_22_ILI9225(TFT_LED_PIN, TFT_RST_PIN, TFT_RS_PIN);
+  m_ILI9225->begin();
+  printf("Done.\n");
+  fflush(stdout);
 }
 
 void lasertag::groveOLED_write(std::string s, int x, int y) {

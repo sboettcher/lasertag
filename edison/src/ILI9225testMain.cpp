@@ -28,8 +28,14 @@ void sig_handler(int signo) {
 int main(int argc, char** argv) {
   //signal(SIGINT, sig_handler);
 
+  printf("Constructor... ");
+  fflush(stdout);
   TFT_22_ILI9225 tft(TFT_LED_PIN, TFT_RST_PIN, TFT_RS_PIN);
+  printf("Done.\nbegin()... ");
+  fflush(stdout);
   tft.begin();
+  printf("Done.\n");
+  fflush(stdout);
 
   tft.drawRectangle(0, 0, tft.maxX() - 1, tft.maxY() - 1, COLOR_WHITE);
   tft.setFont(Terminal6x8);

@@ -23,6 +23,7 @@ int main(int argc, char** argv) {
   lt.i2c()->address(0x68);
 
   dsp.init_groveOLED();
+  dsp.init_ILI9225();
 
   uint8_t i = 2;
 
