@@ -10,7 +10,6 @@
 #include "./TFT_22_ILI9225.h"
 
 #include <string>
-#include <sstream>
 
 #define I2C_BUS 6
 #define AMMO_X 1
@@ -34,8 +33,6 @@ class lasertag {
 
     // writes a string to the given position
     void groveOLED_write(std::string s, int x, int y);
-    // writes an int as a string to the given position
-    void groveOLED_write_int(int i, int x, int y);
     // writes the current ammo to lcd
     void write_ammo();
     // writes the current status to lcd
@@ -59,6 +56,9 @@ class lasertag {
     }
     upm::SSD1327* groveOLED() {
       return m_groveOLED;
+    }
+    TFT_22_ILI9225* ILI9225() {
+      return m_ILI9225;
     }
 
     void re_i2c();

@@ -59,6 +59,7 @@ void lasertag::init_ILI9225() {
   fflush(stdout);
   m_ILI9225 = new TFT_22_ILI9225(TFT_LED_PIN, TFT_RST_PIN, TFT_RS_PIN);
   m_ILI9225->begin();
+  m_ILI9225->setOrientation(2);
   printf("Done.\n");
   fflush(stdout);
 }
@@ -72,23 +73,12 @@ void lasertag::groveOLED_write(std::string s, int x, int y) {
   m_groveOLED->write(s);
 }
 
-void lasertag::groveOLED_write_int(int i, int x, int y) {
-  if (!m_groveOLED_init) {
-    printf("groveOLED not initialized!\n");
-    return;
-  }
-  m_groveOLED->setCursor(x, y);
-  std::stringstream ss;
-  ss << i;
-  m_groveOLED->write(ss.str());
-}
-
 void lasertag::write_ammo() {
   if (m_ammo < 100) {
-    groveOLED_write_int(0, AMMO_X, 6);
-    groveOLED_write_int(m_ammo, AMMO_X, 7);
+    groveOLED_write("0", AMMO_X, 6);
+    groveOLED_write(std::to_string(m_ammo), AMMO_X, 7);
   } else {
-    groveOLED_write_int(m_ammo, AMMO_X, 6);
+    groveOLED_write(std::to_string(m_ammo), AMMO_X, 6);
   }
 }
 

@@ -3,6 +3,8 @@
 #include <signal.h>
 #include <syslog.h>
 
+#include <string>
+
 #include "./lasertag.h"
 
 int running = 1;
@@ -34,7 +36,8 @@ int main(int argc, char** argv) {
       fflush(stdout);
     }
     if (rec != 0 && rec != 255) {
-      dsp.groveOLED_write_int(rec, i++, 0);
+      dsp.groveOLED_write(std::to_string(rec), i++, 0);
+      dsp.ILI9225()->drawText(i+10, 10, std::to_string(rec));
       if (i > 10)
         i = 2;
     }

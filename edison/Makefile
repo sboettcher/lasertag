@@ -4,7 +4,7 @@
 #	 .PRECIOUS targets marked with this are not deleted when make is killed
 
 CXX=g++
-CFLAGS=-g -Wall -lmraa -lupm-i2clcd -Iinclude -I/usr/include/upm -I/usr/include/mraa
+CFLAGS=-g -Wall -std=c++0x -lmraa -lupm-i2clcd -Iinclude -I/usr/include/upm -I/usr/include/mraa
 COPTS=#`sdl-config --cflags`
 LOPTS=#`sdl-config --libs` -pthread 
 
