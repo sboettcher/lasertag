@@ -12,14 +12,14 @@ TFT_22_ILI9225::TFT_22_ILI9225(int ledpin, int rstpin, int rspin) {
 	mraa_result_t response;
 
 	// init led gpio
-	_led = new mraa::Gpio(ledpin);
-	if (_led == NULL) {
-		mraa::printError(MRAA_ERROR_UNSPECIFIED);
-	}
-	response = _led->dir(mraa::DIR_OUT);
-	if (response != MRAA_SUCCESS) {
-		mraa::printError(response);
-	}
+	// _led = new mraa::Gpio(ledpin);
+	// if (_led == NULL) {
+	// 	mraa::printError(MRAA_ERROR_UNSPECIFIED);
+	// }
+	// response = _led->dir(mraa::DIR_OUT);
+	// if (response != MRAA_SUCCESS) {
+	// 	mraa::printError(response);
+	// }
 	
 	// init reset gpio
 	_rst = new mraa::Gpio(rstpin);
@@ -99,10 +99,10 @@ void TFT_22_ILI9225::begin() {
 	mraa_result_t response;
 
 	// Turn on backlight
-	response = _led->write(1);
-	if (response != MRAA_SUCCESS) {
-		mraa::printError(response);
-	}
+	// response = _led->write(1);
+	// if (response != MRAA_SUCCESS) {
+	// 	mraa::printError(response);
+	// }
 
 	// Initialization Code
 	
@@ -211,10 +211,10 @@ void TFT_22_ILI9225::invert(bool flag) {
 
 
 void TFT_22_ILI9225::setBacklight(bool flag) {
-	mraa_result_t response = _led->write(flag ? 1 : 0);
-	if (response != MRAA_SUCCESS) {
-		mraa::printError(response);
-	}
+	// mraa_result_t response = _led->write(flag ? 1 : 0);
+	// if (response != MRAA_SUCCESS) {
+	// 	mraa::printError(response);
+	// }
 }
 
 
