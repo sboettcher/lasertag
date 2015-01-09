@@ -393,6 +393,16 @@ void TFT_22_ILI9225::drawPixel(uint16_t x1, uint16_t y1, uint16_t color) {
 }
 
 
+uint8_t TFT_22_ILI9225::fontX() {
+  return cfont.width;
+}
+
+
+uint8_t TFT_22_ILI9225::fontY() {
+  return cfont.height;
+}
+
+
 uint16_t TFT_22_ILI9225::maxX() {
 	return _maxX;
 }
@@ -585,7 +595,7 @@ uint16_t TFT_22_ILI9225::drawChar(uint16_t x, uint16_t y, uint16_t ch, uint16_t 
 			if (i == charWidth) charData = (uint8_t)0x0; // Insert blank column
 			else                charData = readFontByte(charOffset);
 			charOffset++;
-			
+
 			// Process every row in font character
 			for (k = 0; k < 8; k++) {
 				if (h >= cfont.height ) break;  // No need to process excess bits

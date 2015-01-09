@@ -28,7 +28,7 @@ lasertag::lasertag(int bus)
 lasertag::~lasertag() {
   if (m_groveOLED_init) {
     m_groveOLED->close();
-    printf("\nLCD closed.\n");
+    printf("\ngrove OLED closed.\n");
   }
   delete m_i2c;
 }
@@ -59,9 +59,12 @@ void lasertag::init_ILI9225() {
   fflush(stdout);
   m_ILI9225 = new TFT_22_ILI9225(TFT_LED_PIN, TFT_RST_PIN, TFT_RS_PIN);
   m_ILI9225->begin();
-  m_ILI9225->setOrientation(2);
+  m_ILI9225->setOrientation(0);
+  m_ILI9225->setFont(Terminal6x8);
   printf("Done.\n");
   fflush(stdout);
+
+  m_ILI9225_init = true;
 }
 
 void lasertag::groveOLED_write(std::string s, int x, int y) {

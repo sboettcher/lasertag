@@ -73,4 +73,5 @@ class lasertag {
     int m_i2c_bus;
 
     bool m_groveOLED_init;
+    bool m_ILI9225_init;
 };

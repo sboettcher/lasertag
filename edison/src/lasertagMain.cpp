@@ -24,10 +24,10 @@ int main(int argc, char** argv) {
 
   lt.i2c()->address(0x68);
 
-  dsp.init_groveOLED();
   dsp.init_ILI9225();
+  dsp.ILI9225()->setOrientation(3);
 
-  uint8_t i = 2;
+  uint8_t i = 0;
 
   while (running == 1) {
     int rec = lt.i2c()->read();
@@ -36,10 +36,9 @@ int main(int argc, char** argv) {
       fflush(stdout);
     }
     if (rec != 0 && rec != 255) {
-      dsp.groveOLED_write(std::to_string(rec), i++, 0);
-      dsp.ILI9225()->drawText(i+10, 10, std::to_string(rec));
-      if (i > 10)
-        i = 2;
+      dsp.ILI9225()->drawText(10, ((i++)*dsp.ILI9225()->fontY())+10, std::to_string(rec));
+      if ((i*dsp.ILI9225()->fontY())+10 > dsp.ILI9225()->maxY()-2*dsp.ILI9225()->fontY())
+        i = 0;
     }
     usleep(1000);
   }
