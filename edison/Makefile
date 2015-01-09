@@ -11,7 +11,8 @@ LOPTS=-pthread
 SOURCES = src/edison_serial.cpp \
 					src/lasertag.cpp \
 					src/TFT_22_ILI9225.cpp \
-					src/DefaultFonts.cpp
+					src/DefaultFonts.cpp \
+					src/tcp_client.cpp
 
 MAIN_BINARIES=$(addprefix bin/,$(basename $(notdir $(wildcard src/*Main.cpp))))
 OBJECTS = $(subst src/,build/,$(subst .cpp,.o,$(SOURCES)))

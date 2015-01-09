@@ -573,6 +573,8 @@ void TFT_22_ILI9225::drawText(uint16_t x, uint16_t y, std::string s, uint16_t co
 
 	// Print every character in string
 	for (uint8_t k = 0; k < s.length(); k++) {
+    if (s.substr(k,1) == "\n")
+      continue;
 		currx += drawChar(currx, y, s.at(k), color) + 1;
 	}
 }
