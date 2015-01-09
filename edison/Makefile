@@ -5,8 +5,8 @@
 
 CXX=g++
 CFLAGS=-g -Wall -std=c++0x -lmraa -lupm-i2clcd -Iinclude -I/usr/include/upm -I/usr/include/mraa
-COPTS=#`sdl-config --cflags`
-LOPTS=#`sdl-config --libs` -pthread 
+COPTS=
+LOPTS=-pthread
 
 SOURCES = src/edison_serial.cpp \
 					src/lasertag.cpp \
