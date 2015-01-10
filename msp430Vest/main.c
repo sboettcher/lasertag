@@ -10,12 +10,14 @@
 
 #define I2C_BASE_ADRESS 0x60
 #define I2C_PRESCALE 1600
-#define BT_START_BYTE 0xFF
+#define BT_START_BYTE (char)0xFF
 #define NUM_DOMES 1
 
 // The vest id is used for the bluetooth name and is sent to the domes to avoid
 // getting hit by the own tagger.
-const unsigned char vestId = 1;
+unsigned char vestId = 1;
+
+unsigned char* indata;
 
 void initClocks (void) {
   // Stop Watchdog Timer
@@ -33,8 +35,10 @@ void initUART()
   P1SEL |= BIT1 + BIT2;                     // P1.1 = RXD, P1.2=TXD
   P1SEL2 |= BIT1 + BIT2;                    // P1.1 = RXD, P1.2=TXD
   UCA0CTL1 |= UCSSEL_2;                     // SMCLK
-  UCA0BR0 = (417 & 0xFF);                   // 16MHz 38400 (required by bluetooth module)
-  UCA0BR1 = (417 >> 8);                     // 16MHz 38400
+  // UCA0BR0 = (417 & 0xFF);                   // 16MHz 38400 (required by bluetooth module)
+  // UCA0BR1 = (417 >> 8);                     // 16MHz 38400
+  UCA0BR0 = (1667 & 0xFF);                   // 16MHz 38400 (required by bluetooth module)
+  UCA0BR1 = (1667 >> 8);                     // 16MHz 38400
   UCA0MCTL = UCBRS0;                        // Modulation UCBRSx = 1
   UCA0CTL1 &= ~UCSWRST;                     // Initialize USCI state machine
   IE2 |= UCA0RXIE;                          // Enable USCI_A0 RX interrupt
@@ -44,7 +48,7 @@ void setupBlueToothSlave() {
   serialPrint("\r\n+STWMOD=0\r\n");//set the bluetooth work in master mode
   //set the bluetooth name as "SeeedBTMaster"
   serialPrint("\r\n+STNA=vest");
-  serialPrint(vestId);
+  serialPrintInt(vestId);
   serialPrint("\r\n");
   serialPrint("\r\n+STPIN=0000\r\n");//Set Master pincode"0000",it must be same as Slave pincode
   serialPrint("\r\n+STOAUT=1\r\n"); // Permit Paired device to connect me
@@ -57,6 +61,7 @@ void setupBlueToothSlave() {
 }
 
 void sendIdToDomes() {
+  char i;
   for (i = 0; i < NUM_DOMES; i++) {
     master_i2c_transmit_init(I2C_BASE_ADRESS + i, I2C_PRESCALE);
     while(!i2c_ready());
@@ -74,8 +79,7 @@ int main(void) {
 
   sendIdToDomes();
 
-  int i = 0;
-  unsigned char* indata;
+  char i;
 
   while (1) {
     // Loop through the connected domes and ask for received hits.
@@ -85,13 +89,15 @@ int main(void) {
       master_i2c_receive(1, indata);
       while(!i2c_ready());
 
+      __delay_cycles(8000000); // This delay is required.
+      serialPrintInt((char) *indata);
+
       // Send received hit codes that are different from 0 and the dome number.
       if (*indata != 0) {
-        serialPrint(BT_START_BYTE);
-        serialPrint(indata);
-        serialPrint(i);
+        serialWrite(BT_START_BYTE);
+        serialWrite((char) *indata);
+        serialWrite(i);
       }
     }
   }
-  return 0;
 }

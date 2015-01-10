@@ -7,6 +7,8 @@
   #include "laserTagUART.h"
 #endif
 
+#define I2C_ADRESS 0x60
+
 // LED pins on Port 1
 #define LED_RED BIT3
 #define LED_GREEN BIT4
@@ -95,7 +97,7 @@ int main(void) {
     serialPrint("MSP430 booted!\n");
   #endif
 
-  slave_i2c_init(start_cb, transmit_cb, receive_cb, 0x68);
+  slave_i2c_init(start_cb, transmit_cb, receive_cb, I2C_ADRESS);
   flashHitLed();
 
   while (1) {
