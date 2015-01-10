@@ -5,7 +5,9 @@
 
 
 edison_serial::edison_serial(std::string port)
-  : m_port("/dev/ttyMFD1"), m_fd(0), m_port_ready(false) {
+  : m_port("/dev/ttyMFD1"), m_fd(0), m_port_ready(false),
+    m_bt_connected(false)
+{
   m_port = port;
   if (open_port()) {
     configure_port();
@@ -69,6 +71,8 @@ void edison_serial::bt_slave_init(std::string name) {
   serial_write("\r\n+INQ=1\r\n");
   usleep(2000000);
   printf("Slave running and inquirable.\n");
+
+  m_bt_connected = true;
 }
 
 void edison_serial::bt_master_init(std::string name, std::string slave) {
@@ -84,7 +88,7 @@ void edison_serial::bt_master_init(std::string name, std::string slave) {
   usleep(2000000);
   serial_write("\r\n+INQ=1\r\n");
   usleep(2000000);
-  printf("Master running and inquiring.\n");
+  printf("Master running and inquiring for slave %s.\n", slave.c_str());
 
   // find target slave
   std::string buf;
@@ -98,28 +102,31 @@ void edison_serial::bt_master_init(std::string name, std::string slave) {
       nameIndex = buf.find(";" + slave);
       if (nameIndex != -1) {
         addrIndex = buf.find("+RTINQ=") + 7;
-        slaveAddr = buf.substr(addrIndex, nameIndex);
+        slaveAddr = buf.substr(addrIndex, nameIndex - addrIndex);
         break;
       }
     }
   }
 
   // connect to slave
-  bool connected = false;
+  m_bt_connected = false;
   buf = "";
-  while (!connected) {
+  while (!m_bt_connected) {
     printf("Connecting to slave: %s @ %s\n", slave.c_str(), slaveAddr.c_str());
     serial_write("\r\n+CONN=" + slaveAddr + "\r\n");
     while (true) {
       if (available(1)) {
         buf += serial_read();
         if (buf.find("CONNECT:OK") != std::string::npos) {
-          connected = true;
+          m_bt_connected = true;
           printf("Connected!\n");
           break;
         } else if (buf.find("CONNECT:FAIL") != std::string::npos) {
           printf("Connect failed, trying again.\n");
           break;
+        } else if (buf.find("ERROR") != std::string::npos) {
+          printf("ERROR while trying to connect, aborting.\n");
+          return;
         }
       }
     }
@@ -154,7 +161,7 @@ bool edison_serial::available(int timeout) {
     // printf("Data available.\n");
     return true;
   } else {
-    printf("Timeout, no data.\n");
+    // printf("Timeout, no data.\n");
   }
 
   return false;
@@ -169,6 +176,8 @@ char edison_serial::serial_read() {
 
   char c;
   read(m_fd, &c, 1);
+  //printf("%c", c);
+  //fflush(stdout);
   return c;
 }
 

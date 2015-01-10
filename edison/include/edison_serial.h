@@ -33,6 +33,10 @@ class edison_serial {
       return m_fd;
     }
 
+    bool bt_connected() {
+      return m_bt_connected;
+    }
+
   private:
     // open and configure given port
     bool open_port();
@@ -41,4 +45,5 @@ class edison_serial {
     std::string m_port;
     int m_fd; // file description for serial port
     bool m_port_ready;
+    bool m_bt_connected;
 };

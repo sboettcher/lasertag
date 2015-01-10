@@ -25,12 +25,17 @@ int main(int argc, char** argv) {
 
   edison_serial bluetooth("/dev/ttyMFD1");
 
-  bluetooth.bt_slave_init("EdisonBTSlave");
+  if (argc == 1)
+    bluetooth.bt_slave_init("EdisonBTSlave");
+  else if (argc == 2)
+    bluetooth.bt_master_init("EdisonBTMaster", argv[1]);
 
-  while (running == 1) {
+  while (running == 1 && bluetooth.bt_connected()) {
     if (bluetooth.available(1)) {
       printf("%c", bluetooth.serial_read());
+      fflush(stdout);
     }
+    //bluetooth.serial_write("test");
   }
 
   return 0;
