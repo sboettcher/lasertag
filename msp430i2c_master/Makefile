@@ -4,7 +4,7 @@
 #	 $< the first dependency
 #	 .PRECIOUS targets marked with this are not deleted when make is killed
 
-CXX=msp430-elf-gcc
+CXX=msp430-gcc
 CFLAGS=-mmcu=msp430g2553
 COPTS=
 LOPTS=
