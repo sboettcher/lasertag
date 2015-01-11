@@ -1,6 +1,3 @@
-/*
-
-// RX uses a ringbuffer. This defines it's size.
 #define RXBUFFERSIZE 32
 
 // Serial ringbuffer & bufferpositions
@@ -12,6 +9,8 @@ char rxBufferError = 0;
 // Echo flag - 1 if we should echo back the serial input
 char echoBack = 0;
 
+
+// UART functions
 // 1 if serial input should be echoed again, 0 if not
 void serialEchoBack(char e)
 {
@@ -133,27 +132,21 @@ int serialReadInt(void)
   return number;
 }
 
-// UART interrupt (we received something!)
-
-#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
-  #pragma vector=USCIAB0RX_VECTOR
-  __interrupt void USCI0RX_ISR(void)
-#elif defined(__GNUC__)
-  void __attribute__ ((interrupt(USCIAB0RX_VECTOR))) USCIORX_ISR (void)
-#else
-  #error Compiler not supported!
-#endif
+void uart_receive_interrupt()
 {
-  // Store received byte in ringbuffer
-  rxBuffer[rxBufferEnd++] = UCA0RXBUF;
-  rxBufferEnd %= RXBUFFERSIZE;
-  if (echoBack)
+  // interrupts in module A (UART)
+  if (IFG2 & UCA0RXIFG)
   {
-    while (!(IFG2&UCA0TXIFG));
-    UCA0TXBUF = UCA0RXBUF;
+    // Store received byte in ringbuffer
+    rxBuffer[rxBufferEnd++] = UCA0RXBUF;
+    rxBufferEnd %= RXBUFFERSIZE;
+    if (echoBack)
+    {
+      while (!(IFG2&UCA0TXIFG));
+      UCA0TXBUF = UCA0RXBUF;
+    }
+    // Check for an overflow
+    if (rxBufferStart == rxBufferEnd)
+      rxBufferError = 1;
   }
-  // Check for an overflow
-  if (rxBufferStart == rxBufferEnd)
-    rxBufferError = 1;
 }
-*/

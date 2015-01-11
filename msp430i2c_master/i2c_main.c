@@ -1,5 +1,6 @@
 #include <msp430.h>
 #include "i2c_master.h"
+#include "uart.h"
 
 
 void initPins()
@@ -43,7 +44,7 @@ int main(void)
     //while(!TI_USCI_I2C_ready());
     */
 
-    master_i2c_receive_init(0x68, 1600);
+    master_i2c_receive_init(0x50, 1600);
     //master_i2c_receive_init(0x68, 32);
     while(!i2c_ready());
     master_i2c_receive(4, indata);
@@ -56,4 +57,29 @@ int main(void)
   }
 
   return 0;
+}
+
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+  #pragma vector = USCIAB0RX_VECTOR
+  __interrupt void USCIAB0RX_ISR(void)
+#elif defined(__GNUC__)
+  void __attribute__ ((interrupt(USCIAB0RX_VECTOR))) USCIAB0RX_ISR (void)
+#else
+  #error Compiler not supported!
+#endif
+{
+  void uart_receive_interrupt();
+  void master_i2c_receive_interrupt();
+}
+
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+  #pragma vector = USCIAB0TX_VECTOR
+  __interrupt void USCIAB0TX_ISR(void)
+#elif defined(__GNUC__)
+  void __attribute__ ((interrupt(USCIAB0TX_VECTOR))) USCIAB0TX_ISR (void)
+#else
+  #error Compiler not supported!
+#endif
+{
+  void master_i2c_transmit_interrupt();
 }
