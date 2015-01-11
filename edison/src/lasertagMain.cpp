@@ -20,8 +20,13 @@ void sig_handler(int signo) {
 int main(int argc, char** argv) {
   signal(SIGINT, sig_handler);
 
+  if (argc != 2) {
+    printf("provide a server ip or hostname\n");
+    exit(1);
+  }
+
   tcp_client client;
-  client.tcp_connect("192.168.0.104");
+  client.tcp_connect(argv[1]);
 
   lasertag lt(6);
   lt.i2c()->address(0x68);
@@ -45,7 +50,6 @@ int main(int argc, char** argv) {
         i = 0;
       client.tcp_send(std::to_string(rec).append("\n"));
     }
-
 
     if (client.tcp_available(0, 1000) > 0) {
       std::string tmp = client.tcp_read_string("\n");
