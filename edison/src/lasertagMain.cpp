@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
   uint8_t j = 0;
 
   while (running == 1) {
-    int rec = lt.i2c()->read();
+    int rec = lt.i2c_read_int();
 
     if (rec != 0) {
       printf("%d\n", rec);

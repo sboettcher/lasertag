@@ -108,3 +108,10 @@ bool lasertag::active(bool active) {
   return tmp;
 }
 
+uint8_t lasertag::i2c_read_int() {
+  uint8_t rx_tx_buf[1];
+  m_i2c->read(rx_tx_buf, 1);
+  return rx_tx_buf[0];
+}
+
+

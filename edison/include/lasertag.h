@@ -63,6 +63,8 @@ class lasertag {
 
     void re_i2c();
 
+    uint8_t i2c_read_int();
+
   private:
     uint8_t m_ammo;
     bool m_active;

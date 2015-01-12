@@ -94,7 +94,7 @@ void TFT_22_ILI9225::begin() {
 
 	// init spi
 	_spi->lsbmode(0);
-	_spi->mode(MRAA_SPI_MODE1);
+	_spi->mode(mraa::SPI_MODE1);
 
 	mraa_result_t response;
 
