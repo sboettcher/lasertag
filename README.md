@@ -3,6 +3,20 @@
 Repository for the [Wearable Computing Lab Course 2014](http://praktikum.ese.uni-freiburg.de/)  
 University of Freiburg  
 
+##0. TODO
+
+- I2C Zuverlaessigkeit testen
+- Stromversorgung mit Akkus
+- RFID Reader via I2C verbinden
+- RFID-Tags einrichten
+- Tagger-Gehaeuse
+- Platine Tagger
+- Weste-Weste
+- Versuch MSPs auf Tagger zu vereinen
+- I2C NACK wenn keine Daten vorhanden.
+- Display-Geschwindigkeit
+
+
 ##1. Edison
 ###1.1 Image Installation and Preparation
 Installation instructions for getting the Intel Edison to work with the **Mini** Breakout board and a pre-built Yocto image.  
