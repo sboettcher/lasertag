@@ -37,6 +37,20 @@ int main(int argc, char** argv) {
   printf("Done.\n");
   fflush(stdout);
 
+
+  tft.setFont(Terminal6x8);
+  tft.drawText(10, 10, "kjsdfklfkjwlkfelksdjf");
+  tft.drawText(10, tft.maxY()/2, "kjsdfklfkjwlkfelksdjf");
+  tft.drawText(10, tft.maxY()-10, "kjsdfklfkjwlkfelksdjf");
+
+  for (int i = 0; i*tft.fontY() < tft.maxY(); i++) {
+    tft.drawText(tft.maxX()-10, i*tft.fontY(), "|");
+  }
+
+  return 0;
+
+
+
   tft.drawRectangle(0, 0, tft.maxX() - 1, tft.maxY() - 1, COLOR_WHITE);
   tft.setFont(Terminal6x8);
   tft.drawText(10, 10, "hello!");

@@ -12,14 +12,14 @@ TFT_22_ILI9225::TFT_22_ILI9225(int ledpin, int rstpin, int rspin) {
 	mraa_result_t response;
 
 	// init led gpio
-	// _led = new mraa::Gpio(ledpin);
-	// if (_led == NULL) {
-	// 	mraa::printError(MRAA_ERROR_UNSPECIFIED);
-	// }
-	// response = _led->dir(mraa::DIR_OUT);
-	// if (response != MRAA_SUCCESS) {
-	// 	mraa::printError(response);
-	// }
+	_led = new mraa::Gpio(ledpin);
+	if (_led == NULL) {
+		mraa::printError(MRAA_ERROR_UNSPECIFIED);
+	}
+	response = _led->dir(mraa::DIR_OUT);
+	if (response != MRAA_SUCCESS) {
+		mraa::printError(response);
+	}
 	
 	// init reset gpio
 	_rst = new mraa::Gpio(rstpin);
@@ -95,6 +95,7 @@ void TFT_22_ILI9225::begin() {
 	// init spi
 	_spi->lsbmode(0);
 	_spi->mode(mraa::SPI_MODE1);
+  _spi->frequency(25000000);
 
 	mraa_result_t response;
 
@@ -440,8 +441,12 @@ void TFT_22_ILI9225::_writeCommand(uint8_t HI, uint8_t LO) {
 		mraa::printError(response);
 	}
 	
-	_spi->write(HI);
-	_spi->write(LO);
+  uint8_t buf[2];
+  buf[0] = HI;
+  buf[1] = LO;
+  _spi->write(buf, 2);
+	//_spi->writeByte(HI);
+	//_spi->writeByte(LO);
 }
 
 
@@ -451,8 +456,12 @@ void TFT_22_ILI9225::_writeData(uint8_t HI, uint8_t LO) {
 		mraa::printError(response);
 	}
 	
-	_spi->write(HI);
-	_spi->write(LO);
+  uint8_t buf[2];
+  buf[0] = HI;
+  buf[1] = LO;
+  _spi->write(buf, 2);
+	//_spi->writeByte(HI);
+	//_spi->writeByte(LO);
 }
 
 

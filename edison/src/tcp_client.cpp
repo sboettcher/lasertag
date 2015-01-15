@@ -43,11 +43,11 @@ void tcp_client::tcp_connect(std::string ip) {
   server.sin_port = htons(PORT);
 
   // connect to server
-  printf("connecting to server @ %s\n", ip.c_str());
+  printf("Connecting to server @ %s\n", ip.c_str());
   fflush(stdout);
   if(connect(m_socketFD, (struct sockaddr*)&server, sizeof(server)) < 0)
     error_exit("Could not connect to server!");
-  printf("connected\n");
+  printf("Connected!\n");
   fflush(stdout);
 
   m_connected = true;
@@ -105,8 +105,8 @@ std::string tcp_client::tcp_read_string(std::string term) {
     while (!tcp_available(0,1000)) {
       // do nothing, wait for available
     }
-    tmp = tcp_read_single();
     ret.append(tmp);
+    tmp = tcp_read_single();
   }
   return ret;
 }
