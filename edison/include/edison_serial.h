@@ -2,6 +2,7 @@
 
 #include <fcntl.h>
 #include <errno.h>
+#include <string.h>
 #include <termios.h>
 #include <time.h>
 #include <stdio.h>
@@ -23,7 +24,7 @@ class edison_serial {
     void bt_master_init(std::string name, std::string slave);
 
     // wait for available data on port, false if timeout (sec) or error
-    bool available(int timeout);
+    bool available(int sec, int usec = 0);
     // read one byte of data and return it
     char serial_read();
     // write the given string to port

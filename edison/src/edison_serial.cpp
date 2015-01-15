@@ -1,6 +1,7 @@
 // Copyright 2014 Sebastian Boettcher
 
 #include <string>
+#include <stdexcept>
 #include "./edison_serial.h"
 
 
@@ -99,6 +100,12 @@ void edison_serial::bt_master_init(std::string name, std::string slave) {
   while (true) {
     if (available(1)) {
       buf += serial_read();
+
+      // limit size of buffer slave name size + offset,
+      // this prevents parsing the wrong address
+      if (buf.size() > 30 + slave.size())
+        buf = buf.substr(1);
+
       nameIndex = buf.find(";" + slave);
       if (nameIndex != -1) {
         addrIndex = buf.find("+RTINQ=") + 7;
@@ -134,7 +141,7 @@ void edison_serial::bt_master_init(std::string name, std::string slave) {
 }
 
 
-bool edison_serial::available(int timeout) {
+bool edison_serial::available(int sec, int usec) {
   if (!m_port_ready) {
     printf("Serial port not ready.\n");
     return false;
@@ -149,8 +156,8 @@ bool edison_serial::available(int timeout) {
   FD_SET(m_fd, &rfds);
 
   // timeout for select
-  tv.tv_sec = timeout;
-  tv.tv_usec = 0;
+  tv.tv_sec = sec;
+  tv.tv_usec = usec;
 
   // wait until port is available, until timeout
   retval = select(m_fd + 1, &rfds, NULL, NULL, &tv);
@@ -175,7 +182,10 @@ char edison_serial::serial_read() {
   }
 
   char c;
-  read(m_fd, &c, 1);
+  if (read(m_fd, &c, 1) == -1) {
+    printf("read() error: %s\n", strerror(errno));
+    fflush(stdout);
+  }
   //printf("%c", c);
   //fflush(stdout);
   return c;
@@ -187,7 +197,10 @@ void edison_serial::serial_write(std::string s) {
     return;
   }
 
-  write(m_fd, s.c_str(), s.length());
+  if (write(m_fd, s.c_str(), s.length()) == -1) {
+    printf("write() error: %s\n", strerror(errno));
+    fflush(stdout);
+  }
 }
 
 

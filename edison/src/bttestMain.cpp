@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
 
   while (running == 1 && bluetooth.bt_connected()) {
     if (bluetooth.available(1)) {
-      printf("%c", bluetooth.serial_read());
+      printf("%d\n", (uint8_t)bluetooth.serial_read());
       fflush(stdout);
     }
     //bluetooth.serial_write("test");
