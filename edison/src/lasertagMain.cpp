@@ -31,9 +31,8 @@ int main(int argc, char** argv) {
   edison_serial bluetooth("/dev/ttyMFD1");
   bluetooth.bt_master_init("EdisonBTMaster01", argv[2]);
 
-  return 0;
   tcp_client client;
-  client.tcp_connect(argv[1]);
+  //client.tcp_connect(argv[1]);
 
   lasertag lt(6);
   lt.i2c()->address(0x68);

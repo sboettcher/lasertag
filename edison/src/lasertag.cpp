@@ -18,7 +18,7 @@ lasertag::lasertag(int bus)
   m_i2c_bus(6), m_groveOLED_init(false)
 {
   if (bus != 1 && bus != 6) {
-    printf("\nWrong i2c bus number!. Using bus 6.\n");
+    printf("\n[LASERTAG] Wrong i2c bus number!. Using bus 6.\n");
   } else {
     m_i2c_bus = bus;
   }
@@ -28,7 +28,7 @@ lasertag::lasertag(int bus)
 lasertag::~lasertag() {
   if (m_groveOLED_init) {
     m_groveOLED->close();
-    printf("\ngrove OLED closed.\n");
+    printf("\n[LASERTAG] grove OLED closed.\n");
   }
   delete m_i2c;
 }
@@ -39,7 +39,7 @@ void lasertag::re_i2c() {
 }
 
 void lasertag::init_groveOLED() {
-  printf("init grove OLED on bus %d... ", m_i2c_bus);
+  printf("[LASERTAG] init grove OLED on bus %d... ", m_i2c_bus);
   fflush(stdout);
   m_groveOLED = new upm::SSD1327(m_i2c_bus);
   printf("Done.\n");
@@ -55,7 +55,7 @@ void lasertag::init_groveOLED() {
 }
 
 void lasertag::init_ILI9225() {
-  printf("init ILI9225... ");
+  printf("[LASERTAG] init ILI9225... ");
   fflush(stdout);
   m_ILI9225 = new TFT_22_ILI9225(TFT_LED_PIN, TFT_RST_PIN, TFT_RS_PIN);
   m_ILI9225->begin();
@@ -69,7 +69,7 @@ void lasertag::init_ILI9225() {
 
 void lasertag::groveOLED_write(std::string s, int x, int y) {
   if (!m_groveOLED_init) {
-    printf("groveOLED not initialized!\n");
+    printf("[LASERTAG] groveOLED not initialized!\n");
     return;
   }
   m_groveOLED->setCursor(x, y);

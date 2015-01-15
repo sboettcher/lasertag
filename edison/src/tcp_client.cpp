@@ -13,7 +13,7 @@ tcp_client::~tcp_client() {
 }
 
 void tcp_client::error_exit(std::string errorMessage) {
-  fprintf(stderr, "%s: %s\n", errorMessage.c_str(), strerror(errno));
+  fprintf(stderr, "[TCP_CLIENT] %s: %s\n", errorMessage.c_str(), strerror(errno));
   exit(EXIT_FAILURE);
 }
 
@@ -43,11 +43,11 @@ void tcp_client::tcp_connect(std::string ip) {
   server.sin_port = htons(PORT);
 
   // connect to server
-  printf("Connecting to server @ %s\n", ip.c_str());
+  printf("[TCP_CLIENT] Connecting to server @ %s\n", ip.c_str());
   fflush(stdout);
   if(connect(m_socketFD, (struct sockaddr*)&server, sizeof(server)) < 0)
     error_exit("Could not connect to server!");
-  printf("Connected!\n");
+  printf("[TCP_CLIENT] Connected!\n");
   fflush(stdout);
 
   m_connected = true;
@@ -70,7 +70,7 @@ std::string tcp_client::tcp_read() {
   memset(buf, 0, RCVBUFSIZE); // clear buffer
   rec_len = read(m_socketFD, buf, RCVBUFSIZE);
   if(rec_len < 0){
-    perror("error reading stream message");
+    perror("[TCP_CLIENT] error reading stream message");
     exit(1);
   } else {
     return std::string(buf);
@@ -86,7 +86,7 @@ std::string tcp_client::tcp_read_single() {
   memset(buf, 0, 2); // clear buffer
   rec_len = read(m_socketFD, buf, 1);
   if(rec_len < 0){
-    perror("error reading stream message");
+    perror("[TCP_CLIENT] error reading stream message");
     exit(1);
   } else {
     //write(1, buf, 2);
