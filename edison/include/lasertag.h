@@ -20,60 +20,32 @@
 
 class lasertag {
   public:
-    // standard constructor, instantiates lcd and i2c on bus 6
+    // standard constructor, instantiates i2c on bus 6
     lasertag();
     // constructor that specifies a i2c bus
     lasertag(int bus);
-    // destructor, closes lcd
+    // destructor
     ~lasertag();
 
+    // reinitialize i2c
+    void re_i2c();
+    // read uint8 from i2c
+    uint8_t i2c_read_int();
+
     // initializes some stuff (display), writes to lcd
-    void init_groveOLED();
     void init_ILI9225();
-
-    // writes a string to the given position
-    void groveOLED_write(std::string s, int x, int y);
-    // writes the current ammo to lcd
-    void write_ammo();
-    // writes the current status to lcd
-    void write_status();
-
-    // changes ammo amount, returns old value
-    uint8_t ammo(uint8_t ammo);
-    // changes status, returns old value
-    bool active(bool active);
-
-    uint8_t ammo() {
-      return m_ammo;
-    }
-
-    bool active() {
-      return m_active;
-    }
 
     mraa::I2c* i2c() {
       return m_i2c;
-    }
-    upm::SSD1327* groveOLED() {
-      return m_groveOLED;
     }
     TFT_22_ILI9225* ILI9225() {
       return m_ILI9225;
     }
 
-    void re_i2c();
-
-    uint8_t i2c_read_int();
-
   private:
-    uint8_t m_ammo;
-    bool m_active;
-
-    upm::SSD1327* m_groveOLED;
     TFT_22_ILI9225* m_ILI9225;
     mraa::I2c* m_i2c;
     int m_i2c_bus;
 
-    bool m_groveOLED_init;
     bool m_ILI9225_init;
 };

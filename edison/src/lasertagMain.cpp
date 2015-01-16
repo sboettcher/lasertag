@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
   bluetooth.bt_master_init("EdisonBTMaster01", argv[2]);
 
   tcp_client client;
-  //client.tcp_connect(argv[1]);
+  client.tcp_connect(argv[1]);
 
   lasertag lt(6);
   lt.i2c()->address(0x68);
