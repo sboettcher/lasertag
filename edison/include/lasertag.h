@@ -6,6 +6,12 @@
 
 #include <mraa.hpp>
 
+#include <vector>
+#include <string>
+#include <sstream>
+#include <iostream>
+#include <thread>
+
 #include "./TFT_22_ILI9225.h"
 #include "./edison_serial.h"
 #include "./tcp_client.h"
@@ -43,7 +49,15 @@ class lasertag {
     // read from tcp server, threaded
     void t_read_tcp();
 
+    // threading
+    void spawn_threads();
+    void join_threads();
 
+    // register a hit, manage related stuff
+    void hit_register(int code, int pos);
+
+
+    // getter functions
     mraa::I2c* i2c() {
       return m_i2c;
     }
@@ -67,6 +81,9 @@ class lasertag {
 
     edison_serial* m_bluetooth;
     tcp_client* m_client;
+
+    std::vector<std::thread> m_threads;
+    bool m_active;
 };
 
 
