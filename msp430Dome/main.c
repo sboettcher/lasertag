@@ -7,7 +7,7 @@
   #include "laserTagUART.h"
 #endif
 
-#define I2C_ADRESS 0x60
+#define I2C_BASE_ADRESS 0x60
 
 // LED pins on Port 1
 #define LED_RED BIT3
@@ -45,6 +45,12 @@ void initIOPins (void) {
   // Enable interrupt on IR_RECEIVER_PIN on falling edge.
   IR_ENABLE_INTERRUPT
 
+  // Enable pull-up on P2.0 P2.1 and P2.2.
+  P2SEL = 0x00;
+  P2SEL2 = 0x00;
+  P2DIR = 0x00;
+  P2REN = BIT0 | BIT1 | BIT2;
+  P2OUT = BIT0 | BIT1 | BIT2;
 
   #ifdef DEBUG_UART
     // Activate UART on 1.1 / 1.2
@@ -85,6 +91,12 @@ void transmit_cb(unsigned char volatile *value)
 
 void receive_cb(unsigned char value) {}
 
+void initI2C (void) {
+  // I2C adress is determined by the 3 jumpers on P2.0 P2.1 P2.3.
+  char domeId = P2IN & 0x7;
+  slave_i2c_init(start_cb, transmit_cb, receive_cb, (I2C_BASE_ADRESS + domeId));
+}
+
 /*
  * main.c
  */
@@ -97,7 +109,7 @@ int main(void) {
     serialPrint("MSP430 booted!\n");
   #endif
 
-  slave_i2c_init(start_cb, transmit_cb, receive_cb, I2C_ADRESS);
+  initI2C();
   flashHitLed();
 
   while (1) {
