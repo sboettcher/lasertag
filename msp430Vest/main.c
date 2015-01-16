@@ -9,7 +9,7 @@
  */
 
 #define I2C_BASE_ADRESS 0x60
-#define I2C_PRESCALE 1600
+#define I2C_PRESCALE 160
 #define BT_START_BYTE (char)0xFF
 #define NUM_DOMES 1
 
@@ -17,7 +17,7 @@
 // getting hit by the own tagger.
 unsigned char vestId = 1;
 
-unsigned char* indata;
+unsigned char indata = 0;
 
 void initClocks (void) {
   // Stop Watchdog Timer
@@ -37,27 +37,36 @@ void initUART()
   UCA0CTL1 |= UCSSEL_2;                     // SMCLK
   // UCA0BR0 = (417 & 0xFF);                   // 16MHz 38400 (required by bluetooth module)
   // UCA0BR1 = (417 >> 8);                     // 16MHz 38400
-  UCA0BR0 = (1667 & 0xFF);                   // 16MHz 38400 (required by bluetooth module)
-  UCA0BR1 = (1667 >> 8);                     // 16MHz 38400
+  UCA0BR0 = (1667 & 0xFF);                   // 16MHz 9600 (required by bluetooth module)
+  UCA0BR1 = (1667 >> 8);                     // 16MHz 9600
   UCA0MCTL = UCBRS0;                        // Modulation UCBRSx = 1
   UCA0CTL1 &= ~UCSWRST;                     // Initialize USCI state machine
   IE2 |= UCA0RXIE;                          // Enable USCI_A0 RX interrupt
 }
 
-void setupBlueToothSlave() {
-  serialPrint("\r\n+STWMOD=0\r\n");//set the bluetooth work in master mode
-  //set the bluetooth name as "SeeedBTMaster"
+void setupBlueToothSlaveGrove() {
+  serialPrint("\r\n+STWMOD=0\r\n");//set the bluetooth work in slave mode
+  //set the bluetooth name as "vestIdxx"
   serialPrint("\r\n+STNA=vest");
   serialPrintInt(vestId);
   serialPrint("\r\n");
-  serialPrint("\r\n+STPIN=0000\r\n");//Set Master pincode"0000",it must be same as Slave pincode
+  serialPrint("\r\n+STPIN=0000\r\n");//Set slave pincode"0000",it must be same as Slave pincode
   serialPrint("\r\n+STOAUT=1\r\n"); // Permit Paired device to connect me
   serialPrint("\r\n+STAUTO=0\r\n");// Auto-connection is forbidden here
-  __delay_cycles(32000000); // This delay is required.
-  serialPrint("\r\n+INQ=1\r\n");//make the master inquire
+  __delay_cycles(32000000); // This 2s delay is required.
+  serialPrint("\r\n+INQ=1\r\n");//make the slave inquire
   serialPrint("Vest bluetooth is inquirable!");
-  __delay_cycles(32000000); // This delay is required.
+  __delay_cycles(32000000); // This 2s delay is required.
   serialFlush();
+}
+
+void setupBlueToothSlaveHC06() {
+  __delay_cycles(16000000); // 2s delay to let bluetooth module boot.
+  serialPrint("AT");
+  __delay_cycles(16000000);
+  serialPrint("AT+NAMEvest02");
+  __delay_cycles(16000000);
+  serialPrint("AT+PIN0000");
 }
 
 void sendIdToDomes() {
@@ -73,9 +82,10 @@ void sendIdToDomes() {
 int main(void) {
   initClocks();
   initUART();
-  _EINT();
+  // _EINT();
+  __enable_interrupt();
 
-  setupBlueToothSlave();
+  setupBlueToothSlaveHC06();
 
   sendIdToDomes();
 
@@ -86,16 +96,17 @@ int main(void) {
     for (i = 0; i < NUM_DOMES; i++) {
       master_i2c_receive_init(I2C_BASE_ADRESS + i, I2C_PRESCALE);
       while(!i2c_ready());
-      master_i2c_receive(1, indata);
+      master_i2c_receive(1, &indata);
       while(!i2c_ready());
 
-      __delay_cycles(8000000); // This delay is required.
-      serialPrintInt((char) *indata);
+      // __delay_cycles(8000000);
+      // serialPrintInt((char) indata);
+      // serialPrint("\n");
 
       // Send received hit codes that are different from 0 and the dome number.
-      if (*indata != 0) {
+      if (indata != 0) {
         serialWrite(BT_START_BYTE);
-        serialWrite((char) *indata);
+        serialWrite((char) indata);
         serialWrite(i);
       }
     }
