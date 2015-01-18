@@ -11,6 +11,7 @@
 #include <sstream>
 #include <iostream>
 #include <thread>
+#include <mutex>
 
 #include "./TFT_22_ILI9225.h"
 #include "./edison_serial.h"
@@ -42,20 +43,9 @@ class lasertag {
     // initialize tcp client server connection
     void tcp_init(std::string address);
 
-    // read from i2c, threaded
-    void t_read_i2c();
-    // read from bluetooth, threaded
-    void t_read_bt();
-    // read from tcp server, threaded
-    void t_read_tcp();
-
     // threading
     void spawn_threads();
     void join_threads();
-
-    // register a hit, manage related stuff
-    void hit_register(int code, int pos);
-
 
     // getter functions
     mraa::I2c* i2c() {
@@ -72,6 +62,21 @@ class lasertag {
     }
 
   private:
+    // register a hit, manage related stuff
+    void hit_register(int code, int pos);
+
+    // writes text to coordinates on display
+    void dsp_write(int x, int y, std::string text, uint16_t color = COLOR_WHITE);
+
+
+    // read from i2c, threaded
+    void t_read_i2c();
+    // read from bluetooth, threaded
+    void t_read_bt();
+    // read from tcp server, threaded
+    void t_read_tcp();
+
+
     TFT_22_ILI9225* m_ILI9225;
 
     mraa::I2c* m_i2c;
@@ -84,6 +89,8 @@ class lasertag {
 
     std::vector<std::thread> m_threads;
     bool m_active;
+    std::mutex m_mtx_hitreg;
+    std::mutex m_mtx_dsp;
 };
 
 
