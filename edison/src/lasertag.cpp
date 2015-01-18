@@ -82,8 +82,9 @@ void lasertag::t_read_bt() {
   int code = 0;
   int pos = 0;
   while (m_active) {
-    if (m_bluetooth->available(0,1000)) {
+    if (m_bluetooth->available(0,1000) && m_bluetooth->bt_connected()) {
       bt_rec = (uint8_t)m_bluetooth->serial_read();
+      // 255 indicates new hit, read next 2 bytes for code and position
       if (bt_rec == 255) {
         while (!m_bluetooth->available(0,1000));
         code = (uint8_t)m_bluetooth->serial_read();
@@ -100,7 +101,8 @@ void lasertag::t_read_tcp() {
   while (m_active) {
     if (m_client->tcp_available(0, 1000) > 0) {
       std::string tcp_rec = m_client->tcp_read_string("\n");
-      printf("Hit by %s \n", tcp_rec.c_str());
+      printf("[LASERTAG] Hit by %s \n", tcp_rec.c_str());
+      fflush(stdout);
     }
   }
 }
@@ -124,8 +126,11 @@ void lasertag::join_threads() {
 
 void lasertag::hit_register(int code, int pos) {
   std::lock_guard<std::mutex> hitreg_lock(m_mtx_hitreg);
-  printf("Hit by %i at %i\n", code, pos);
+  printf("[LASERTAG] Hit by %i at %i\n", code, pos);
   fflush(stdout);
+  std::stringstream ss;
+  ss << code << "\n"; //<< ":" << pos << "\n";
+  m_client->tcp_send(ss.str());
 }
 
 
