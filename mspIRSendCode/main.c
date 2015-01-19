@@ -56,10 +56,11 @@ void initPorts() {
 	P1OUT |= BUTTON_PIN;
 
 	// Set IROutput PIN to Ouput and disable
-	P1DIR |= IR_TX_PIN;
+	P2DIR |= IR_TX_PIN;
+	// Reset XOUT
+	P2SEL &= ~BIT7;
 	// Set output source to timer A
-	P1SEL |= IR_TX_PIN;
-	P1OUT &= ~IR_TX_PIN;
+	P2SEL |= IR_TX_PIN;
 
 	// PWM setup
 	// Set the PWM periode to 38kHz
@@ -71,6 +72,10 @@ void initPorts() {
 	// Set the counter to "count up" to TA0CCR0 with clock input "SMCLK"
 	TA0CTL |= TASSEL_2 + MC_1;
 
+	// Disable Output for the moment
+	// Set output source to timer A
+	P2SEL &= ~IR_TX_PIN;
+	P2OUT &= ~IR_TX_PIN;
 }
 
 
@@ -87,7 +92,7 @@ void sendCode(int Byte) {
 	int parity = 0;
 
 	// Send start Bit
-	P1SEL |= IR_TX_PIN;
+	P2SEL |= IR_TX_PIN;
 	for (j = 0; j < CLK_SPEED; j++) {
 		_delay_cycles(BITTIME/2);
 	}
@@ -101,7 +106,7 @@ void sendCode(int Byte) {
 			// If code and Mask not 0
 			if ((code & BIT0) != 0) {
 				// Send a logical 1
-				P1SEL |= IR_TX_PIN;
+				P2SEL |= IR_TX_PIN;
 				if (DEBUG) {
 					serialPrint("\t BIT");
 					serialPrintInt(i);
@@ -118,8 +123,8 @@ void sendCode(int Byte) {
 					serialPrint(": ");
 					serialPrintInt(code & BIT0);
 				}
-				P1SEL &= ~IR_TX_PIN;
-				P1OUT &= ~IR_TX_PIN;
+				P2SEL &= ~IR_TX_PIN;
+				P2OUT &= ~IR_TX_PIN;
 			}
 			// Shift the Bit to send
 			code = code >> 1;
@@ -135,7 +140,7 @@ void sendCode(int Byte) {
 			// If code and Mask not 0
 			if ((code & BIT7) != 0) {
 				// Send a logical 1
-				P1SEL |= IR_TX_PIN;
+				P2SEL |= IR_TX_PIN;
 				if (DEBUG) {
 					serialPrint("\t BIT");
 					serialPrintInt(i);
@@ -152,8 +157,8 @@ void sendCode(int Byte) {
 					serialPrint(": ");
 					serialPrintInt((code & BIT7) >> 7);
 				}
-				P1SEL &= ~IR_TX_PIN;
-				P1OUT &= ~IR_TX_PIN;
+				P2SEL &= ~IR_TX_PIN;
+				P2OUT &= ~IR_TX_PIN;
 			}
 			// Shift the Bit to send
 			code = code << 1;
@@ -170,11 +175,11 @@ void sendCode(int Byte) {
 	// If it was an odd number of 1s
 	if (parity) {
 		// send parity 1
-		P1SEL |= IR_TX_PIN;
+		P2SEL |= IR_TX_PIN;
 	} else {
 		// else 0
-		P1SEL &= ~IR_TX_PIN;
-		P1OUT &= ~IR_TX_PIN;
+		P2SEL &= ~IR_TX_PIN;
+		P2OUT &= ~IR_TX_PIN;
 	}
 	// Send stop bit
 	for (j = 0; j < CLK_SPEED; j++) {
@@ -184,13 +189,13 @@ void sendCode(int Byte) {
 		serialPrint("\t STOPBIT:");
 		serialPrintInt(1);
 	}
-	P1SEL |= IR_TX_PIN;	// Send stop bit
+	P2SEL |= IR_TX_PIN;	// Send stop bit
 	for (j = 0; j < CLK_SPEED; j++) {
 		_delay_cycles(BITTIME);
 	}
 	// Disable PWM on line
-	P1SEL &= ~IR_TX_PIN;
-	P1OUT &= ~IR_TX_PIN;
+	P2SEL &= ~IR_TX_PIN;
+	P2OUT &= ~IR_TX_PIN;
 	if (DEBUG) serialPrintln("");
 }
 
