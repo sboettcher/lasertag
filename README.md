@@ -7,14 +7,36 @@ University of Freiburg
 
 - I2C Zuverlaessigkeit testen
 - Stromversorgung mit Akkus
-- RFID Reader via I2C verbinden
+- RFID Reader an Edison betreiben
 - RFID-Tags einrichten
+- Server Programm fertig stellen
 - Tagger-Gehaeuse
 - Platine Tagger
 - Weste-Weste
 - Versuch MSPs auf Tagger zu vereinen
-- I2C NACK wenn keine Daten vorhanden.
+- I2C NACK wenn keine Daten vorhanden
 - Display-Geschwindigkeit
+- LED-Stripes am Tagger
+- Berechnen ob Strahlung gefährlich ist
+- Hauptplatine für Tagger designen
+- Platinen ätzen und bestücken
+
+0.1 ToBuy für 2 Westen-Tagger-Sets:
+
+12x MSP
+1x HC-06 Bluetooth
+2-3x RFID-Reader
+4x Plastik-Kugel
+2x Weste
+4x Akku
+5m Kabel für Domes
+Klettband
+1x Edison inkl. kleines Breakout-Board
+1-2x Abzugsschalter
+kleine Schrumpfschläuche
+
+Transistoren ?
+Jumperkabel ?
 
 
 ##1. Edison
