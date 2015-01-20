@@ -113,6 +113,7 @@ Some important pin mappings for the project. Complete tables can be found [here]
 |    17-10   |     SPI-5-CS    |    Display CS   |     9    |
 |    17-11   |    SPI-5-CLK    |   Display CLK   |    10    |
 |    17-12   |    SPI-5-MOSI   |   Display SDI   |    11    |
+|    18-11   |    SPI-5-MISO   |                 |    24    |
 |    19-5    |     GPIO-46     |   Display RST   |    32    |
 |    19-6    |     GPIO-48     |    Display RS   |    33    |
 |    18-13   |     UART1-RX    |   BT Module TX  |    26    |
