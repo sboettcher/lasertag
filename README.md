@@ -23,20 +23,20 @@ University of Freiburg
 
 0.1 ToBuy für 2 Westen-Tagger-Sets:
 
-12x MSP
-1x HC-06 Bluetooth
-2-3x RFID-Reader
-4x Plastik-Kugel
-2x Weste
-4x Akku
-5m Kabel für Domes
-Klettband
-1x Edison inkl. kleines Breakout-Board
-1-2x Abzugsschalter
-kleine Schrumpfschläuche
+- 12x MSP
+- 1x HC-06 Bluetooth
+- 2-3x RFID-Reader
+- 4x Plastik-Kugel
+- 2x Weste
+- 4x Akku
+- 5m Kabel für Domes
+- Klettband
+- 1x Edison inkl. kleines Breakout-Board
+- 1-2x Abzugsschalter
+- kleine Schrumpfschläuche
 
-Transistoren ?
-Jumperkabel ?
+- Transistoren ?
+- Jumperkabel ?
 
 
 ##1. Edison
