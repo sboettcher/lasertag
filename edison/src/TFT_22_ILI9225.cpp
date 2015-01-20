@@ -6,17 +6,17 @@
 
 #include "./TFT_22_ILI9225.h"
 
-TFT_22_ILI9225::TFT_22_ILI9225(int ledpin, int rstpin, int rspin) {
+TFT_22_ILI9225::TFT_22_ILI9225(int cspin, int rstpin, int rspin) {
 	_spi = new mraa::Spi(0);
 
 	mraa_result_t response;
 
 	// init led gpio
-	_led = new mraa::Gpio(ledpin);
-	if (_led == NULL) {
+	_cs = new mraa::Gpio(ledpin);
+	if (_cs == NULL) {
 		mraa::printError(MRAA_ERROR_UNSPECIFIED);
 	}
-	response = _led->dir(mraa::DIR_OUT);
+	response = _cs->dir(mraa::DIR_OUT);
 	if (response != MRAA_SUCCESS) {
 		mraa::printError(response);
 	}
@@ -44,10 +44,30 @@ TFT_22_ILI9225::TFT_22_ILI9225(int ledpin, int rstpin, int rspin) {
 
 TFT_22_ILI9225::~TFT_22_ILI9225() {
 	delete _spi;
-	delete _led;
+	delete _cs;
 	delete _rst;
 	delete _rs;
 }
+
+void MFRC522::CS(int cs) {
+  mraa_result_t response = _cs->write(cs);
+  if (response != MRAA_SUCCESS) {
+    mraa::printError(response);
+  }
+}
+void MFRC522::RST(int rst) {
+  mraa_result_t response = _rst->write(rst);
+  if (response != MRAA_SUCCESS) {
+    mraa::printError(response);
+  }
+}
+void MFRC522::RS(int rs) {
+  mraa_result_t response = _rs->write(rs);
+  if (response != MRAA_SUCCESS) {
+    mraa::printError(response);
+  }
+}
+
 
 void TFT_22_ILI9225::_orientCoordinates(uint16_t &x1, uint16_t &y1) {
 
@@ -97,8 +117,6 @@ void TFT_22_ILI9225::begin() {
 	_spi->mode(mraa::SPI_MODE1);
   _spi->frequency(25000000);
 
-	mraa_result_t response;
-
 	// Turn on backlight
 	// response = _led->write(1);
 	// if (response != MRAA_SUCCESS) {
@@ -108,24 +126,15 @@ void TFT_22_ILI9225::begin() {
 	// Initialization Code
 	
 	// Pull the reset pin high to release the ILI9225C from the reset status
-	response = _rst->write(1);
-	if (response != MRAA_SUCCESS) {
-		mraa::printError(response);
-	}
+	RST(1);
 	usleep(1000);
 	
 	// Pull the reset pin low to reset ILI9225
-	response = _rst->write(0);
-	if (response != MRAA_SUCCESS) {
-		mraa::printError(response);
-	}
+	RST(0);
 	usleep(10000);
 	
 	// Pull the reset pin high to release the ILI9225C from the reset status
-	response = _rst->write(1);
-	if (response != MRAA_SUCCESS) {
-		mraa::printError(response);
-	}
+	RST(1);
 	usleep(50000);
 
 	/* Start Initial Sequence */
@@ -436,30 +445,30 @@ void TFT_22_ILI9225::_swap(uint16_t &a, uint16_t &b) {
 
 // Utilities
 void TFT_22_ILI9225::_writeCommand(uint8_t HI, uint8_t LO) {
-	mraa_result_t response = _rs->write(0);
-	if (response != MRAA_SUCCESS) {
-		mraa::printError(response);
-	}
+	RS(0);
 	
+  CS(0);
   uint8_t buf[2];
   buf[0] = HI;
   buf[1] = LO;
   _spi->write(buf, 2);
+  CS(1);
+  
 	//_spi->writeByte(HI);
 	//_spi->writeByte(LO);
 }
 
 
 void TFT_22_ILI9225::_writeData(uint8_t HI, uint8_t LO) {
-	mraa_result_t response = _rs->write(1);
-	if (response != MRAA_SUCCESS) {
-		mraa::printError(response);
-	}
+	RS(1);
 	
+  CS(0);
   uint8_t buf[2];
   buf[0] = HI;
   buf[1] = LO;
   _spi->write(buf, 2);
+  CS(1);
+  
 	//_spi->writeByte(HI);
 	//_spi->writeByte(LO);
 }

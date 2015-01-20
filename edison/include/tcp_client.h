@@ -40,6 +40,10 @@ class tcp_client {
     // >0 if data is available, 0 if timeout, -1 if error
     int tcp_available(int sec, int usec);
 
+    bool connected() {
+      return m_connected;
+    }
+    
   private:
     int m_socketFD;
     bool m_connected;

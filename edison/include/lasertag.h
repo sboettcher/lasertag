@@ -82,7 +82,9 @@ class lasertag {
     mraa::I2c* m_i2c;
     int m_i2c_bus;
 
-    bool m_ILI9225_init;
+    bool m_dsp_init;
+    bool m_bt_init;
+    bool m_tcp_init;
 
     edison_serial* m_bluetooth;
     tcp_client* m_client;

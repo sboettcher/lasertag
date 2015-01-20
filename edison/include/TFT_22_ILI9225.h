@@ -120,8 +120,12 @@ class TFT_22_ILI9225 {
 
 	public:
 
-		TFT_22_ILI9225(int ledpin, int rstpin, int rspin);
+		TFT_22_ILI9225(int cspin, int rstpin, int rspin);
 		~TFT_22_ILI9225();
+    
+    void CS(int cs);
+    void RST(int rst);
+    void RS(int rs);
 
 		/// Initialization
 		void begin(void);
@@ -283,7 +287,7 @@ class TFT_22_ILI9225 {
 		uint8_t  _orientation;
 
 		mraa::Spi* _spi;
-		mraa::Gpio* _led;
+		mraa::Gpio* _cs;
 		mraa::Gpio* _rst;
 		mraa::Gpio* _rs;
 

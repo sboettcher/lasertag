@@ -4,7 +4,8 @@
 
 lasertag::lasertag()
   : m_ILI9225(NULL), m_i2c(NULL),
-  m_i2c_bus(6), m_ILI9225_init(false),
+  m_i2c_bus(6), m_dsp_init(false),
+  m_bt_init(false), m_tcp_init(false),
   m_bluetooth(NULL), m_client(NULL),
   m_active(false)
 {
@@ -13,7 +14,8 @@ lasertag::lasertag()
 
 lasertag::lasertag(int bus)
   : m_ILI9225(NULL), m_i2c(NULL),
-  m_i2c_bus(6), m_ILI9225_init(false),
+  m_i2c_bus(6), m_dsp_init(false),
+  m_bt_init(false), m_tcp_init(false),
   m_bluetooth(NULL), m_client(NULL),
   m_active(false)
 {
@@ -51,17 +53,21 @@ void lasertag::dsp_init() {
   printf("Done.\n");
   fflush(stdout);
 
-  m_ILI9225_init = true;
+  m_dsp_init = true;
 }
 
 void lasertag::bt_init(std::string slave) {
   m_bluetooth = new edison_serial("/dev/ttyMFD1");
   m_bluetooth->bt_master_init("EdisonBTMaster01", slave);
+  
+  m_bt_init = true;
 }
 
 void lasertag::tcp_init(std::string address) {
   m_client = new tcp_client;
   m_client->tcp_connect(address);
+  
+  m_tcp_init = true;
 }
 
 
@@ -82,7 +88,9 @@ void lasertag::t_read_bt() {
   int code = 0;
   int pos = 0;
   while (m_active) {
-    if (m_bluetooth->available(0,1000) && m_bluetooth->bt_connected()) {
+    if (!m_bt_init || !m_bluetooth->bt_connected())
+      continue;
+    if (m_bluetooth->available(0,1000)) {
       bt_rec = (uint8_t)m_bluetooth->serial_read();
       // 255 indicates new hit, read next 2 bytes for code and position
       if (bt_rec == 255) {
@@ -99,6 +107,8 @@ void lasertag::t_read_bt() {
 
 void lasertag::t_read_tcp() {
   while (m_active) {
+    if (!m_tcp_init || !m_client->connected())
+      continue;
     if (m_client->tcp_available(0, 1000) > 0) {
       std::string tcp_rec = m_client->tcp_read_string("\n");
       printf("[LASERTAG] Hit by %s \n", tcp_rec.c_str());
@@ -109,16 +119,24 @@ void lasertag::t_read_tcp() {
 
 
 void lasertag::spawn_threads() {
+  printf("[LASERTAG] Spawning threads.\n");
+  fflush(stdout);
   m_active = true;
   m_threads.push_back(std::thread(&lasertag::t_read_i2c, this));
   m_threads.push_back(std::thread(&lasertag::t_read_bt, this));
   m_threads.push_back(std::thread(&lasertag::t_read_tcp, this));
+  printf("[LASERTAG] Done.\n");
+  fflush(stdout);
 }
 
 void lasertag::join_threads() {
+  printf("[LASERTAG] Joining threads.\n");
+  fflush(stdout);
   m_active = false;
   for (auto& th : m_threads) th.join();
   m_threads.clear();
+  printf("[LASERTAG] Done.\n");
+  fflush(stdout);
 }
 
 
@@ -130,11 +148,14 @@ void lasertag::hit_register(int code, int pos) {
   fflush(stdout);
   std::stringstream ss;
   ss << code << "\n"; //<< ":" << pos << "\n";
-  m_client->tcp_send(ss.str());
+  if (m_tcp_init && m_client->connected())
+    m_client->tcp_send(ss.str());
 }
 
 
 void lasertag::dsp_write(int x, int y, std::string text, uint16_t color) {
+  if (!m_dsp_init)
+    return;
   std::lock_guard<std::mutex> dsp_lock(m_mtx_dsp);
   m_ILI9225->drawText(x, y, text, color);
 }
