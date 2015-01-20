@@ -3,6 +3,20 @@
 Repository for the [Wearable Computing Lab Course 2014](http://praktikum.ese.uni-freiburg.de/)  
 University of Freiburg  
 
+##0. TODO
+
+- I2C Zuverlaessigkeit testen
+- Stromversorgung mit Akkus
+- RFID Reader via I2C verbinden
+- RFID-Tags einrichten
+- Tagger-Gehaeuse
+- Platine Tagger
+- Weste-Weste
+- Versuch MSPs auf Tagger zu vereinen
+- I2C NACK wenn keine Daten vorhanden.
+- Display-Geschwindigkeit
+
+
 ##1. Edison
 ###1.1 Image Installation and Preparation
 Installation instructions for getting the Intel Edison to work with the **Mini** Breakout board and a pre-built Yocto image.  
@@ -52,7 +66,7 @@ In the cloned upm repo:
     cmake .. -DCMAKE_INSTALL_PREFIX:PATH=/usr
     make
 
-###1.3 Other Stuff
+###1.3 Partition Size Problem
 I had a problem where the root partition of the Edison was 100% full at some point. This was mostly due to a lot of system boot logs (>100MB) still saved in **/var/log/journal**.  
 A good fix for this would be to increase the size of the root partition (standard is 500MB), which is possible, but requires to rebuild the image, by hand, from scratch, and then re-flashing the Edison.  
 What I ended up doing was simply limiting the size of the kept logs, after deleting all current saved logs.  
@@ -65,3 +79,23 @@ What I ended up doing was simply limiting the size of the kept logs, after delet
     Storage=none
 
 No logs will be kept but the root partition won't fill up again. Might try to change this to *volatile*, which temporarily saves the current system log in /run/log/journal.
+
+###1.4 Pin Mappings
+Some important pin mappings for the project. Complete tables can be found [here](https://github.com/intel-iot-devkit/mraa/blob/master/docs/edison.md) and in the breakout board hardware guide (see dropbox).
+
+| Edison Pin | Edison Function |   Description   | MRAA # |
+|:----------:|:---------------:|:---------------:|:--------:|
+|    19-1    |      V_SYS      | 3.15-4.5V input |    28    |
+|    19-2    |      V_OUT      |   3.3V output   |    29    |
+|    19-3    |       GND       |       GND       |    30    |
+|    17-10   |     SPI-5-CS    |    Display CS   |     9    |
+|    17-11   |    SPI-5-CLK    |   Display CLK   |    10    |
+|    17-12   |    SPI-5-MOSI   |   Display SDI   |    11    |
+|    19-5    |     GPIO-46     |   Display RST   |    32    |
+|    19-6    |     GPIO-48     |    Display RS   |    33    |
+|    18-13   |     UART1-RX    |   BT Module TX  |    26    |
+|    19-8    |     UART1-TX    |   BT Module RX  |    35    |
+|    17-7    |    I2C-6-SCL    |                 |     6    |
+|    17-9    |    I2C-6-SDA    |                 |     8    |
+|    18-6    |    I2C-1-SCL    |                 |    19    |
+|    17-8    |    I2C-1-SDA    |                 |     7    |
