@@ -21,7 +21,7 @@ University of Freiburg
 - Hauptplatine für Tagger designen
 - Platinen ätzen und bestücken
 
-0.1 ToBuy für 2 Westen-Tagger-Sets:
+###0.1 ToBuy für 2 Westen-Tagger-Sets:
 
 - 12x MSP
 - 1x HC-06 Bluetooth
@@ -34,9 +34,7 @@ University of Freiburg
 - 1x Edison inkl. kleines Breakout-Board
 - 1-2x Abzugsschalter
 - kleine Schrumpfschläuche
-
-- Transistoren ?
-- Jumperkabel ?
+- 2x Ein-/Aus-Schalter
 
 
 ##1. Edison
