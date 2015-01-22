@@ -64,7 +64,7 @@ void MFRC522::initSPI() {
   
   // Set the resetPowerDownPin as digital output, do not reset or power down.
   // _resetPowerDownPin = resetPowerDownPin;
-  RST(0)
+  RST(0);
 }
 
 void MFRC522::PCD_Init() {
@@ -180,7 +180,7 @@ void MFRC522::PCD_ReadRegister(uint8_t reg, uint8_t count, uint8_t *values, uint
   uint8_t rx_buf[count];
   
   for (uint8_t i = 0; i < count; ++i)
-    buf[i] = address;
+    tx_buf[i] = address;
   
 	//count--;								// One read is performed outside of the loop
 	//SPI.transfer(address);					// Tell MFRC522 which address we want to read
