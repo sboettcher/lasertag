@@ -22,10 +22,13 @@
 #define TFT_RST_PIN 32
 #define TFT_RS_PIN 33
 
+#define MAX_HEALTH 10
+#define MAX_AMMO 10
+
 class lasertag {
   public:
     // standard constructor, instantiates i2c on bus 6
-    lasertag();
+    //lasertag();
     // constructor that specifies a i2c bus
     lasertag(int bus);
     // destructor
@@ -38,6 +41,7 @@ class lasertag {
 
     // initializes some stuff (display)
     void dsp_init();
+    void dsp_draw_init();
     // initialize bluetooth master
     void bt_init(std::string slave);
     // initialize tcp client server connection
@@ -52,7 +56,7 @@ class lasertag {
       return m_i2c;
     }
     TFT_22_ILI9225* dsp() {
-      return m_ILI9225;
+      return m_dsp;
     }
     edison_serial* bt() {
       return m_bluetooth;
@@ -66,7 +70,10 @@ class lasertag {
     void hit_register(int code, int pos);
 
     // writes text to coordinates on display
-    void dsp_write(int x, int y, std::string text, uint16_t color = COLOR_WHITE);
+    void dsp_write(std::string text, uint16_t color = COLOR_WHITE);
+
+    void draw_health(int health);
+    void draw_ammo(int ammo);
 
 
     // read from i2c, threaded
@@ -77,7 +84,7 @@ class lasertag {
     void t_read_tcp();
 
 
-    TFT_22_ILI9225* m_ILI9225;
+    TFT_22_ILI9225* m_dsp;
 
     mraa::I2c* m_i2c;
     int m_i2c_bus;
@@ -93,6 +100,15 @@ class lasertag {
     bool m_active;
     std::mutex m_mtx_hitreg;
     std::mutex m_mtx_dsp;
+
+    uint16_t m_h_coord[4];
+    uint16_t m_a_coord[4];
+    uint16_t m_t_coord[4];
+
+    int m_health;
+    int m_ammo;
+
+    int m_tln;
 };
 
 

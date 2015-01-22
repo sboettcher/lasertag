@@ -30,7 +30,6 @@ int main(int argc, char** argv) {
   lt.i2c()->address(0x68);
 
   lt.dsp_init();
-  lt.dsp()->setOrientation(3);
 
   lt.tcp_init(argv[1]);
   lt.bt_init(argv[2]);
