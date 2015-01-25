@@ -28,20 +28,19 @@ int main(int argc, char** argv) {
 
   lasertag lt(6);
   lt.i2c()->address(0x68);
+  lt.gpio_init(36);
 
   lt.dsp_init();
 
-  lt.tcp_init(argv[1]);
-  lt.bt_init(argv[2]);
+  //lt.tcp_init(argv[1]);
+  //lt.bt_init(argv[2]);
 
   printf("\n");
   fflush(stdout);
 
   lt.spawn_threads();
-
   while (running == 1) {
   }
-
   lt.join_threads();
 
   return 0;

@@ -278,7 +278,9 @@ class TFT_22_ILI9225 {
 				 _orientCoordinates(uint16_t &x1, uint16_t &y1),
 				 _writeRegister(uint16_t reg, uint16_t data),
 				 _writeData(uint8_t HI, uint8_t LO),
-				 _writeCommand(uint8_t HI, uint8_t LO);
+				 _writeCommand(uint8_t HI, uint8_t LO),
+				 _writeDataBuf(uint8_t* dataHI, uint8_t* dataLO, size_t len),
+				 _writeCommandBuf(uint8_t* cmdHI, uint8_t* cmdLO, size_t len);
 
     bool _bitRead8(uint8_t data, uint8_t index);
 

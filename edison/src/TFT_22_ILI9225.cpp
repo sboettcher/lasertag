@@ -287,7 +287,17 @@ void TFT_22_ILI9225::fillRectangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16
 
 	_setWindow(x1, y1, x2, y2);
 
-	for(uint16_t t=(y2 - y1 + 1) * (x2 - x1 + 1); t > 0; t--)
+  size_t len = (y2 - y1 + 1) * (x2 - x1 + 1);
+
+  //uint8_t bufHI[len];
+  //uint8_t bufLO[len];
+	//for(uint16_t t = 0; t < len; ++t) {
+  //  bufHI[t] = color >> 8;
+  //  bufLO[t] = color;
+  //}
+  //_writeDataBuf(bufHI, bufLO, len);
+
+	for(uint16_t t = 0; t < len; ++t)
 		_writeData(color >> 8, color);
 }
 
@@ -457,6 +467,24 @@ void TFT_22_ILI9225::_writeCommand(uint8_t HI, uint8_t LO) {
 	//_spi->writeByte(HI);
 	//_spi->writeByte(LO);
 }
+void TFT_22_ILI9225::_writeCommandBuf(uint8_t* cmdHI, uint8_t* cmdLO, size_t len) {
+  uint8_t buf[len * 2];
+  for (size_t i = 0; i < len; ++i) {
+    if (i % 2 == 0)
+      buf[i * 2] = cmdHI[i];
+    else
+      buf[i * 2 + 1] = cmdLO[i];
+  }
+
+	RS(0);
+	
+  CS(0);
+  mraa_result_t response = _spi->transfer(buf, NULL, len * 2);
+  if (response != MRAA_SUCCESS) {
+    mraa::printError(response);
+  }
+  CS(1);
+}
 
 
 void TFT_22_ILI9225::_writeData(uint8_t HI, uint8_t LO) {
@@ -471,6 +499,24 @@ void TFT_22_ILI9225::_writeData(uint8_t HI, uint8_t LO) {
   
 	//_spi->writeByte(HI);
 	//_spi->writeByte(LO);
+}
+void TFT_22_ILI9225::_writeDataBuf(uint8_t* dataHI, uint8_t* dataLO, size_t len) {
+  uint8_t buf[len * 2];
+  for (size_t i = 0; i < len; ++i) {
+    if (i % 2 == 0)
+      buf[i * 2] = dataHI[i];
+    else
+      buf[i * 2 + 1] = dataLO[i];
+  }
+
+	RS(0);
+	
+  CS(0);
+  mraa_result_t response = _spi->transfer(buf, NULL, len * 2);
+  if (response != MRAA_SUCCESS) {
+    mraa::printError(response);
+  }
+  CS(1);
 }
 
 
@@ -620,7 +666,7 @@ uint16_t TFT_22_ILI9225::drawChar(uint16_t x, uint16_t y, uint16_t ch, uint16_t 
 			for (k = 0; k < 8; k++) {
 				if (h >= cfont.height ) break;  // No need to process excess bits
 				if (_bitRead8(charData, k)) drawPixel(x + i, y + (j * 8) + k, color);
-				else                      drawPixel(x + i, y + (j * 8) + k, _bgColor);
+				//else                      drawPixel(x + i, y + (j * 8) + k, _bgColor);
 				h++;
 			};
 		};

@@ -22,13 +22,11 @@
 #define TFT_RST_PIN 32
 #define TFT_RS_PIN 33
 
-#define MAX_HEALTH 10
-#define MAX_AMMO 10
+#define MAX_HEALTH 20
+#define MAX_AMMO 100
 
 class lasertag {
   public:
-    // standard constructor, instantiates i2c on bus 6
-    //lasertag();
     // constructor that specifies a i2c bus
     lasertag(int bus);
     // destructor
@@ -46,6 +44,8 @@ class lasertag {
     void bt_init(std::string slave);
     // initialize tcp client server connection
     void tcp_init(std::string address);
+
+    void gpio_init(int pin);
 
     // threading
     void spawn_threads();
@@ -70,10 +70,10 @@ class lasertag {
     void hit_register(int code, int pos);
 
     // writes text to coordinates on display
-    void dsp_write(std::string text, uint16_t color = COLOR_WHITE);
+    void dsp_write(int x, int y, std::string text, uint8_t* font = Terminal6x8, uint16_t color = COLOR_WHITE);
 
-    void draw_health(int health);
-    void draw_ammo(int ammo);
+    void draw_health(int old_h, int new_h);
+    void draw_ammo(int old_a, int new_a);
 
 
     // read from i2c, threaded
@@ -82,16 +82,19 @@ class lasertag {
     void t_read_bt();
     // read from tcp server, threaded
     void t_read_tcp();
-
+    // read from trigger gpio pin, threaded
+    void t_read_gpio();
 
     TFT_22_ILI9225* m_dsp;
 
     mraa::I2c* m_i2c;
     int m_i2c_bus;
+    mraa::Gpio* m_gpio;
 
     bool m_dsp_init;
     bool m_bt_init;
     bool m_tcp_init;
+    bool m_gpio_init;
 
     edison_serial* m_bluetooth;
     tcp_client* m_client;
@@ -107,8 +110,6 @@ class lasertag {
 
     int m_health;
     int m_ammo;
-
-    int m_tln;
 };
 
 
