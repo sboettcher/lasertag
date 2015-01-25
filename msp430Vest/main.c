@@ -10,13 +10,14 @@
 
 #define I2C_BASE_ADRESS 0x60
 #define I2C_PRESCALE 160
-#define BT_START_BYTE (char)0xFF
+#define SERIAL_START_BYTE (char)0xFF
+#define SERIAL_STOP_BYTE (char)0xFE
 #define NUM_DOMES 1
+unsigned char i2cTxBuffer[4] = {SERIAL_START_BYTE, 0, 0, SERIAL_STOP_BYTE};
 
 // The vest id is used for the bluetooth name and is sent to the domes to avoid
 // getting hit by the own tagger.
 unsigned char vestId = 1;
-
 unsigned char indata = 0;
 
 void initClocks (void) {
@@ -69,12 +70,14 @@ void setupBlueToothSlaveHC06() {
   serialPrint("AT+PIN0000");
 }
 
-void sendIdToDomes() {
+void sendIdAndColorToDomes(unsigned char color) {
   char i;
+  i2cTxBuffer[1] = color;
+  i2cTxBuffer[2] = vestId;
   for (i = 0; i < NUM_DOMES; i++) {
     master_i2c_transmit_init(I2C_BASE_ADRESS + i, I2C_PRESCALE);
     while(!i2c_ready());
-    master_i2c_transmit(1, &vestId);
+    master_i2c_transmit(4, i2cTxBuffer);
     while(!i2c_ready());
   }
 }
@@ -84,10 +87,8 @@ int main(void) {
   initUART();
   // _EINT();
   __enable_interrupt();
-
   setupBlueToothSlaveHC06();
-
-  sendIdToDomes();
+  sendIdAndColorToDomes(0x01);
 
   char i;
 
@@ -105,7 +106,7 @@ int main(void) {
 
       // Send received hit codes that are different from 0 and the dome number.
       if (indata != 0) {
-        serialWrite(BT_START_BYTE);
+        serialWrite(SERIAL_START_BYTE);
         serialWrite((char) indata);
         serialWrite(i);
       }
