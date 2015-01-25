@@ -75,6 +75,9 @@ class lasertag {
     void draw_health(int old_h, int new_h);
     void draw_ammo(int old_a, int new_a);
 
+    void clear_hit();
+    void clear_tagged();
+
 
     // read from i2c, threaded
     void t_read_i2c();

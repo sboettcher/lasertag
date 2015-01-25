@@ -76,7 +76,7 @@ void lasertag::dsp_draw_init() {
   m_a_coord[3] = m_a_coord[1] + barH;
 
   m_dsp->drawText(10, 10, "[Player]");
-  m_dsp->drawText(10, 15 + fontY, "[Points]");
+  m_dsp->drawText(10, 15 + fontY, "[Score]");
   m_dsp->drawLine(10, 20 + 2 * fontY, maxX - 10, 20 + 2 * fontY, COLOR_WHITE);
 
   m_dsp->drawText(10, 30 + 2 * fontY, "HEALTH:");
@@ -93,7 +93,7 @@ void lasertag::dsp_draw_init() {
   m_t_coord[0] = 10;
   m_t_coord[1] = m_a_coord[3] + 11 + fontY;
   m_t_coord[2] = maxX - 10;
-  m_t_coord[3] = maxY;
+  m_t_coord[3] = maxY - 5;
 
   m_dsp->drawText(10, m_a_coord[3] + 10, "hit by");
   m_dsp->drawText(maxX/2, m_a_coord[3] + 10, "tagged");
@@ -142,7 +142,7 @@ void lasertag::t_read_i2c() {
     i2c_rec = i2c_read_int();
 
     if (i2c_rec != 0 && i2c_rec != 255) {
-      hit_register(i2c_rec, 0);
+      hit_register(i2c_rec, 4);
       i2c_rec = 0;
     }
   }
@@ -235,10 +235,32 @@ void lasertag::hit_register(int code, int pos) {
     --m_health;
   }
 
+  clear_hit();
   std::stringstream text;
-  //text << "Hit by " << code << " at " << pos;
-  text << code << " -> " << pos;
+  //text << code << " -> " << pos;
+  switch (pos) {
+    case 0: text << "Front"; break;
+    case 1: text << "Back"; break;
+    case 2: text << "Left"; break;
+    case 3: text << "Right"; break;
+    case 4: text << "Tagger"; break;
+    default: text << "N/A";
+  }
   dsp_write(m_t_coord[0] + 5, m_t_coord[1] + 5, text.str());
+}
+
+
+void lasertag::clear_hit() {
+  if (!m_dsp_init)
+    return;
+  std::lock_guard<std::mutex> dsp_lock(m_mtx_dsp);
+  m_dsp->fillRectangle(m_t_coord[0]+1, m_t_coord[1]+1, m_dsp->maxX()/2-1, m_t_coord[3]-1, COLOR_BLACK);
+}
+void lasertag::clear_tagged() {
+  if (!m_dsp_init)
+    return;
+  std::lock_guard<std::mutex> dsp_lock(m_mtx_dsp);
+  m_dsp->fillRectangle(m_dsp->maxX()/2+1, m_t_coord[1]+1, m_t_coord[2]-1, m_t_coord[3]-1, COLOR_BLACK);
 }
 
 
