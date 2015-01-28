@@ -14,8 +14,8 @@
 
 class edison_serial {
   public:
-    // constructor, takes the serial port (/dev/...)
-    edison_serial(std::string port);
+    // constructor, takes the serial port (/dev/...) and baud rate (e.g. B9600)
+    edison_serial(std::string port, speed_t baud);
     ~edison_serial();
 
     // send bt slave initiation
@@ -41,7 +41,7 @@ class edison_serial {
   private:
     // open and configure given port
     bool open_port();
-    void configure_port();
+    void configure_port(speed_t baud);
 
     std::string m_port;
     int m_fd; // file description for serial port

@@ -10,9 +10,9 @@
 
 #include "./TFT_22_ILI9225.h"
 
-#define TFT_LED_PIN 31
+#define TFT_CS_PIN 0
 #define TFT_RST_PIN 32
-#define TFT_RS_PIN 33
+#define TFT_RS_PIN 47
 
 int running = 1;
 uint16_t x, y;
@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
 
   printf("Constructor... ");
   fflush(stdout);
-  TFT_22_ILI9225 tft(TFT_LED_PIN, TFT_RST_PIN, TFT_RS_PIN);
+  TFT_22_ILI9225 tft(TFT_CS_PIN, TFT_RST_PIN, TFT_RS_PIN);
   printf("Done.\nbegin()... ");
   fflush(stdout);
   tft.begin();

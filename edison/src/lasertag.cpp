@@ -2,20 +2,13 @@
 
 #include "./lasertag.h"
 
-lasertag::lasertag(int bus)
+lasertag::lasertag()
   : m_dsp(NULL), m_i2c(NULL),
-  m_i2c_bus(6), m_dsp_init(false),
+  m_i2c_bus(6), m_i2c_init(false), m_dsp_init(false),
   m_bt_init(false), m_tcp_init(false), m_gpio_init(false),
   m_bluetooth(NULL), m_client(NULL),
   m_active(false)
 {
-  if (bus != 1 && bus != 6) {
-    printf("\n[LASERTAG] Wrong i2c bus number!. Using bus 6.\n");
-  } else {
-    m_i2c_bus = bus;
-  }
-  m_i2c = new mraa::I2c(m_i2c_bus);
-
   m_health = MAX_HEALTH;
   m_ammo = MAX_AMMO;
 }
@@ -25,12 +18,30 @@ lasertag::~lasertag() {
   delete m_gpio;
 }
 
+void lasertag::i2c_init(int bus, int address) {
+  if (bus != 1 && bus != 6) {
+    printf("\n[LASERTAG] Wrong i2c bus number!. Using bus 6.\n");
+  } else {
+    m_i2c_bus = bus;
+  }
+  m_i2c = new mraa::I2c(m_i2c_bus);
+  m_i2c->address(0x68);
+
+  m_i2c_init = true;
+}
+
 void lasertag::re_i2c() {
+  if (!m_i2c_init)
+    return;
+
   delete m_i2c;
   m_i2c = new mraa::I2c(m_i2c_bus);
 }
 
 uint8_t lasertag::i2c_read_int() {
+  if (!m_i2c_init)
+    return 0;
+
   uint8_t rx_tx_buf[1];
   m_i2c->read(rx_tx_buf, 1);
   return rx_tx_buf[0];
@@ -39,7 +50,7 @@ uint8_t lasertag::i2c_read_int() {
 void lasertag::dsp_init() {
   printf("[LASERTAG] init ILI9225... ");
   fflush(stdout);
-  m_dsp = new TFT_22_ILI9225(TFT_LED_PIN, TFT_RST_PIN, TFT_RS_PIN);
+  m_dsp = new TFT_22_ILI9225(TFT_CS_PIN, TFT_RST_PIN, TFT_RS_PIN);
   m_dsp->begin();
   m_dsp->setOrientation(0);
   printf("Done.\n");
@@ -103,7 +114,7 @@ void lasertag::dsp_draw_init() {
 
 
 void lasertag::bt_init(std::string slave) {
-  m_bluetooth = new edison_serial("/dev/ttyMFD1");
+  m_bluetooth = new edison_serial("/dev/ttyMFD1", B38400);
   m_bluetooth->bt_master_init("EdisonBTMaster01", slave);
   
   m_bt_init = true;
@@ -141,11 +152,12 @@ void lasertag::t_read_i2c() {
 
   std::vector<std::future<void>> handles;
   while (m_active) {
-    i2c_rec = i2c_read_int();
-
-    if (i2c_rec != 0 && i2c_rec != 255) {
-      handles.push_back(std::async(std::launch::async, &lasertag::hit_register, this, i2c_rec, 4));
-      i2c_rec = 0;
+    if (m_i2c_init) {
+      i2c_rec = i2c_read_int();
+      if (i2c_rec != 0 && i2c_rec != 255) {
+        handles.push_back(std::async(std::launch::async, &lasertag::hit_register, this, i2c_rec, 4));
+        i2c_rec = 0;
+      }
     }
   }
   for (auto& h : handles) h.get();

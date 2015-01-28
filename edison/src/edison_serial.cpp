@@ -5,13 +5,13 @@
 #include "./edison_serial.h"
 
 
-edison_serial::edison_serial(std::string port)
+edison_serial::edison_serial(std::string port, speed_t baud)
   : m_port("/dev/ttyMFD1"), m_fd(0), m_port_ready(false),
     m_bt_connected(false)
 {
   m_port = port;
   if (open_port()) {
-    configure_port();
+    configure_port(baud);
     m_port_ready = true;
   }
 }
@@ -36,13 +36,13 @@ bool edison_serial::open_port() {
   return true;
 }
 
-void edison_serial::configure_port() {
+void edison_serial::configure_port(speed_t baud) {
   // struct to store settings
   struct termios port_settings;
 
   // baud rates
-  cfsetispeed(&port_settings, B38400);
-  cfsetospeed(&port_settings, B38400);
+  cfsetispeed(&port_settings, baud);
+  cfsetospeed(&port_settings, baud);
 
   // no parity, one stop bit, 8 data bits
   port_settings.c_cflag &= ~PARENB;

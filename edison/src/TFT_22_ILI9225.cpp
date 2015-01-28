@@ -11,15 +11,15 @@ TFT_22_ILI9225::TFT_22_ILI9225(int cspin, int rstpin, int rspin) {
 
 	mraa_result_t response;
 
-	// init led gpio
-	_cs = new mraa::Gpio(cspin);
-	if (_cs == NULL) {
-		mraa::printError(MRAA_ERROR_UNSPECIFIED);
-	}
-	response = _cs->dir(mraa::DIR_OUT);
-	if (response != MRAA_SUCCESS) {
-		mraa::printError(response);
-	}
+	//// init cs gpio
+	//_cs = new mraa::Gpio(cspin);
+	//if (_cs == NULL) {
+	//	mraa::printError(MRAA_ERROR_UNSPECIFIED);
+	//}
+	//response = _cs->dir(mraa::DIR_OUT);
+	//if (response != MRAA_SUCCESS) {
+	//	mraa::printError(response);
+	//}
 	
 	// init reset gpio
 	_rst = new mraa::Gpio(rstpin);
@@ -50,10 +50,10 @@ TFT_22_ILI9225::~TFT_22_ILI9225() {
 }
 
 void TFT_22_ILI9225::CS(int cs) {
-  mraa_result_t response = _cs->write(cs);
-  if (response != MRAA_SUCCESS) {
-    mraa::printError(response);
-  }
+  //mraa_result_t response = _cs->write(cs);
+  //if (response != MRAA_SUCCESS) {
+  //  mraa::printError(response);
+  //}
 }
 void TFT_22_ILI9225::RST(int rst) {
   mraa_result_t response = _rst->write(rst);

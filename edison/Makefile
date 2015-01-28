@@ -4,7 +4,7 @@
 #	 .PRECIOUS targets marked with this are not deleted when make is killed
 
 CXX=g++
-CFLAGS=-g -Wall -std=c++0x -lmraa -lupm-i2clcd -Iinclude -I/usr/include/upm -I/usr/include/mraa
+CFLAGS=-g -Wall -std=c++0x -Iinclude -lmraa# -I/usr/include/mraa -lupm-i2clcd -I/usr/include/upm
 COPTS=
 LOPTS=-pthread
 
@@ -12,8 +12,7 @@ SOURCES = src/edison_serial.cpp \
 					src/lasertag.cpp \
 					src/TFT_22_ILI9225.cpp \
 					src/DefaultFonts.cpp \
-					src/tcp_client.cpp \
-					src/MFRC522.cpp
+					src/tcp_client.cpp
 
 MAIN_BINARIES=$(addprefix bin/,$(basename $(notdir $(wildcard src/*Main.cpp))))
 OBJECTS = $(subst src/,build/,$(subst .cpp,.o,$(SOURCES)))

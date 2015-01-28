@@ -19,9 +19,9 @@
 #include "./tcp_client.h"
 
 #define I2C_BUS 6
-#define TFT_LED_PIN 31
+#define TFT_CS_PIN 0
 #define TFT_RST_PIN 32
-#define TFT_RS_PIN 33
+#define TFT_RS_PIN 47
 
 #define MAX_HEALTH 20
 #define MAX_AMMO 100
@@ -29,10 +29,11 @@
 class lasertag {
   public:
     // constructor that specifies a i2c bus
-    lasertag(int bus);
+    lasertag();
     // destructor
     ~lasertag();
 
+    void i2c_init(int bus, int address);
     // reinitialize i2c
     void re_i2c();
     // read uint8 from i2c
@@ -95,6 +96,7 @@ class lasertag {
     int m_i2c_bus;
     mraa::Gpio* m_gpio;
 
+    bool m_i2c_init;
     bool m_dsp_init;
     bool m_bt_init;
     bool m_tcp_init;
