@@ -4,10 +4,9 @@
 
 //________________________________________________________________________________
 lasertag::lasertag()
-  : m_dsp(NULL), m_i2c(NULL),
-  m_i2c_bus(6), m_i2c_init(false), m_dsp_init(false),
-  m_bt_init(false), m_tcp_init(false), m_gpio_init(false),
-  m_bluetooth(NULL), m_client(NULL),
+  : m_dsp(NULL), m_i2c(NULL), m_gpio(NULL), m_bluetooth(NULL), m_client(NULL),
+  m_i2c_bus(6), m_dsp_init(false), m_i2c_init(false),
+  m_gpio_init(false), m_bt_init(false), m_tcp_init(false),
   m_active(false)
 {
   m_health = MAX_HEALTH;

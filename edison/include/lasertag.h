@@ -101,11 +101,11 @@ class lasertag {
 
     int m_i2c_bus;
     
-    bool m_i2c_init;
     bool m_dsp_init;
+    bool m_i2c_init;
+    bool m_gpio_init;
     bool m_bt_init;
     bool m_tcp_init;
-    bool m_gpio_init;
 
     std::vector<std::thread> m_threads;
     bool m_active;
