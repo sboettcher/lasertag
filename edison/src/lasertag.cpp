@@ -138,20 +138,25 @@ void lasertag::gpio_init(int pin) {
 
 void lasertag::t_read_i2c() {
   int i2c_rec = 0;
+
+  std::vector<std::future<void>> handles;
   while (m_active) {
     i2c_rec = i2c_read_int();
 
     if (i2c_rec != 0 && i2c_rec != 255) {
-      hit_register(i2c_rec, 4);
+      handles.push_back(std::async(std::launch::async, &lasertag::hit_register, this, i2c_rec, 4));
       i2c_rec = 0;
     }
   }
+  for (auto& h : handles) h.get();
 }
 
 void lasertag::t_read_bt() {
   int bt_rec = 0;
   int code = 0;
   int pos = 0;
+
+  std::vector<std::future<void>> handles;
   while (m_active) {
     if (!m_bt_init || !m_bluetooth->bt_connected())
       continue;
@@ -163,14 +168,16 @@ void lasertag::t_read_bt() {
         code = (uint8_t)m_bluetooth->serial_read();
         while (!m_bluetooth->available(0,1000));
         pos = (uint8_t)m_bluetooth->serial_read();
-        hit_register(code, pos);
+        handles.push_back(std::async(std::launch::async, &lasertag::hit_register, this, code, pos));
         bt_rec = 0;
       }
     }
   }
+  for (auto& h : handles) h.get();
 }
 
 void lasertag::t_read_tcp() {
+  std::vector<std::future<void>> handles;
   while (m_active) {
     if (!m_tcp_init || !m_client->connected())
       continue;
@@ -178,21 +185,24 @@ void lasertag::t_read_tcp() {
       std::string tcp_rec = m_client->tcp_read_string("\n");
       printf("[LASERTAG] Hit by %s \n", tcp_rec.c_str());
       fflush(stdout);
-      dsp_write(m_t_coord[0] + 5, m_t_coord[1] + 15, tcp_rec, Terminal11x16);
+      handles.push_back(std::async(std::launch::async, &lasertag::dsp_write, this, m_t_coord[0] + 5, m_t_coord[1] + 15, tcp_rec, Terminal11x16, COLOR_WHITE));
     }
   }
+  for (auto& h : handles) h.get();
 }
 
 void lasertag::t_read_gpio() {
+  std::vector<std::future<void>> handles;
   while (m_active) {
     if (m_gpio_init && m_gpio->read() == 0) {
       if (m_ammo > 0) {
-        draw_ammo(m_ammo, m_ammo - 1);
+        handles.push_back(std::async(std::launch::async, &lasertag::draw_ammo, this, m_ammo, m_ammo - 1));
         --m_ammo;
       }
       usleep(100000);
     }
   }
+  for (auto& h : handles) h.get();
 }
 
 
@@ -222,7 +232,7 @@ void lasertag::join_threads() {
 
 
 void lasertag::hit_register(int code, int pos) {
-  std::lock_guard<std::mutex> hitreg_lock(m_mtx_hitreg);
+  std::lock_guard<std::recursive_mutex> hitreg_lock(m_mtx_hitreg);
   printf("[LASERTAG] Hit by %i at %i\n", code, pos);
   fflush(stdout);
   std::stringstream ss;
@@ -231,10 +241,12 @@ void lasertag::hit_register(int code, int pos) {
     m_client->tcp_send(ss.str());
 
   if (m_health > 0) {
+    //auto handle1 = std::async(std::launch::async, &lasertag::draw_health, this, m_health, m_health - 1);
     draw_health(m_health, m_health - 1);
     --m_health;
   }
 
+  //auto handle2 = std::async(std::launch::async, &lasertag::clear_hit, this);
   clear_hit();
   std::stringstream text;
   //text << code << " -> " << pos;
@@ -246,6 +258,7 @@ void lasertag::hit_register(int code, int pos) {
     case 4: text << "Tagger"; break;
     default: text << "N/A";
   }
+  //auto handle3 = std::async(std::launch::async, &lasertag::dsp_write, this, m_t_coord[0] + 5, m_t_coord[1] + 5, text.str(), Terminal6x8, COLOR_WHITE);
   dsp_write(m_t_coord[0] + 5, m_t_coord[1] + 5, text.str());
 }
 
@@ -253,13 +266,13 @@ void lasertag::hit_register(int code, int pos) {
 void lasertag::clear_hit() {
   if (!m_dsp_init)
     return;
-  std::lock_guard<std::mutex> dsp_lock(m_mtx_dsp);
+  std::lock_guard<std::recursive_mutex> dsp_lock(m_mtx_dsp);
   m_dsp->fillRectangle(m_t_coord[0]+1, m_t_coord[1]+1, m_dsp->maxX()/2-1, m_t_coord[3]-1, COLOR_BLACK);
 }
 void lasertag::clear_tagged() {
   if (!m_dsp_init)
     return;
-  std::lock_guard<std::mutex> dsp_lock(m_mtx_dsp);
+  std::lock_guard<std::recursive_mutex> dsp_lock(m_mtx_dsp);
   m_dsp->fillRectangle(m_dsp->maxX()/2+1, m_t_coord[1]+1, m_t_coord[2]-1, m_t_coord[3]-1, COLOR_BLACK);
 }
 
@@ -267,16 +280,17 @@ void lasertag::clear_tagged() {
 void lasertag::dsp_write(int x, int y, std::string text, uint8_t* font, uint16_t color) {
   if (!m_dsp_init)
     return;
-  std::lock_guard<std::mutex> dsp_lock(m_mtx_dsp);
+  std::lock_guard<std::recursive_mutex> dsp_lock(m_mtx_dsp);
 
-  m_dsp->setFont(font);
+  uint8_t tmp = m_dsp->setFont(font);
   m_dsp->drawText(x, y, text, color);
+  m_dsp->setFont(&tmp);
 }
 
 void lasertag::draw_health(int old_h, int new_h) {
   if (!m_dsp_init)
     return;
-  std::lock_guard<std::mutex> dsp_lock(m_mtx_dsp);
+  std::lock_guard<std::recursive_mutex> dsp_lock(m_mtx_dsp);
 
   float perc_old = old_h * (1.0 / MAX_HEALTH);
   float perc_new = new_h * (1.0 / MAX_HEALTH);
@@ -292,7 +306,7 @@ void lasertag::draw_health(int old_h, int new_h) {
 void lasertag::draw_ammo(int old_a, int new_a) {
   if (!m_dsp_init)
     return;
-  std::lock_guard<std::mutex> dsp_lock(m_mtx_dsp);
+  std::lock_guard<std::recursive_mutex> dsp_lock(m_mtx_dsp);
 
   float perc_old = old_a * (1.0 / MAX_AMMO);
   float perc_new = new_a * (1.0 / MAX_AMMO);

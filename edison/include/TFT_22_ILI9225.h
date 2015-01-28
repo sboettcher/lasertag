@@ -9,8 +9,8 @@
 #include "./pgmspace.h"
 
 /* ILI9225 screen size */
-#define ILI9225_LCD_WIDTH  176
-#define ILI9225_LCD_HEIGHT 220
+#define ILI9225_LCD_WIDTH  176 //176 240
+#define ILI9225_LCD_HEIGHT 220 //220 320
 
 /* ILI9225 LCD Registers */
 #define ILI9225_DRIVER_OUTPUT_CTRL      (0x01u)  // Driver Output Control
@@ -262,7 +262,7 @@ class TFT_22_ILI9225 {
 
 		/// Set current font
 		/// @param	font Font name
-		void setFont(uint8_t* font);
+		uint8_t setFont(uint8_t* font);
 
 		/// Draw single character (pixel coordinates)
 		/// @param	x point coordinate, x-axis
@@ -294,6 +294,7 @@ class TFT_22_ILI9225 {
 		mraa::Gpio* _rs;
 
 		_currentFont cfont;
+    uint8_t cfont_int;
 
 };
 

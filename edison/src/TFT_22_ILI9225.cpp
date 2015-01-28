@@ -618,7 +618,7 @@ void TFT_22_ILI9225::setBackgroundColor(uint16_t color) {
 }
 
 
-void TFT_22_ILI9225::setFont(uint8_t* font) {
+uint8_t TFT_22_ILI9225::setFont(uint8_t* font) {
 
 	cfont.font 	   = font;
 	cfont.width    = readFontByte(0);
@@ -628,6 +628,9 @@ void TFT_22_ILI9225::setFont(uint8_t* font) {
 	cfont.nbrows   = cfont.height / 8;
 
 	if (cfont.height % 8) cfont.nbrows++;  // Set number of bytes used by height of font in multiples of 8
+  uint8_t ret = cfont_int;
+  cfont_int = *font;
+  return ret;
 }
 
 

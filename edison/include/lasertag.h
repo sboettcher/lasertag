@@ -12,6 +12,7 @@
 #include <iostream>
 #include <thread>
 #include <mutex>
+#include <future>
 
 #include "./TFT_22_ILI9225.h"
 #include "./edison_serial.h"
@@ -104,8 +105,8 @@ class lasertag {
 
     std::vector<std::thread> m_threads;
     bool m_active;
-    std::mutex m_mtx_hitreg;
-    std::mutex m_mtx_dsp;
+    std::recursive_mutex m_mtx_hitreg;
+    std::recursive_mutex m_mtx_dsp;
 
     uint16_t m_h_coord[4];
     uint16_t m_a_coord[4];
