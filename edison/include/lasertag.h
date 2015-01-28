@@ -1,4 +1,4 @@
-// Copyright 2014 Sebastian Boettcher
+// Copyright 2015 Sebastian Boettcher
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,25 +28,24 @@
 
 class lasertag {
   public:
-    // constructor that specifies a i2c bus
+    // constructor
     lasertag();
     // destructor
     ~lasertag();
 
+    // initialize i2c on bus and address
     void i2c_init(int bus, int address);
-    // reinitialize i2c
-    void re_i2c();
     // read uint8 from i2c
     uint8_t i2c_read_int();
 
-    // initializes some stuff (display)
+    // initializes some display stuff
     void dsp_init();
     void dsp_draw_init();
     // initialize bluetooth master
     void bt_init(std::string slave);
     // initialize tcp client server connection
     void tcp_init(std::string address);
-
+    // initialize trigger gpio input
     void gpio_init(int pin);
 
     // threading
@@ -72,14 +71,16 @@ class lasertag {
     void hit_register(int code, int pos);
 
     // writes text to coordinates on display
+    // if a font is given, the old one will be restored when the function returns
     void dsp_write(int x, int y, std::string text, uint8_t* font = Terminal6x8, uint16_t color = COLOR_WHITE);
 
+    // draw the difference of the arguments given on the status bars
     void draw_health(int old_h, int new_h);
     void draw_ammo(int old_a, int new_a);
 
+    // clear the corresponding text boxes on the display
     void clear_hit();
     void clear_tagged();
-
 
     // read from i2c, threaded
     void t_read_i2c();
@@ -90,20 +91,21 @@ class lasertag {
     // read from trigger gpio pin, threaded
     void t_read_gpio();
 
+    
+    //________________________________________________________________________________
     TFT_22_ILI9225* m_dsp;
-
     mraa::I2c* m_i2c;
-    int m_i2c_bus;
     mraa::Gpio* m_gpio;
+    edison_serial* m_bluetooth;
+    tcp_client* m_client;
 
+    int m_i2c_bus;
+    
     bool m_i2c_init;
     bool m_dsp_init;
     bool m_bt_init;
     bool m_tcp_init;
     bool m_gpio_init;
-
-    edison_serial* m_bluetooth;
-    tcp_client* m_client;
 
     std::vector<std::thread> m_threads;
     bool m_active;
