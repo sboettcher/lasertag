@@ -7,14 +7,28 @@
   #include "laserTagUART.h"
 #endif
 
-#define I2C_BASE_ADRESS 0x60
+/**
+ * Variables and constant defines
+ */
 
-// LED pins on Port 1
+// I2C
+#define I2C_BASE_ADRESS 0x60
+#define SERIAL_START_BYTE (char)0xFF
+#define SERIAL_STOP_BYTE (char)0xFE
+volatile unsigned char i2cTxBuffer;
+volatile unsigned char i2cRxBuffer[2]; // Buffers [teamColor, ownTaggerCode]
+volatile unsigned char i2cRxCursor;
+
+// RGB LED on Port 1
 #define LED_RED BIT3
 #define LED_GREEN BIT4
 #define LED_BLUE BIT5
+#define COLOR_WHITE 0x38
+#define FLASH_CYCLES 2400000
+volatile unsigned char teamColor = COLOR_WHITE; // color is encoded by 0bBGR
+volatile unsigned char ownTaggerCode = 0;
 
-// Variables for ir receiver.
+// IR receiver.
 volatile unsigned char irInput = 0;
 volatile unsigned char irBitCount = 0;
 volatile unsigned int irDataBuffer = 0;
@@ -67,29 +81,42 @@ void initIOPins (void) {
 }
 
 void flashHitLed (void) {
-  P1OUT |= LED_RED;
-  __delay_cycles(1600000);
-  P1OUT &= ~LED_RED;
-  P1OUT |= LED_GREEN;
-  __delay_cycles(1600000);
-  P1OUT &= ~LED_GREEN;
-  P1OUT |= LED_BLUE;
-  __delay_cycles(1600000);
-  P1OUT &= ~LED_BLUE;
+  P1OUT |= COLOR_WHITE;
+  __delay_cycles(FLASH_CYCLES);
+  P1OUT &= ~COLOR_WHITE;
+  P1OUT |= teamColor;
+  __delay_cycles(FLASH_CYCLES);
+  P1OUT |= COLOR_WHITE;
+  __delay_cycles(FLASH_CYCLES);
+  P1OUT &= ~COLOR_WHITE;
+  P1OUT |= teamColor;
 }
 
 // I2C callback functions.
-volatile unsigned char i2cBuffer; // TODO durch ringbuffer ersetzen.
-
 void start_cb() {}
 
 void transmit_cb(unsigned char volatile *value)
 {
-  *value = i2cBuffer;
-  i2cBuffer = 0;
+  *value = i2cTxBuffer;
+  i2cTxBuffer = 0;
 }
 
-void receive_cb(unsigned char value) {}
+void receive_cb(unsigned char value) {
+  if (value == SERIAL_START_BYTE) {
+    i2cRxCursor = 0;
+  } else if (i2cRxCursor == 0) {
+    i2cRxBuffer[0] = value;
+    i2cRxCursor++;
+  } else if (i2cRxCursor == 1) {
+    i2cRxBuffer[1] = value;
+    i2cRxCursor++;
+  } else if (i2cRxCursor == 2 && value == SERIAL_STOP_BYTE) {
+    teamColor = i2cRxBuffer[0] << 3;
+    ownTaggerCode = i2cRxBuffer[1];
+    i2cRxCursor++;
+    flashHitLed();
+  } 
+}
 
 void initI2C (void) {
   // I2C adress is determined by the 3 jumpers on P2.0 P2.1 P2.3.
@@ -104,13 +131,8 @@ int main(void) {
   initClocks();
   initIOPins();
   __enable_interrupt();
-
-  #ifdef DEBUG_UART
-    serialPrint("MSP430 booted!\n");
-  #endif
-
   initI2C();
-  flashHitLed();
+  P1OUT |= COLOR_WHITE;
 
   while (1) {
     // TODO(Jan): vielleicht direkt in der timer isr machen.
@@ -118,17 +140,11 @@ int main(void) {
       // Check the parity and stop bit.
       // If irParityCheck is 1, the parity bit is wrong.
       if (irDataBuffer & 0x01 && ~irParityCheck & 0x01) {
-        #ifdef DEBUG_UART
-          serialPrint("Success! Received: ");
-        #endif
-        i2cBuffer = irDataBuffer >> 2;
-        flashHitLed();
+        if ((irDataBuffer >> 2) != ownTaggerCode) {
+          i2cTxBuffer = irDataBuffer >> 2;
+          flashHitLed();
+        }
       }
-      #ifdef DEBUG_UART
-      	int serialBuffer = irDataBuffer >> 2;
-        serialPrintInt(serialBuffer);
-        serialPrint("\n");
-      #endif
       irValid = 0;
       IR_ENABLE_INTERRUPT
     }
