@@ -7,7 +7,7 @@ lasertag::lasertag()
   : m_dsp(NULL), m_i2c(NULL), m_gpio(NULL), m_bluetooth(NULL), m_client(NULL),
   m_i2c_bus(6), m_dsp_init(false), m_i2c_init(false),
   m_gpio_init(false), m_bt_init(false), m_tcp_init(false),
-  m_active(false)
+  m_bt_slave(""), m_active(false)
 {
   m_health = MAX_HEALTH;
   m_ammo = MAX_AMMO;
@@ -131,10 +131,16 @@ void lasertag::dsp_draw_init() {
  */
  
 //________________________________________________________________________________
-void lasertag::bt_init(std::string slave) {
+void lasertag::bt_init() {
+  if (m_bt_slave == "")
+    return;
+
   m_bluetooth = new edison_serial("/dev/ttyMFD1", B38400);  // UART1, bt module needs 38400 baud
-  m_bluetooth->bt_master_init("EdisonBTMaster01", slave);
+  m_bluetooth->bt_master_init("EdisonBTMaster01", m_bt_slave);
   
+  printf("\n");
+  fflush(stdout);
+
   m_bt_init = true;
 }
 
@@ -221,20 +227,15 @@ void lasertag::t_read_bt() {
 
 //________________________________________________________________________________
 void lasertag::t_read_tcp() {
-  std::vector<std::future<void>> handles;  // collect all handles for async calls
   while (m_active) {
     if (!m_tcp_init || !m_client->connected())
       continue;
     if (m_client->tcp_available(0, 1000) > 0) {
       // read string from tcp, doesn't return terminating characters
       std::string tcp_rec = m_client->tcp_read_string("\n");
-      printf("[LASERTAG] Hit by %s \n", tcp_rec.c_str());
-      fflush(stdout);
-      // asynchronously draw on display so tcp communication can continue
-      handles.push_back(std::async(std::launch::async, &lasertag::dsp_write, this, m_t_coord[0] + 5, m_t_coord[1] + 15, tcp_rec, Terminal11x16, COLOR_WHITE));
+      parse_cmd(tcp_rec);
     }
   }
-  for (auto& h : handles) h.get();  // make sure all async calls return
 }
 
 //________________________________________________________________________________
@@ -299,7 +300,7 @@ void lasertag::hit_register(int code, int pos) {
   
   // send the player code to the server to recieve player name
   std::stringstream ss;
-  ss << code << "\n"; //<< ":" << pos << "\n";
+  ss << "<hi:" << code << ":" << pos << ">\n";
   if (m_tcp_init && m_client->connected())
     m_client->tcp_send(ss.str());
 
@@ -325,6 +326,39 @@ void lasertag::hit_register(int code, int pos) {
   }
   //auto handle3 = std::async(std::launch::async, &lasertag::dsp_write, this, m_t_coord[0] + 5, m_t_coord[1] + 5, text.str(), Terminal6x8, COLOR_WHITE);
   dsp_write(m_t_coord[0] + 5, m_t_coord[1] + 5, text.str());
+}
+
+//________________________________________________________________________________
+void lasertag::parse_cmd(std::string cmd) {
+  std::vector<std::future<void>> handles;  // collect all handles for async calls
+
+  // command structure: <key:data>
+  // get the command key
+  std::string key = cmd.substr(cmd.find("<") + 1, cmd.find(":") - 1);
+  if (key == "")
+    return;
+
+  // get the command data
+  std::string data = cmd.substr(cmd.find(":") + 1, cmd.find(">") - 1 - cmd.find(":"));
+
+  if (key == "ci") {  // <ci:has_vest:id>
+    m_player.set_vest(std::stoi(data.substr(0, 1)));
+    m_player.set_ID(std::stoi(data.substr(2)));
+    if (m_player.get_vest())
+      bt_init();
+  } else if (key == "np") {  // <np:playername>
+    m_player.set_name(data);
+  } else if (key == "hp") {  // <hi:hit_by>
+    printf("[LASERTAG] Hit by %s \n", data.c_str());
+    fflush(stdout);
+    // asynchronously draw on display so tcp communication can continue
+    handles.push_back(std::async(std::launch::async, &lasertag::dsp_write, this, m_t_coord[0] + 5, m_t_coord[1] + 15, data, Terminal11x16, COLOR_WHITE));
+  } else {
+    printf("[LASERTAG] TCP command not recognized.\n");
+    fflush(stdout);
+  }
+
+  for (auto& h : handles) h.get();  // make sure all async calls return
 }
 
 

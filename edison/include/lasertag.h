@@ -17,6 +17,7 @@
 #include "./TFT_22_ILI9225.h"
 #include "./edison_serial.h"
 #include "./tcp_client.h"
+#include "./player.h"
 
 #define I2C_BUS 6
 #define TFT_CS_PIN 0
@@ -42,7 +43,7 @@ class lasertag {
     void dsp_init();
     void dsp_draw_init();
     // initialize bluetooth master
-    void bt_init(std::string slave);
+    void bt_init();
     // initialize tcp client server connection
     void tcp_init(std::string address);
     // initialize trigger gpio input
@@ -52,7 +53,7 @@ class lasertag {
     void spawn_threads();
     void join_threads();
 
-    // getter functions
+    // getter/setter functions
     mraa::I2c* i2c() {
       return m_i2c;
     }
@@ -64,6 +65,10 @@ class lasertag {
     }
     tcp_client* tcp() {
       return m_client;
+    }
+
+    void set_bt_slave(std::string slave) {
+      m_bt_slave = slave;
     }
 
   private:
@@ -91,6 +96,9 @@ class lasertag {
     // read from trigger gpio pin, threaded
     void t_read_gpio();
 
+    // parse a command coming i.e. from the server and do the corresponding action
+    void parse_cmd(std::string cmd);
+
     
     //________________________________________________________________________________
     TFT_22_ILI9225* m_dsp;
@@ -100,12 +108,14 @@ class lasertag {
     tcp_client* m_client;
 
     int m_i2c_bus;
-    
+
     bool m_dsp_init;
     bool m_i2c_init;
     bool m_gpio_init;
     bool m_bt_init;
     bool m_tcp_init;
+
+    std::string m_bt_slave;
 
     std::vector<std::thread> m_threads;
     bool m_active;
@@ -118,6 +128,8 @@ class lasertag {
 
     int m_health;
     int m_ammo;
+
+    Player m_player;
 };
 
 

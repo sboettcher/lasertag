@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
   lt.i2c_init(6, 0x68);
   lt.gpio_init(36);
   lt.tcp_init(argv[1]);
-  lt.bt_init(argv[2]);
+  lt.set_bt_slave(argv[2]);
 
   printf("\n");
   fflush(stdout);
