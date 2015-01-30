@@ -21,14 +21,18 @@ class Player {
     void refill_health(int amount);
     
     // If Player got hit he will loose a defined amount of health
+    // returns new value
     int hit();
     
     // If Player fires tagger he will loose 1 ammunition
+    // returns new value
     int fired();
     
     // setter/getter
     int get_health() {return m_health;}
+    int get_max_health() {return m_full_health;}
     int get_ammo() {return m_ammo;}
+    int get_max_ammo() {return m_full_ammo;}
     
     void set_ID(int id) {m_id = id;}
     int get_ID() {return m_id;}

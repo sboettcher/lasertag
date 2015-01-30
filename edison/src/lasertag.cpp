@@ -9,8 +9,6 @@ lasertag::lasertag()
   m_gpio_init(false), m_bt_init(false), m_tcp_init(false),
   m_bt_slave(""), m_active(false)
 {
-  m_health = MAX_HEALTH;
-  m_ammo = MAX_AMMO;
 }
 
 //________________________________________________________________________________
@@ -73,8 +71,8 @@ void lasertag::dsp_init() {
   printf("[LASERTAG] draw init screen... ");
   fflush(stdout);
   dsp_draw_init();
-  draw_health(0, MAX_HEALTH);
-  draw_ammo(0, MAX_AMMO);
+  draw_health(0, m_player.get_max_health());
+  draw_ammo(0, m_player.get_max_ammo());
   printf("Done.\n");
   fflush(stdout);
 }
@@ -140,6 +138,8 @@ void lasertag::bt_init() {
   
   printf("\n");
   fflush(stdout);
+
+  m_threads.push_back(std::thread(&lasertag::t_read_bt, this));
 
   m_bt_init = true;
 }
@@ -243,11 +243,10 @@ void lasertag::t_read_gpio() {
   std::vector<std::future<void>> handles;  // collect all handles for async calls
   while (m_active) {
     if (m_gpio_init && m_gpio->read() == 0) {
-      if (m_ammo > 0) {
+      if (m_player.get_ammo() > 0) {
         // decrement ammo on trigger activation
         // asynchronously draw on display so tcp communication can continue
-        handles.push_back(std::async(std::launch::async, &lasertag::draw_ammo, this, m_ammo, m_ammo - 1));
-        --m_ammo;
+        handles.push_back(std::async(std::launch::async, &lasertag::draw_ammo, this, m_player.get_health(), m_player.fired()));
       }
       usleep(100000);  // wait some time so tagger can't trigger continuously
     }
@@ -267,7 +266,7 @@ void lasertag::spawn_threads() {
   fflush(stdout);
   m_active = true;
   m_threads.push_back(std::thread(&lasertag::t_read_i2c, this));
-  m_threads.push_back(std::thread(&lasertag::t_read_bt, this));
+  //m_threads.push_back(std::thread(&lasertag::t_read_bt, this));  // only spawn if vest used
   m_threads.push_back(std::thread(&lasertag::t_read_tcp, this));
   m_threads.push_back(std::thread(&lasertag::t_read_gpio, this));
   printf("[LASERTAG] Done.\n");
@@ -305,14 +304,11 @@ void lasertag::hit_register(int code, int pos) {
     m_client->tcp_send(ss.str());
 
   // decrement health by one
-  if (m_health > 0) {
-    //auto handle1 = std::async(std::launch::async, &lasertag::draw_health, this, m_health, m_health - 1);
-    draw_health(m_health, m_health - 1);
-    --m_health;
+  if (m_player.get_health() > 0) {
+    draw_health(m_player.get_health(), m_player.hit());
   }
 
   // write hit position to display
-  //auto handle2 = std::async(std::launch::async, &lasertag::clear_hit, this);
   clear_hit();
   std::stringstream text;
   //text << code << " -> " << pos;
@@ -324,13 +320,15 @@ void lasertag::hit_register(int code, int pos) {
     case 4: text << "Tagger"; break;
     default: text << "N/A";
   }
-  //auto handle3 = std::async(std::launch::async, &lasertag::dsp_write, this, m_t_coord[0] + 5, m_t_coord[1] + 5, text.str(), Terminal6x8, COLOR_WHITE);
   dsp_write(m_t_coord[0] + 5, m_t_coord[1] + 5, text.str());
 }
 
 //________________________________________________________________________________
 void lasertag::parse_cmd(std::string cmd) {
   std::vector<std::future<void>> handles;  // collect all handles for async calls
+
+  if (cmd.find("<") == std::string::npos || cmd.find(">") == std::string::npos)
+    return;
 
   // command structure: <key:data>
   // get the command key
@@ -344,8 +342,6 @@ void lasertag::parse_cmd(std::string cmd) {
   if (key == "ci") {  // <ci:has_vest:id>
     m_player.set_vest(std::stoi(data.substr(0, 1)));
     m_player.set_ID(std::stoi(data.substr(2)));
-    if (m_player.get_vest())
-      bt_init();
   } else if (key == "np") {  // <np:playername>
     m_player.set_name(data);
   } else if (key == "hp") {  // <hi:hit_by>
@@ -353,6 +349,10 @@ void lasertag::parse_cmd(std::string cmd) {
     fflush(stdout);
     // asynchronously draw on display so tcp communication can continue
     handles.push_back(std::async(std::launch::async, &lasertag::dsp_write, this, m_t_coord[0] + 5, m_t_coord[1] + 15, data, Terminal11x16, COLOR_WHITE));
+  } else if (key == "ve") {  // <ve:vest_name>
+    m_bt_slave = data;
+    if (m_player.get_vest())
+      bt_init();
   } else {
     printf("[LASERTAG] TCP command not recognized.\n");
     fflush(stdout);
@@ -403,8 +403,8 @@ void lasertag::draw_health(int old_h, int new_h) {
   std::lock_guard<std::recursive_mutex> dsp_lock(m_mtx_dsp);
 
   // calculate the correct horizontal coordinates for the rectangle start and end point
-  float perc_old = old_h * (1.0 / MAX_HEALTH);
-  float perc_new = new_h * (1.0 / MAX_HEALTH);
+  float perc_old = old_h * (1.0 / m_player.get_max_health());
+  float perc_new = new_h * (1.0 / m_player.get_max_health());
   int h_old = ((m_h_coord[2] - m_h_coord[0]) * perc_old) + m_h_coord[0];
   int h_new = ((m_h_coord[2] - m_h_coord[0]) * perc_new) + m_h_coord[0];
 
@@ -423,8 +423,8 @@ void lasertag::draw_ammo(int old_a, int new_a) {
   std::lock_guard<std::recursive_mutex> dsp_lock(m_mtx_dsp);
 
   // calculate the correct horizontal coordinates for the rectangle start and end point
-  float perc_old = old_a * (1.0 / MAX_AMMO);
-  float perc_new = new_a * (1.0 / MAX_AMMO);
+  float perc_old = old_a * (1.0 / m_player.get_max_ammo());
+  float perc_new = new_a * (1.0 / m_player.get_max_ammo());
   int a_old = ((m_a_coord[2] - m_a_coord[0]) * perc_old) + m_a_coord[0];
   int a_new = ((m_a_coord[2] - m_a_coord[0]) * perc_new) + m_a_coord[0];
 

@@ -21,8 +21,8 @@ void sig_handler(int signo) {
 int main(int argc, char** argv) {
   signal(SIGINT, sig_handler);
 
-  if (argc != 3) {
-    printf("usage: lasertagMain [server host] [BT slave]\n");
+  if (argc != 2) {
+    printf("usage: lasertagMain [server host]\n");
     exit(1);
   }
 
@@ -32,7 +32,6 @@ int main(int argc, char** argv) {
   lt.i2c_init(6, 0x68);
   lt.gpio_init(36);
   lt.tcp_init(argv[1]);
-  lt.set_bt_slave(argv[2]);
 
   printf("\n");
   fflush(stdout);

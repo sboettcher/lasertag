@@ -24,9 +24,6 @@
 #define TFT_RST_PIN 32
 #define TFT_RS_PIN 47
 
-#define MAX_HEALTH 20
-#define MAX_AMMO 100
-
 class lasertag {
   public:
     // constructor
@@ -125,9 +122,6 @@ class lasertag {
     uint16_t m_h_coord[4];
     uint16_t m_a_coord[4];
     uint16_t m_t_coord[4];
-
-    int m_health;
-    int m_ammo;
 
     Player m_player;
 };

@@ -34,22 +34,16 @@ void Player::refill_health(int amount) {
 // ___________________________________________________________________
 int Player::hit() {
   m_health -= FULL_HEALTH * (HIT_LOST_PERCENT / 100.0);
-  if (m_health <= 0) {
+  if (m_health < 0)
     m_health = 0;
-    return -1;
-  } else {
-    return 0;
-  }
+  return m_health;
 }
 
 
 // ___________________________________________________________________
 int Player::fired() {
   m_ammo -= 1;
-  if (m_ammo <= 0) {
+  if (m_ammo < 0)
     m_ammo = 0;
-    return -1;
-  } else {
-    return 0;
-  }
+  return m_ammo;
 }
