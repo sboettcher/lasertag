@@ -7,6 +7,7 @@
 #include <mraa.hpp>
 
 #include <vector>
+#include <map>
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -124,6 +125,8 @@ class lasertag {
     uint16_t m_t_coord[4];
 
     Player m_player;
+
+    std::map<uint8_t,std::string> m_hit_pos;
 };
 
 

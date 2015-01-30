@@ -9,6 +9,11 @@ lasertag::lasertag()
   m_gpio_init(false), m_bt_init(false), m_tcp_init(false),
   m_bt_slave(""), m_active(false)
 {
+  m_hit_pos[0] = "Front";
+  m_hit_pos[1] = "Back";
+  m_hit_pos[2] = "Left";
+  m_hit_pos[3] = "Right";
+  m_hit_pos[4] = "Tagger";
 }
 
 //________________________________________________________________________________
@@ -312,13 +317,10 @@ void lasertag::hit_register(int code, int pos) {
   clear_hit();
   std::stringstream text;
   //text << code << " -> " << pos;
-  switch (pos) {
-    case 0: text << "Front"; break;
-    case 1: text << "Back"; break;
-    case 2: text << "Left"; break;
-    case 3: text << "Right"; break;
-    case 4: text << "Tagger"; break;
-    default: text << "N/A";
+  if (pos < 0 || pos > 4) {
+    text << "N/A";
+  } else {
+    text << m_hit_pos[pos];
   }
   dsp_write(m_t_coord[0] + 5, m_t_coord[1] + 5, text.str());
 }

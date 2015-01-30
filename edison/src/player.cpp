@@ -6,7 +6,7 @@ Player::Player() {
   m_name = "";
   m_id = -1;
   m_score = 0;
-  m_color = 0xFFFFFFu;
+  m_color = 65535;  // COLOR_WHITE
   m_health = FULL_HEALTH;
   m_ammo = FULL_AMMO;
   m_full_health = FULL_HEALTH;
