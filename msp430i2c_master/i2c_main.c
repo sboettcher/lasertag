@@ -33,7 +33,8 @@ int main(void)
   initPins();
 
   unsigned char data[] = {0x3B};
-  unsigned char i2cTxBuffer[4] = {0xFF, 0, 0, 0xFE};
+  unsigned char indata[5];
+  indata[4] = '\0';
 
   P1DIR |= BIT0;
 
@@ -43,16 +44,18 @@ int main(void)
   {
 
 
-    master_i2c_transmit_init(0x60, 1600);
+    master_i2c_receive_init(0x68, 1600);
     while(!i2c_ready());
-    if (master_i2c_slave_present(0x60)) {
-      master_i2c_transmit(4, i2cTxBuffer);
-      while(!i2c_ready());
-    }
+    master_i2c_receive(4, indata);
+    while(!i2c_ready());
 
 
-    // serialPrint("Got i2c data: ");
-    // serialPrintln(indata);
+
+    /*
+    serialPrint("Got i2c data: ");
+    serialPrintln(indata);
+    */
+
 
 
     if (serialAvailable())
