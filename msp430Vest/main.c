@@ -12,7 +12,7 @@
 #define I2C_PRESCALE 160
 #define SERIAL_START_BYTE (char)0xFF
 #define SERIAL_STOP_BYTE (char)0xFE
-#define NUM_DOMES 1
+#define NUM_DOMES 4
 unsigned char i2cTxBuffer[4] = {SERIAL_START_BYTE, 0, 0, SERIAL_STOP_BYTE};
 
 // The vest id is used for the bluetooth name and is sent to the domes to avoid
@@ -95,14 +95,11 @@ int main(void) {
   while (1) {
     // Loop through the connected domes and ask for received hits.
     for (i = 0; i < NUM_DOMES; i++) {
+      indata = 0;
       master_i2c_receive_init(I2C_BASE_ADRESS + i, I2C_PRESCALE);
       while(!i2c_ready());
       master_i2c_receive(1, &indata);
       while(!i2c_ready());
-
-      // __delay_cycles(8000000);
-      // serialPrintInt((char) indata);
-      // serialPrint("\n");
 
       // Send received hit codes that are different from 0 and the dome number.
       if (indata != 0) {
