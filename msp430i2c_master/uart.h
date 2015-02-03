@@ -148,5 +148,6 @@ void uart_receive_interrupt()
     // Check for an overflow
     if (rxBufferStart == rxBufferEnd)
       rxBufferError = 1;
+    //IFG2 &= ~UCA0RXIFG; // not necessary, reading RXBUF clears flag
   }
 }

@@ -10,6 +10,7 @@ void master_i2c_receive(unsigned char byteCount, unsigned char *field);
 void master_i2c_transmit(unsigned char byteCount, unsigned char *field);
 unsigned char master_i2c_slave_present(unsigned char slave_address);
 unsigned char i2c_ready();
-
+void master_i2c_receive_interrupt();
+void master_i2c_transmit_interrupt();
 
 #endif
