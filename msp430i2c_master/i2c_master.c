@@ -55,7 +55,7 @@ void master_i2c_transmit_init(unsigned char slave_address,
   UCB0I2CSA = slave_address;                  // Set slave address
   UCB0CTL1 &= ~UCSWRST;                       // Clear SW reset, resume operation
   UCB0I2CIE = UCNACKIE;
-  IE2 = UCB0TXIE;                            // Enable TX ready interrupt
+  IE2 |= UCB0TXIE;                            // Enable TX ready interrupt
 }
 
 //------------------------------------------------------------------------------
