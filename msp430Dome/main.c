@@ -17,16 +17,20 @@
 #define SERIAL_STOP_BYTE (char)0xFE
 volatile unsigned char i2cTxBuffer;
 volatile unsigned char i2cRxBuffer[2]; // Buffers [teamColor, ownTaggerCode]
-volatile unsigned char i2cRxCursor;
+volatile unsigned char i2cRxCursor = 0;
+
+volatile unsigned char outOfEnergy = 0;
 
 // RGB LED on Port 1
 #define LED_RED BIT3
 #define LED_GREEN BIT4
 #define LED_BLUE BIT5
 #define COLOR_WHITE 0x38
+#define COLOR_BLACK 0
 #define FLASH_CYCLES 2400000
-volatile unsigned char teamColor = COLOR_WHITE; // color is encoded by 0bBGR
+volatile unsigned char teamColor = COLOR_BLACK; // color is encoded by 0bBGR
 volatile unsigned char ownTaggerCode = 0;
+volatile char i;
 
 // IR receiver.
 volatile unsigned char irInput = 0;
@@ -80,16 +84,15 @@ void initIOPins (void) {
   #endif
 }
 
-void flashHitLed (void) {
-  P1OUT |= COLOR_WHITE;
-  __delay_cycles(FLASH_CYCLES);
-  P1OUT &= ~COLOR_WHITE;
-  P1OUT |= teamColor;
-  __delay_cycles(FLASH_CYCLES);
-  P1OUT |= COLOR_WHITE;
-  __delay_cycles(FLASH_CYCLES);
-  P1OUT &= ~COLOR_WHITE;
-  P1OUT |= teamColor;
+void flashLed (unsigned char color1, unsigned char color2, char repetitions) {
+  for (i = 0; i < repetitions; i++) {
+    P1OUT &= ~COLOR_WHITE; // first clear color and then set new color.
+    P1OUT |= color1;
+    __delay_cycles(FLASH_CYCLES);
+    P1OUT &= ~COLOR_WHITE;
+    P1OUT |= color2;
+    __delay_cycles(FLASH_CYCLES);
+  }
 }
 
 // I2C callback functions.
@@ -103,18 +106,23 @@ void transmit_cb(unsigned char volatile *value)
 
 void receive_cb(unsigned char value) {
   if (value == SERIAL_START_BYTE) {
-    i2cRxCursor = 0;
-  } else if (i2cRxCursor == 0) {
-    i2cRxBuffer[0] = value;
-    i2cRxCursor++;
+    i2cRxCursor = 1;
   } else if (i2cRxCursor == 1) {
-    i2cRxBuffer[1] = value;
-    i2cRxCursor++;
+    i2cRxBuffer[0] = value;
+    i2cRxCursor = 2;
   } else if (i2cRxCursor == 2 && value == SERIAL_STOP_BYTE) {
+    // received outOfEnergy.
+    outOfEnergy = i2cRxBuffer[0];
+    i2cRxCursor = 0;
+  } else if (i2cRxCursor == 2) {
+    i2cRxBuffer[1] = value;
+    i2cRxCursor = 3;
+  } else if (i2cRxCursor == 3 && value == SERIAL_STOP_BYTE) {
+    // received team color and ownTaggerCode.
     teamColor = i2cRxBuffer[0] << 3;
     ownTaggerCode = i2cRxBuffer[1];
-    i2cRxCursor++;
-    flashHitLed();
+    i2cRxCursor = 0;
+    flashLed(COLOR_WHITE, teamColor, 1);
   } 
 }
 
@@ -132,17 +140,25 @@ int main(void) {
   initIOPins();
   __enable_interrupt();
   initI2C();
-  P1OUT |= COLOR_WHITE;
+  flashLed(COLOR_BLACK, COLOR_WHITE, 1);
 
   while (1) {
-    // TODO(Jan): vielleicht direkt in der timer isr machen.
+    P1OUT &= ~COLOR_WHITE;
+    P1OUT |= teamColor;
+    // flash back and white if out of energy.
+    while (outOfEnergy) {
+      flashLed(COLOR_WHITE, COLOR_BLACK, 1);
+      irValid = 0;
+    }
+
+    // Got hit?
     if (irValid) {
       // Check the parity and stop bit.
       // If irParityCheck is 1, the parity bit is wrong.
       if (irDataBuffer & 0x01 && ~irParityCheck & 0x01) {
         if ((irDataBuffer >> 2) != ownTaggerCode) {
           i2cTxBuffer = irDataBuffer >> 2;
-          flashHitLed();
+          flashLed(COLOR_WHITE, teamColor, 3);
         }
       }
       irValid = 0;
