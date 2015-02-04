@@ -104,9 +104,9 @@
 #define readFontByte(x) pgm_read_byte(&cfont.font[x])  
 
 extern uint8_t Terminal6x8[];
-extern uint8_t Terminal11x16[];
+//extern uint8_t Terminal11x16[];
 extern uint8_t Terminal12x16[];
-extern uint8_t Trebuchet_MS16x21[];
+//extern uint8_t Trebuchet_MS16x21[];
 
 struct _currentFont
 {
