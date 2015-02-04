@@ -24,15 +24,19 @@ void master_i2c_receive_init(unsigned char slave_address,
                              unsigned int prescale){
   P1SEL |= SDA_PIN + SCL_PIN;                 // Assign I2C pins to USCI_B0
   P1SEL2 |= SDA_PIN + SCL_PIN;
+
   UCB0CTL1 = UCSWRST;                        // Enable SW reset
   UCB0CTL0 = UCMST + UCMODE_3 + UCSYNC;       // I2C Master, synchronous mode
   UCB0CTL1 = UCSSEL_2 + UCSWRST;              // Use SMCLK, keep SW reset
   UCB0BR0 = (unsigned char)(prescale & 0xFF); // set prescaler
   UCB0BR1 = (unsigned char)((prescale >> 8) & 0xFF);
+
   UCB0I2CSA = slave_address;                  // set slave address
   UCB0CTL1 &= ~UCSWRST;                       // Clear SW reset, resume operation
+
   UCB0I2CIE = UCNACKIE;
-  IE2 = UCB0RXIE;                            // Enable RX interrupt
+
+  IE2 |= UCB0RXIE;                            // Enable RX interrupt
 }
 
 //------------------------------------------------------------------------------
@@ -51,7 +55,7 @@ void master_i2c_transmit_init(unsigned char slave_address,
   UCB0I2CSA = slave_address;                  // Set slave address
   UCB0CTL1 &= ~UCSWRST;                       // Clear SW reset, resume operation
   UCB0I2CIE = UCNACKIE;
-  IE2 = UCB0TXIE;                            // Enable TX ready interrupt
+  IE2 |= UCB0TXIE;                            // Enable TX ready interrupt
 }
 
 //------------------------------------------------------------------------------
@@ -119,12 +123,14 @@ unsigned char i2c_ready(){
 void master_i2c_receive_interrupt()
 {
   if (IFG2 & UCB0RXIFG)
+  {
     if (UCB0STAT & UCNACKIFG)
     {
       // send STOP if slave sends NACK
       UCB0CTL1 |= UCTXSTP;
       UCB0STAT &= ~UCNACKIFG;
     }
+  }
 }
 
 // checks if the interrupt was called because of an i2c transmit event

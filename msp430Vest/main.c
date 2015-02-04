@@ -1,5 +1,6 @@
 #include <msp430.h>
 #include "i2c_master.h"
+#include "uart.h"
 
 /**
  * The vest is bluetooth slave and i2c master to communicate between the tagger
@@ -10,14 +11,17 @@
 
 #define I2C_BASE_ADRESS 0x60
 #define I2C_PRESCALE 160
-#define BT_START_BYTE (char)0xFF
-#define NUM_DOMES 1
+#define SERIAL_START_BYTE (char)0xFF
+#define SERIAL_STOP_BYTE (char)0xFE
+#define NUM_DOMES 4
+unsigned char i2cTxBuffer[4] = {SERIAL_START_BYTE, 0, 0, SERIAL_STOP_BYTE};
+unsigned char i2cIn = 0;
+unsigned char uartRxCursor = 0;
+char uartIn = 0;
 
 // The vest id is used for the bluetooth name and is sent to the domes to avoid
 // getting hit by the own tagger.
-unsigned char vestId = 1;
-
-unsigned char indata = 0;
+unsigned char vestId = 2;
 
 void initClocks (void) {
   // Stop Watchdog Timer
@@ -41,7 +45,7 @@ void initUART()
   UCA0BR1 = (1667 >> 8);                     // 16MHz 9600
   UCA0MCTL = UCBRS0;                        // Modulation UCBRSx = 1
   UCA0CTL1 &= ~UCSWRST;                     // Initialize USCI state machine
-  IE2 |= UCA0RXIE;                          // Enable USCI_A0 RX interrupt
+  UC0IE |= UCA0RXIE;                          // Enable USCI_A0 RX interrupt
 }
 
 void setupBlueToothSlaveGrove() {
@@ -61,54 +65,96 @@ void setupBlueToothSlaveGrove() {
 }
 
 void setupBlueToothSlaveHC06() {
-  __delay_cycles(16000000); // 2s delay to let bluetooth module boot.
+  __delay_cycles(32000000); // 2s delay to let bluetooth module boot.
   serialPrint("AT");
   __delay_cycles(16000000);
-  serialPrint("AT+NAMEvest02");
+  serialPrint("AT+NAMEvest");
+  serialPrintInt(vestId);
   __delay_cycles(16000000);
   serialPrint("AT+PIN0000");
 }
 
-void sendIdToDomes() {
+// Send 
+void sendIdAndColorToDomes(unsigned char color) {
   char i;
+  i2cTxBuffer[1] = color;
+  i2cTxBuffer[2] = vestId;
   for (i = 0; i < NUM_DOMES; i++) {
     master_i2c_transmit_init(I2C_BASE_ADRESS + i, I2C_PRESCALE);
     while(!i2c_ready());
-    master_i2c_transmit(1, &vestId);
+    master_i2c_transmit(4, i2cTxBuffer);
     while(!i2c_ready());
   }
 }
 
 int main(void) {
+  P2DIR = 0;
   initClocks();
   initUART();
   // _EINT();
   __enable_interrupt();
-
   setupBlueToothSlaveHC06();
-
-  sendIdToDomes();
+  sendIdAndColorToDomes(0x00);
 
   char i;
 
   while (1) {
-    // Loop through the connected domes and ask for received hits.
-    for (i = 0; i < NUM_DOMES; i++) {
-      master_i2c_receive_init(I2C_BASE_ADRESS + i, I2C_PRESCALE);
-      while(!i2c_ready());
-      master_i2c_receive(1, &indata);
-      while(!i2c_ready());
+    // Receive team color via uart and send to domes.
+    while (serialAvailable()) {
+      uartIn = serialRead();
 
-      // __delay_cycles(8000000);
-      // serialPrintInt((char) indata);
-      // serialPrint("\n");
+      // serialWrite(uartIn);
+      // serialPrintln("test");
 
-      // Send received hit codes that are different from 0 and the dome number.
-      if (indata != 0) {
-        serialWrite(BT_START_BYTE);
-        serialWrite((char) indata);
-        serialWrite(i);
+      if (uartIn == SERIAL_START_BYTE) {
+        uartRxCursor = 1;
+      } else if (uartRxCursor == 1) {
+        sendIdAndColorToDomes((unsigned char) uartIn);
+        uartRxCursor = 0;
       }
     }
+
+    // Loop through the connected domes and ask for received hits.
+    for (i = 0; i < NUM_DOMES; i++) {
+      i2cIn = 0;
+      master_i2c_receive_init(I2C_BASE_ADRESS + i, I2C_PRESCALE);
+      while(!i2c_ready());
+      master_i2c_receive(1, &i2cIn);
+      while(!i2c_ready());
+
+      // Send received hit codes that are different from 0 and the dome number.
+      if (i2cIn != 0) {
+        serialWrite(SERIAL_START_BYTE);
+        serialWrite((char) i2cIn);
+        serialWrite(i);
+      }
+    } 
   }
+}
+
+// I2C and UART RX interrupt
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+  #pragma vector = USCIAB0RX_VECTOR
+  __interrupt void USCIAB0RX_ISR(void)
+#elif defined(__GNUC__)
+  void __attribute__ ((interrupt(USCIAB0RX_VECTOR))) USCIAB0RX_ISR (void)
+#else
+  #error Compiler not supported!
+#endif
+{
+  uart_receive_interrupt();
+  master_i2c_receive_interrupt();
+}
+
+// I2C and UART TX interrupt
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+  #pragma vector = USCIAB0TX_VECTOR
+  __interrupt void USCIAB0TX_ISR(void)
+#elif defined(__GNUC__)
+  void __attribute__ ((interrupt(USCIAB0TX_VECTOR))) USCIAB0TX_ISR (void)
+#else
+  #error Compiler not supported!
+#endif
+{
+  master_i2c_transmit_interrupt();
 }
