@@ -1,3 +1,9 @@
+/*
+ * Benjamin Völker, University of Freiburg
+ * mail: voelkerb@me.com
+ */
+
+
 #ifndef LED_H
 #define LED_H
 
@@ -11,8 +17,6 @@
 
 // Shoot pattern delay
 #define SHOOT_PATTERN_DELAY 40
-// How often the shoot pattern should be shown
-#define SHOOT_PATTERN_COUNT 3
 // Boot pattern delay
 #define BOOT_PATTERN_DELAY 100
 // Hit pattern delay
@@ -26,9 +30,9 @@
 // Reload pattern delay
 #define HEALTH_PATTERN_DELAY 300
 // The three Hit colors
-#define HIT_COLOR_1 255, 0, 0
-#define HIT_COLOR_2 0, 255, 0
-#define HIT_COLOR_3 0, 0, 255
+#define HIT_COLOR_1 255, 255, 255
+#define HIT_COLOR_2 255, 255, 255
+#define HIT_COLOR_3 255, 255, 255
 // The shoot color
 #define SHOOT_COLOR 255, 0, 0
 // The boot color
@@ -36,7 +40,7 @@
 // The shoot color
 #define SHOOT_COLOR 255, 0, 0
 // The shoot color
-#define DEAD_COLOR 255, 0, 0
+#define DEAD_COLOR 255, 255, 255
 // The shoot color
 #define LOW_AMMO_COLOR 255, 255, 0
 
@@ -85,7 +89,7 @@ public:
   
   void showHealthPattern(/*int health, int maxHealth*/);
   
-  void showLowAmmoPattern();
+  void showLowAmmoPattern(int health);
   
   void showDeadPattern();
   

@@ -1,3 +1,9 @@
+/*
+ * Benjamin Völker, University of Freiburg
+ * mail: voelkerb@me.com
+ */
+
+
 #ifndef DISPLAY_H
 #define DISPLAY_H
 #include <SoftwareSerial.h>
@@ -99,6 +105,11 @@
 #define INFO_TEXT_X_OFFSET SIDE_OFFSET + INFO_Y_SEPERATOR
 #define INFO_TEXT_Y_OFFSET INFO_RECT_OFFSET + INFO_Y_SEPERATOR
 
+#define HIT_POS_0 "front"
+#define HIT_POS_1 "left shoulder"
+#define HIT_POS_2 "right shoulder"
+#define HIT_POS_3 "back"
+#define HIT_POS_100 "tagger"
 
 class Display {
 public:
@@ -124,6 +135,8 @@ public:
   
   // update Info box
   bool updateInfo(char * infoText);
+  
+  bool updateInfo(char * playerName, uint8_t position);
   //bool updateInfo(String infoText);
   bool updateInfo(Hit hit);
   

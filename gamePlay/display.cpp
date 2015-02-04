@@ -1,3 +1,9 @@
+/*
+ * Benjamin Völker, University of Freiburg
+ * mail: voelkerb@me.com
+ */
+
+
 #include "display.h"
 
 TFT_22_ILI9225 _tft = TFT_22_ILI9225(TFT_RST, TFT_RS, TFT_CS, TFT_LED);
@@ -108,20 +114,51 @@ bool Display::updateInfo(String string) {
 bool Display::updateInfo(Hit hit) {
   _tft.fillRectangle(RECT_SIDE_OFFSET + 2, INFO_RECT_OFFSET + 2, _tft.maxX() - RECT_SIDE_OFFSET - 2, INFO_RECT_OFFSET + INFO_RECT_HEIGTH - 2, BACKGROUND_COLOR);
   char numbHit[4]; 
-  char numbPos[2]; 
   sprintf (numbHit, "%03i", hit.code);
-  sprintf (numbPos, "%01i", hit.position);
   
-  
+ 
   char myBigArray[30];
   myBigArray[0] = '\0';
   strcat(myBigArray, "Hit by: ");
   strcat(myBigArray, numbHit);
-  strcat(myBigArray, " at Pos: ");
-  strcat(myBigArray, numbPos);
+  strcat(myBigArray, " at ");
+  if (hit.position == 100) {
+    strcat(myBigArray, HIT_POS_100);
+  } else if (hit.position == 0) {
+    strcat(myBigArray, HIT_POS_0);
+  } else if (hit.position == 1) {
+    strcat(myBigArray, HIT_POS_1);
+  } else if (hit.position == 2) {
+    strcat(myBigArray, HIT_POS_2);
+  } else if (hit.position == 3) {
+    strcat(myBigArray, HIT_POS_3);
+  }
 
 
   _tft.setFont(INFO_FONT);
   _tft.drawText(INFO_TEXT_X_OFFSET, INFO_TEXT_Y_OFFSET, myBigArray, INFO_TEXT_COLOR);
 }
 
+// ___________________________________________________________________
+bool Display::updateInfo(char * playerName, uint8_t position) { 
+  _tft.fillRectangle(RECT_SIDE_OFFSET + 2, INFO_RECT_OFFSET + 2, _tft.maxX() - RECT_SIDE_OFFSET - 2, INFO_RECT_OFFSET + INFO_RECT_HEIGTH - 2, BACKGROUND_COLOR);
+ 
+ char myBigArray[30];
+  myBigArray[0] = '\0';
+  strcat(myBigArray, "Hit by: ");
+  strcat(myBigArray, playerName);
+  strcat(myBigArray, " at ");
+  if (position == 100) {
+    strcat(myBigArray, HIT_POS_100);
+  } else if (position == 0) {
+    strcat(myBigArray, HIT_POS_0);
+  } else if (position == 1) {
+    strcat(myBigArray, HIT_POS_1);
+  } else if (position == 2) {
+    strcat(myBigArray, HIT_POS_2);
+  } else if (position == 3) {
+    strcat(myBigArray, HIT_POS_3);
+  }
+  _tft.setFont(INFO_FONT);
+  _tft.drawText(INFO_TEXT_X_OFFSET, INFO_TEXT_Y_OFFSET, myBigArray, INFO_TEXT_COLOR);
+}

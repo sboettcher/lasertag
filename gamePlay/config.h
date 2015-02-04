@@ -1,10 +1,7 @@
-//
-//  config.h
-//  
-//
-//  Created by Benjamin Völker on 23/01/15.
-//
-//
+/*
+ * Benjamin Völker, University of Freiburg
+ * mail: voelkerb@me.com
+ */
 
 #ifndef _config_h
 #define _config_h
@@ -37,8 +34,9 @@ typedef struct hit Hit;
 #define RECEIVE_PIN 2
 #define RECEIVE_INTERRUPT 0
 #define IR_LED 3
-#define SERVER_SERIAL_RX A1
+#define SERVER_SERIAL_RX A5
 #define SERVER_SERIAL_TX A3
+#define LASER_PIN A4
 // Display Pins 8-13  // defined in Display.h
 
 // Server defines and Serial

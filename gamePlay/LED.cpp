@@ -1,3 +1,9 @@
+/*
+ * Benjamin Völker, University of Freiburg
+ * mail: voelkerb@me.com
+ */
+
+
 #include "LED.h"
 // ___________________________________________________________________
 LED::LED(int maxHealth) {
@@ -212,10 +218,18 @@ void LED::showHealthPattern() {
 }
 
 // ___________________________________________________________________
-void LED::showLowAmmoPattern() {
+void LED::showLowAmmoPattern(int health) {
   if (millis() - _timer > AMMO_PATTERN_DELAY) {
     if (_state == 0) { 
-      sendAllLEDsOneColor(CRGB(LOW_AMMO_COLOR));
+      int numLedOn = (int) ((float)NUMB_LEDS / (float) _maxHealth * health);
+      if (numLedOn == 0) numLedOn++;
+      if (numLedOn > NUMB_LEDS) numLedOn = NUMB_LEDS;
+      int state = 0;
+      
+      for (state = 0; state < numLedOn; state++) {
+        ledColors[state] = teamColor;
+      }
+      FastLED.show();
       _timer = millis();
       _state++;
     } else if (_state == 1) {
@@ -309,7 +323,7 @@ void LED::updateLED(int pattern, int health) {
       showCurrentHealth(health, _maxHealth);
       break;
     case AMMO_PATTERN: 
-      showLowAmmoPattern();
+      showLowAmmoPattern(health);
       break;
     case BOOT_PATTERN: 
       showBootPattern();

@@ -1,3 +1,9 @@
+/*
+ * Benjamin Völker, University of Freiburg
+ * mail: voelkerb@me.com
+ */
+
+
 #include "rfid.h"
 
 

@@ -1,3 +1,9 @@
+/*
+ * Benjamin Völker, University of Freiburg
+ * mail: voelkerb@me.com
+ */
+
+
 #ifndef SENDER_H
 #define SENDER_H
 #include "inttypes.h"
@@ -15,7 +21,7 @@ class IRSender {
 public:
   
   // Constructor
-  IRSender(uint8_t buttonPin, uint8_t ledPin);
+  IRSender(uint8_t buttonPin, uint8_t ledPin, uint8_t laserPin);
   
   // init the Interrupt to the sending pin
   void init(uint8_t code, int shootDelay);
@@ -37,6 +43,7 @@ private:
   uint8_t _irLEDPin;
   // Button Pin
   uint8_t _buttonPin;
+  uint8_t _laserPin;
   // Code to send over IR
   uint8_t _code;
   // Delay between two shots

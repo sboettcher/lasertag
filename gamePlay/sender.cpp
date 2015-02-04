@@ -1,16 +1,25 @@
+/*
+ * Benjamin Völker, University of Freiburg
+ * mail: voelkerb@me.com
+ */
+
+
+
 #include "sender.h"
 
 
 // ___________________________________________________________________
-IRSender::IRSender(uint8_t buttonPin, uint8_t ledPin) {
+IRSender::IRSender(uint8_t buttonPin, uint8_t ledPin, uint8_t laserPin) {
   _buttonPin = buttonPin;
   _irLEDPin = ledPin;
+  _laserPin = laserPin;
 }
 
 // ___________________________________________________________________
 void IRSender::init(uint8_t code, int shootDelay) {
   pinMode(_buttonPin, INPUT_PULLUP);
   pinMode(_irLEDPin, OUTPUT);
+  pinMode(_laserPin, OUTPUT);
   _code = code;
   _shootDelay = shootDelay;
   _sendTimer = 0;
@@ -23,17 +32,20 @@ int IRSender::shootIfNeeded() {
   if (millis() - _sendTimer > _shootDelay) {
     _sendTimer = millis();
     if (!digitalRead(_buttonPin)) {
+      digitalWrite(_laserPin, HIGH);
       noInterrupts();
       send(_code);
       interrupts();
       return 1;
     } else {
+      digitalWrite(_laserPin, LOW);
       return -1;
     }
   } else {
     if (!digitalRead(_buttonPin)) {
       return 0;
     } else {
+      digitalWrite(_laserPin, LOW);
       return -1;
     }
   }

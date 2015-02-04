@@ -1,3 +1,8 @@
+/*
+ * Benjamin Völker, University of Freiburg
+ * mail: voelkerb@me.com
+ */
+ 
 #include <FastLED.h>
 #include <SoftwareSerial.h>
 #include <SPI.h>
@@ -36,15 +41,16 @@ RFID rfid;
 
 // If error somewhere
 boolean _error = false;
-boolean _gameOver = false;
+int _gameOver = -1;
 boolean _isConnected = false;
+Hit _lastHit = {0,0};
 
 // The Player
-Player player(1, "John Doe", CRGB(255, 0, 255));
+Player player(2, "John Doe", CRGB(0, 0, 255));
 
 // The IR Sender
 #ifdef SENDER_ACTIVE
-IRSender irSender(SHOOT_BUTTON, IR_LED);
+IRSender irSender(SHOOT_BUTTON, IR_LED, LASER_PIN);
 #endif
 
 volatile boolean _isrHandling = false;
@@ -53,12 +59,12 @@ boolean _showHit = false;
 void setup() {
   // Start Debug Serial
 #ifdef DEBUG
-Serial.begin(DEBUG_SERIAL_SPEED);
+  Serial.begin(DEBUG_SERIAL_SPEED);
 #endif
 
   // Start Server connection 
 #ifdef SERVER_ACTIVE
-serverSerial.begin(SERVER_SERIAL_SPEED);
+  serverSerial.begin(SERVER_SERIAL_SPEED);
 #endif
 
   // Start RFID connection 
@@ -74,10 +80,13 @@ serverSerial.begin(SERVER_SERIAL_SPEED);
 #ifdef SERVER_ACTIVE
   // TODO 
   /*
-  while(server.testConnection()) {
+  while(!_isConnected) {
    #ifdef LED_ACTIVE
    led.updateLED(BOOT_PATTERN, player.getHealth());
    #endif
+   if (serverSerial.available()) {
+     handleServerCommand();
+   }
    #ifdef DEBUG
    Serial.println("Waiting for Server Connection...");
    delay(1000);
@@ -105,11 +114,6 @@ serverSerial.begin(SERVER_SERIAL_SPEED);
   led.setTeamColor(player._teamColor);
 #endif
 
-#ifdef WEST_ACTIVE
-#ifndef DEBUG
-  west.setTeamColor(player._teamColor);
-#endif
-#endif
 
 
   // Init the Display
@@ -164,6 +168,11 @@ serverSerial.begin(SERVER_SERIAL_SPEED);
 #endif
 #endif
 
+#ifdef WEST_ACTIVE
+#ifndef DEBUG
+  west.setTeamColor(player._teamColor);
+#endif
+#endif
 
   // Init the interrupt for the IR receiver
 #ifdef RECEIVER_ACTIVE
@@ -175,7 +184,7 @@ serverSerial.begin(SERVER_SERIAL_SPEED);
 void loop() {
   int ledPattern = CURR_HEALTH_PATTERN;
 #ifdef SERVER_ACTIVE
-  if (_error || _gameOver) {
+  if (_error || _gameOver != -1) {
     ledPattern = ERROR_PATTERN;
 #ifdef DEBUG
     Serial.println("Error");
@@ -222,11 +231,13 @@ void loop() {
       } 
       else {
         ledPattern = AMMO_PATTERN;
+        digitalWrite(LASER_PIN, LOW);
       }
       // show dead Pattern
     } 
     else {
       ledPattern = DEAD_PATTERN;
+      digitalWrite(LASER_PIN, LOW);
     }
 
 #ifdef SERVER_ACTIVE
@@ -246,6 +257,9 @@ void loop() {
 #ifdef WEST_ACTIVE
 #ifndef DEBUG
 void handleWestHit() {
+  /*
+  display.updateInfo("Got Hit");
+  delay(1000);*/
   handleHit(west.getCode());
 }
 #endif
@@ -278,7 +292,11 @@ void handleRFIDTag() {
   } 
   else {
 #ifdef SERVER_ACTIVE
-    // TODO: server.sendTAG(tag);
+    serverSerial.print("ri:");
+    for (int i = 0; i < rfid.uid.size; i++) {
+      serverSerial.write(rfid.uid.uidByte[i]);
+    }
+    serverSerial.println("");
 #endif
   }
 }
@@ -296,6 +314,10 @@ void handleShoot() {
 #ifdef DEBUG
   Serial.println("Player shooted");
 #endif
+#ifdef SERVER_ACTIVE
+  serverSerial.print("as:");
+  serverSerial.println(player._ammunition);
+#endif
 }
 
 void handleHealth(int health) { 
@@ -303,7 +325,7 @@ void handleHealth(int health) {
 #ifdef LED_ACTIVE
     led.updateLED(HEALTH_PATTERN, player._health);
 #endif
-    player.refillHealth(health);
+    player.refillHealth(health, true);
 #ifdef DISPLAY_ACTIVE
     display.updateHealth(player._health);
     display.updateInfo("Reload Health");
@@ -311,12 +333,15 @@ void handleHealth(int health) {
 #ifdef SERVER_ACTIVE
     //TODO server.sendHealth(player._health);
 #endif
+#ifdef WEST_ACTIVE
+  west.isDead(true);
+#endif
   }
 }
 
 void handleReload(int ammo) {
   if (player._ammunition != FULL_AMMUNITION) {
-    player.reload(ammo);
+    player.reload(ammo, true);
 #ifdef LED_ACTIVE
     led.updateLED(RELOAD_PATTERN, player._health);
 #endif
@@ -332,9 +357,7 @@ void handleReload(int ammo) {
 
 void handleHit(Hit hit) {
   if (hit.code != player._id) {
-#ifdef SERVER_ACTIVE
-    // TODO server.sendHit(hit);
-#endif
+    _lastHit = hit;
     if (player.gotHit() == -1) {
 #ifdef DISPLAY_ACTIVE
       display.updateHealth(player._health);
@@ -348,6 +371,12 @@ void handleHit(Hit hit) {
       display.updateInfo(hit);
 #endif
     }
+#ifdef SERVER_ACTIVE
+    serverSerial.print("hi:");
+    serverSerial.print(hit.code);
+    serverSerial.print(":");
+    serverSerial.println(hit.position);
+#endif
 #ifdef LED_ACTIVE
     _showHit = true;
     led.updateLED(HIT_PATTERN, player._health);
@@ -356,7 +385,12 @@ void handleHit(Hit hit) {
 }
 
 void handleDead() { 
+  #ifdef WEST_ACTIVE
+  west.isDead(true);
+  #endif
+  #ifdef SERVER_ACTIVE
   //server.sendDead();
+  #endif
 }
 
 
@@ -375,7 +409,7 @@ void irISR() {
   #endif
   if (code != -1) {
     Hit hit = {
-      0, code    };
+      100, code    };
     handleHit(hit);
   }
   interrupts();
@@ -439,20 +473,26 @@ void handleServerCommand() {
         }
         break;
       case 'g': 
+        // special modes of a game
         if (second == 'm') {
           if (serverSerial.available()) player._gameMode = serverSerial.read();
+        // start game
         } else if (second == 's') {
-          _gameOver = 1;
-        } else if (second == 't') {
           _gameOver = -1;
-        } else if (second == 'p') {
+        // stop game
+        } else if (second == 't') {
           _gameOver = 0;
+        // pause game
+        } else if (second == 'p') {
+          _gameOver = 1;
+        // special modes of a person
         } else if (second == 'c') {
           if (serverSerial.available()) player._gameSpecial = serverSerial.read();
         } 
         break;
       // Info
       case 'i': 
+        // write something on the display
         if (second == 'n') {
           int i = 0;
           while(serverSerial.available()) {
@@ -463,6 +503,9 @@ void handleServerCommand() {
               serverSerial.read();
             }
           }
+          #ifdef DISPLAY_ACTIVE
+          display.updateInfo(player._infoText);
+          #endif
         }
         break;
       case 't': 
@@ -472,15 +515,18 @@ void handleServerCommand() {
             player._teamColor.red = serverSerial.read();
             player._teamColor.green = serverSerial.read();
             player._teamColor.blue = serverSerial.read();
+            #ifdef LED_ACTIVE
+            led.setTeamColor(player._teamColor);
+            #endif
           }
         // TAG points
         } else if (second == 'p') {
           if (serverSerial.available() >= 2) {
-            if (serverSerial.read() == 1) {
-            }// TODO: _increasePoints = true;
-            else {
-            } // TODO: _increasePoints = false;
-            player._incrementPointAmount = serverSerial.read();
+            boolean increase = serverSerial.read();
+            player.gotPoints(serverSerial.read(), increase);
+            #ifdef DISPLAY_ACTIVE
+            display.drawPoints(player._points);
+            #endif
           }
         }
         break;
@@ -489,6 +535,9 @@ void handleServerCommand() {
         if (second == 's') {
           if (serverSerial.available()) {
             player._health = serverSerial.read();
+            #ifdef DISPLAY_ACTIVE
+            display.updateHealth(player._health);
+            #endif
           }
         // shooter name
         } else if (second == 'p') {
@@ -501,6 +550,9 @@ void handleServerCommand() {
               serverSerial.read();
             }
           }
+          #ifdef DISPLAY_ACTIVE
+          display.updateInfo(player._otherPlayerName, _lastHit.position);
+          #endif
         // hit name
         } else if (second == 'v') {
           int i = 0;
@@ -512,6 +564,9 @@ void handleServerCommand() {
               serverSerial.read();
             }
           }
+          #ifdef DISPLAY_ACTIVE
+          display.updateInfo(player._otherPlayerName);
+          #endif
         }
         break; 
       // Points
@@ -519,6 +574,9 @@ void handleServerCommand() {
         if (second == 's') {
           if (serverSerial.available()) {
             player._points = serverSerial.read();
+            #ifdef DISPLAY_ACTIVE
+            display.drawPoints(player._points);
+            #endif
           }
         }
         break;
@@ -528,8 +586,14 @@ void handleServerCommand() {
           // ammo
           if (second == 's') {
             player._ammunition = serverSerial.read();
+            #ifdef DISPLAY_ACTIVE
+            display.updateAmmo(player._ammunition);
+            #endif
           } else if(second == 'p') {
             player._ammoDecrease = serverSerial.read();
+            #ifdef DISPLAY_ACTIVE
+            display.updateAmmo(player._ammunition);
+            #endif
           } else if(second == 't') {
             player._points = serverSerial.read();
           }
@@ -539,22 +603,12 @@ void handleServerCommand() {
         if (serverSerial.available() > 2) {
           // ammo tag
           if (second == 'a') { 
-            if (serverSerial.read() == 1) {
-            }// TODO: _increaseAmmo = true;
-            else {
-            } // TODO: _increaseAmmo = false;
-            if (serverSerial.read() == ':') {
-              player._incrementAmmoAmount = serverSerial.read();
-            }
+            bool increment = serverSerial.read();
+            player.reload(serverSerial.read(), increment);
           // health tag 
           } else if (second == 'h') {
-            if (serverSerial.read() == 1) {
-            }// TODO: _increaseHealth = true;
-            else {
-            } // TODO: _increaseHealth = false;
-            if (serverSerial.read() == ':') {
-              player._incrementHealthAmount = serverSerial.read();
-            }
+            bool increment = serverSerial.read();
+            player.refillHealth(serverSerial.read(), increment);
           }
         }
         break;

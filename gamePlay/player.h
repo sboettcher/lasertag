@@ -1,9 +1,15 @@
+/*
+ * Benjamin Völker, University of Freiburg
+ * mail: voelkerb@me.com
+ */
+
+
 #include <FastLED.h>
 
 #ifndef LASERTAG_PLAYER_H
 #define LASERTAG_PLAYER_H
 
-#define HIT_LOST_PERCENT 10
+#define HIT_LOST_PERCENT 20
 #define AMMO_LOST 1
 #define HEALTH_AT_START 70
 #define FULL_AMMUNITION 50
@@ -18,10 +24,13 @@ public:
   Player(uint8_t identifier, /*String*/ char * name, CRGB teamColor);
  
   // The player is getting full ammo again
-  void reload(int amount);
+  void reload(int amount, bool increment);
+  
+    // The player is getting full ammo again
+  void gotPoints(int amounts, bool increment);
   
   // The player is getting full ammo again
-  void refillHealth(int amount);
+  void refillHealth(int amount, bool increment);
   
   // If Player got hit he will loose a defined amount of health
   int gotHit();
@@ -42,9 +51,9 @@ public:
   uint8_t  _gameMode;  
   uint8_t  _gameSpecial; 
   uint8_t  _ammoDecrease;  
-  uint8_t _incrementPointAmount;
-  uint8_t _incrementAmmoAmount;
-  uint8_t _incrementHealthAmount;  
+  uint8_t  _healthDecrease;
+  uint8_t  _maxHealth;
+  uint8_t  _maxAmmo;
 };
 
 #endif

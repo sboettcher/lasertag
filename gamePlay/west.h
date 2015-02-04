@@ -1,3 +1,9 @@
+/*
+ * Benjamin Völker, University of Freiburg
+ * mail: voelkerb@me.com
+ */
+
+
 #ifndef WEST_H
 #define WEST_H
 #include <SoftwareSerial.h>
@@ -25,6 +31,7 @@ public:
   
   // Returns from whome and where player got hit
   Hit getCode();
+  char * getChars();
   
   // Set the teamColor also at the west
   void setTeamColorRGB(uint8_t R, uint8_t G, uint8_t B);

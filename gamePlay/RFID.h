@@ -1,3 +1,9 @@
+/*
+ * Benjamin Völker, University of Freiburg
+ * mail: voelkerb@me.com
+ */
+
+
 #ifndef RFID_H
 #define RFID_H
 #include <SoftwareSerial.h>
@@ -70,8 +76,8 @@ public:
   // Returns the tag number, if some available
   long getTag();
   
-private:
   Uid uid;
+private:
   
   void initSPI();
   void PCD_Init();
