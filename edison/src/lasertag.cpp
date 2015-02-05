@@ -86,6 +86,7 @@ void lasertag::dsp_init() {
 void lasertag::dsp_draw_init() {
   m_dsp->setFont(Terminal12x16);  // larger font
 
+  //int fontX = m_dsp->fontX();
   int fontY = m_dsp->fontY();
   int maxX = m_dsp->maxX();
   int maxY = m_dsp->maxY();
@@ -103,6 +104,7 @@ void lasertag::dsp_draw_init() {
 
   // draw top part with placeholders for player name and current score
   m_dsp->drawText(10, 10, "[Player]");
+  //m_dsp->drawText(maxX - 10 - 7 * fontX, 15 + fontY, "[Score]");
   m_dsp->drawText(10, 15 + fontY, "[Score]");
   m_dsp->drawLine(10, 20 + 2 * fontY, maxX - 10, 20 + 2 * fontY, COLOR_WHITE);
 
@@ -216,7 +218,7 @@ void lasertag::t_read_bt() {
       // read byte from bluetooth serial
       bt_rec = (uint8_t)m_bluetooth->serial_read();
       // 255 indicates new hit, read next 2 bytes for code and position
-      if (bt_rec == 255) {
+      if (bt_rec == SERIAL_START_BYTE) {
         while (!m_bluetooth->available(0,1000));
         code = (uint8_t)m_bluetooth->serial_read();
         while (!m_bluetooth->available(0,1000));
@@ -346,7 +348,17 @@ void lasertag::parse_cmd(std::string cmd) {
     m_player.set_ID(std::stoi(data.substr(2)));
   } else if (key == "np") {  // <np:playername>
     m_player.set_name(data);
-  } else if (key == "hp") {  // <hi:hit_by>
+    write_name();
+  } else if (key == "hi") {  // <hi:tagged:pos>
+    std::string name = data.substr(0, data.find(":"));
+    std::string pos = data.substr(data.find(":") + 1);
+    printf("[LASERTAG] Tagged player %s at %s\n", name.c_str(), pos.c_str());
+    fflush(stdout);
+    // asynchronously draw on display so tcp communication can continue
+    clear_tagged();
+    handles.push_back(std::async(std::launch::async, &lasertag::dsp_write, this, m_dsp->maxX()/2 + 5, m_t_coord[1] + 5, pos, Terminal6x8, COLOR_WHITE));
+    handles.push_back(std::async(std::launch::async, &lasertag::dsp_write, this, m_dsp->maxX()/2 + 5, m_t_coord[1] + 15, name, Terminal11x16, COLOR_WHITE));
+  } else if (key == "hp") {  // <hp:hit_by>
     printf("[LASERTAG] Hit by %s \n", data.c_str());
     fflush(stdout);
     // asynchronously draw on display so tcp communication can continue
@@ -361,6 +373,18 @@ void lasertag::parse_cmd(std::string cmd) {
   }
 
   for (auto& h : handles) h.get();  // make sure all async calls return
+}
+
+
+//________________________________________________________________________________
+void lasertag::bt_set_team_color(uint16_t color) {
+  m_bluetooth->serial_write(SERIAL_START_BYTE);
+  switch (color) {
+    case COLOR_RED: m_bluetooth->serial_write(1); break;
+    case COLOR_GREEN: m_bluetooth->serial_write(2); break;
+    case COLOR_BLUE: m_bluetooth->serial_write(4); break;
+    case COLOR_WHITE: m_bluetooth->serial_write(7); break;
+  }
 }
 
 
@@ -436,4 +460,28 @@ void lasertag::draw_ammo(int old_a, int new_a) {
   } else if (a_old < a_new) {
     m_dsp->fillRectangle(a_old, m_a_coord[1], a_new, m_a_coord[3], COLOR_GREEN);
   }
+}
+
+//________________________________________________________________________________
+void lasertag::write_name() {
+  if (!m_dsp_init)
+    return;
+  std::lock_guard<std::recursive_mutex> dsp_lock(m_mtx_dsp);
+
+  m_dsp->fillRectangle(10, 10, m_dsp->maxX()-10, 26, COLOR_BLACK);
+  uint8_t tmp = m_dsp->setFont(Terminal12x16);
+  m_dsp->drawText(10, 10, m_player.get_name(), m_player.get_color());
+  m_dsp->setFont(&tmp);
+}
+
+//________________________________________________________________________________
+void lasertag::write_score() {
+  if (!m_dsp_init)
+    return;
+  std::lock_guard<std::recursive_mutex> dsp_lock(m_mtx_dsp);
+
+  m_dsp->fillRectangle(10, 31, m_dsp->maxX()-10, 47, COLOR_BLACK);
+  uint8_t tmp = m_dsp->setFont(Terminal12x16);
+  m_dsp->drawText(10, 31, std::to_string(m_player.get_score()), COLOR_WHITE);
+  m_dsp->setFont(&tmp);
 }

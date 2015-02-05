@@ -106,9 +106,12 @@ void edison_serial::bt_master_init(std::string name, std::string slave) {
       if (buf.size() > 30 + slave.size())
         buf = buf.substr(1);
 
+      //printf("%s\n", buf.c_str());
+      //fflush(stdout);
+
       nameIndex = buf.find(";" + slave);
       if (nameIndex != -1) {
-        addrIndex = buf.find("+RTINQ=") + 7;
+        addrIndex = buf.find("+rtinq=") + 7;
         slaveAddr = buf.substr(addrIndex, nameIndex - addrIndex);
         break;
       }
@@ -120,18 +123,18 @@ void edison_serial::bt_master_init(std::string name, std::string slave) {
   buf = "";
   while (!m_bt_connected) {
     printf("[BLUETOOTH] Connecting to slave: %s @ %s\n", slave.c_str(), slaveAddr.c_str());
-    serial_write("\r\n+CONN=" + slaveAddr + "\r\n");
+    serial_write("\r\n+conn=" + slaveAddr + "\r\n");
     while (true) {
       if (available(1)) {
         buf += serial_read();
-        if (buf.find("CONNECT:OK") != std::string::npos) {
+        if (buf.find("connect:ok") != std::string::npos) {
           m_bt_connected = true;
           printf("[BLUETOOTH] Connected!\n");
           break;
-        } else if (buf.find("CONNECT:FAIL") != std::string::npos) {
+        } else if (buf.find("connect:fail") != std::string::npos) {
           printf("[BLUETOOTH] Connect failed, trying again.\n");
           break;
-        } else if (buf.find("ERROR") != std::string::npos) {
+        } else if (buf.find("error") != std::string::npos) {
           printf("[BLUETOOTH] ERROR while trying to connect, aborting.\n");
           return;
         }
@@ -186,9 +189,12 @@ char edison_serial::serial_read() {
     printf("[SERIAL] read() error: %s\n", strerror(errno));
     fflush(stdout);
   }
-  //printf("%c", c);
+  //if (c == 13) {
+  //  c = ' ';
+  //}
+  //printf("%d\n", c);
   //fflush(stdout);
-  return c;
+  return (char) std::tolower(c);
 }
 
 void edison_serial::serial_write(std::string s) {
@@ -198,6 +204,18 @@ void edison_serial::serial_write(std::string s) {
   }
 
   if (write(m_fd, s.c_str(), s.length()) == -1) {
+    printf("[SERIAL] write() error: %s\n", strerror(errno));
+    fflush(stdout);
+  }
+}
+
+void edison_serial::serial_write(char c) {
+  if (!m_port_ready) {
+    printf("[SERIAL] Serial port not ready.\n");
+    return;
+  }
+
+  if (write(m_fd, &c, 1) == -1) {
     printf("[SERIAL] write() error: %s\n", strerror(errno));
     fflush(stdout);
   }

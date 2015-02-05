@@ -30,6 +30,9 @@ class edison_serial {
     // write the given string to port
     void serial_write(std::string s);
 
+    // write the char to port
+    void serial_write(char c);
+
     int get_serial_fd() {
       return m_fd;
     }

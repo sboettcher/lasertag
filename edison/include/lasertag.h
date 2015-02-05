@@ -25,6 +25,8 @@
 #define TFT_RST_PIN 32
 #define TFT_RS_PIN 47
 
+#define SERIAL_START_BYTE 0x7E
+
 class lasertag {
   public:
     // constructor
@@ -96,6 +98,11 @@ class lasertag {
 
     // parse a command coming i.e. from the server and do the corresponding action
     void parse_cmd(std::string cmd);
+
+    void bt_set_team_color(uint16_t color);
+
+    void write_name();
+    void write_score();
 
     
     //________________________________________________________________________________
