@@ -28,6 +28,7 @@ Server:
 Tagger Edison:
 - Main Platine auf der alles Zusammenläuft (als Lochraster) fertigen
 - Code Edison fertigstellen und testen
+- I2C RFID Reader oder SPI-I2C Converter Arduino
 - Sende- und Empfangs-MSP über I2C (Code + testen)
 - Tagger zusammenbauen
 - LED-Stripe mit Timer 
