@@ -4,22 +4,48 @@ Repository for the [Wearable Computing Lab Course 2014](http://praktikum.ese.uni
 University of Freiburg  
 
 ##0. TODO
+3D-Druck:
+- 6 Gehäuse + Deckel
+- Westen-Master drucken
+- Laser-Dioden Enclousure
+- Korpus für Edison 
+- Korpus für Arduino Tagger 
 
-- I2C Zuverlaessigkeit testen
-- Stromversorgung mit Akkus
-- RFID Reader an Edison betreiben
-- RFID-Tags einrichten
-- Server Programm fertig stellen
-- Tagger-Gehaeuse
-- Platine Tagger
-- Weste-Weste
-- Versuch MSPs auf Tagger zu vereinen
-- I2C NACK wenn keine Daten vorhanden
-- Display-Geschwindigkeit
-- LED-Stripes am Tagger
+CAD: 
+- Westen-Master CAD Design (Platine + Blutooth-Modul + Schaltregler + Akku)
+- Laser-Dioden Enclousure
+- Korpus für Edison 
+- Korpus für Arduino Tagger
+
+Weste:
+- Bestellung bei ESE-Lehrstuhl abholen
+- Bei Obi 5 Kugeln kaufen
+- Westen mit Domes bestücken
+
+Server:
+- Fertigstellen + testen
+
+Tagger Edison:
+- Main Platine auf der alles Zusammenläuft (als Lochraster) fertigen
+- Code Edison fertigstellen und testen
+- Sende- und Empfangs-MSP über I2C (Code + testen)
+- Tagger zusammenbauen
+- LED-Stripe mit Timer 
+- Reichweite Wifi testen
+
+Tagger Arduino:
+- Wifi Modul auf SmartNet programmieren
+- Verbindung zu Server testen
+- Reichweite Wifi testen
+
+Allgemein:
 - Berechnen ob Strahlung gefährlich ist
-- Hauptplatine für Tagger designen
-- Platinen ätzen und bestücken
+
+Präsentation:
+- Poster designen, drucken
+- Dokumentieren (Bilder + Text)
+
+
 
 ###0.1 ToBuy für 2 Westen-Tagger-Sets:
 
