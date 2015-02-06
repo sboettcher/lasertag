@@ -29,11 +29,15 @@ int main(int argc, char** argv) {
   lasertag lt;
 
   lt.dsp_init();
-  lt.i2c_init(6, 0x68);
-  lt.tcp_init(argv[1]);
+  //lt.i2c_init(6);
+  //lt.tcp_init(argv[1]);
   //lt.gpio_init(36);
 
   lt.spawn_threads();
+  //lt.parse_cmd("<ts:green>");
+  //lt.parse_cmd("<ci:1:2>");
+  //lt.parse_cmd("<np:test>");
+  //lt.parse_cmd("<ps:9001>");
   while (running == 1) {
   }
   lt.join_threads();

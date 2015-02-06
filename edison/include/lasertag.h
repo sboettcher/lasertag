@@ -31,6 +31,16 @@
 #define I2C_SEND_MSP 0x61
 #define I2C_REC_MSP 0x68
 
+#define I2C_BOOT 101  // 'e'
+#define I2C_TRIGGER 115  // 's'
+#define I2C_PLAYER_CODE 99  // 'c'
+#define I2C_NO_HEALTH 100  // 'd'
+#define I2C_NO_AMMO 97  // 'a'
+#define I2C_FULL_HEALTH 104  // 'h'
+#define I2C_FULL_AMMO 114  // 'r'
+#define I2C_ACTIVATE 121  // 'y'
+#define I2C_DEACTIVATE 120  // 'x'
+
 class lasertag {
   public:
     // constructor
@@ -114,6 +124,9 @@ class lasertag {
     void write_name();
     void write_score();
 
+    // reset health/ammo after certain amount of time
+    void reset_player();
+
     
     //________________________________________________________________________________
     TFT_22_ILI9225* m_dsp;
@@ -142,6 +155,7 @@ class lasertag {
     uint16_t m_t_coord[4];
 
     Player m_player;
+    int m_reset_time;
 
     std::map<uint8_t,std::string> m_hit_pos;
 };

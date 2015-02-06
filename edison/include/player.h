@@ -14,18 +14,18 @@ class Player {
     // Constructor
     Player();
     
-    // The player is getting full ammo again
-    void reload(int amount);
+    // refill certain amount of ammo, return old value
+    int reload(int amount);
     
-    // The player is getting full health again
-    void refill_health(int amount);
+    // refill certain amount of health, return old value
+    int refill_health(int amount);
     
     // If Player got hit he will loose a defined amount of health
-    // returns new value
+    // returns old value
     int hit();
     
     // If Player fires tagger he will loose 1 ammunition
-    // returns new value
+    // returns old value
     int fired();
     
     // setter/getter

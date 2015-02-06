@@ -16,36 +16,42 @@ Player::Player() {
 
 
 // ___________________________________________________________________
-void Player::reload(int amount) {
+int Player::reload(int amount) {
+  int tmp = m_ammo;
   m_ammo += amount;
   if (m_ammo > m_full_ammo || amount < 0)
     m_ammo = m_full_ammo;
+  return tmp;
 }
 
 
 // ___________________________________________________________________
-void Player::refill_health(int amount) {
+int Player::refill_health(int amount) {
+  int tmp = m_health;
   m_health += amount;
   if (m_health > m_full_health || amount < 0)
     m_health = m_full_health;
+  return tmp;
 }
 
 
 // ___________________________________________________________________
 int Player::hit() {
+  int tmp = m_health;
   m_health -= m_full_health * (HIT_LOST_PERCENT / 100.0);
   if (m_health < 0)
     m_health = 0;
-  return m_health;
+  return tmp;
 }
 
 
 // ___________________________________________________________________
 int Player::fired() {
+  int tmp = m_ammo;
   m_ammo -= 1;
   if (m_ammo < 0)
     m_ammo = 0;
-  return m_ammo;
+  return tmp;
 }
 
 // ___________________________________________________________________
