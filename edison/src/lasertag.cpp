@@ -195,9 +195,17 @@ void lasertag::t_read_i2c() {
       i2c_rec = i2c_read_int();
       // filter out idle, error bytes
       if (i2c_rec != 0 && i2c_rec != 255) {
-        // asynchronously call hitreg function so i2c communication can continue during
-        handles.push_back(std::async(std::launch::async, &lasertag::hit_register, this, i2c_rec, 4));
-        i2c_rec = 0;
+        if (i2c_rec == 83 || i2c_rec == 115) {  // 'S' or 's' for trigger
+          if (m_player.get_ammo() > 0) {
+            // decrement ammo on trigger activation
+            // asynchronously draw on display so tcp communication can continue
+            handles.push_back(std::async(std::launch::async, &lasertag::draw_ammo, this, m_player.get_health(), m_player.fired()));
+          }
+        } else {
+          // asynchronously call hitreg function so i2c communication can continue during
+          handles.push_back(std::async(std::launch::async, &lasertag::hit_register, this, i2c_rec, 4));
+          i2c_rec = 0;
+        }
       }
     }
   }
@@ -210,24 +218,43 @@ void lasertag::t_read_bt() {
   int code = 0;
   int pos = 0;
 
+  uint8_t idx = 0;
+
   std::vector<std::future<void>> handles;  // collect all handles for async calls
   while (m_active) {
     if (!m_bt_init || !m_bluetooth->bt_connected())
       continue;
-    if (m_bluetooth->available(0,1000)) {
+    while (m_bluetooth->available(0,1000)) {
       // read byte from bluetooth serial
       bt_rec = (uint8_t)m_bluetooth->serial_read();
-      // 255 indicates new hit, read next 2 bytes for code and position
-      if (bt_rec == SERIAL_START_BYTE) {
-        while (!m_bluetooth->available(0,1000));
-        code = (uint8_t)m_bluetooth->serial_read();
-        while (!m_bluetooth->available(0,1000));
-        pos = (uint8_t)m_bluetooth->serial_read();
+      if (bt_rec == SERIAL_START_BYTE) {  // indicates new hit, read next 2 bytes for code and position
+        idx = 1;
+      } else if (idx == 1) {
+        code = bt_rec;
+        idx = 2;
+      } else if (idx == 2) {
+        pos = bt_rec;
+        idx = 0;
         // asynchronously call hitreg function so bt communication can continue during
         handles.push_back(std::async(std::launch::async, &lasertag::hit_register, this, code, pos));
-        bt_rec = 0;
       }
+      bt_rec = 0;
     }
+
+    // if (m_bluetooth->available(0,1000)) {
+    //   // read byte from bluetooth serial
+    //   bt_rec = (uint8_t)m_bluetooth->serial_read();
+    //   // 255 indicates new hit, read next 2 bytes for code and position
+    //   if (bt_rec == SERIAL_START_BYTE) {
+    //     while (!m_bluetooth->available(0,1000));
+    //     code = (uint8_t)m_bluetooth->serial_read();
+    //     while (!m_bluetooth->available(0,1000));
+    //     pos = (uint8_t)m_bluetooth->serial_read();
+    //     // asynchronously call hitreg function so bt communication can continue during
+    //     handles.push_back(std::async(std::launch::async, &lasertag::hit_register, this, code, pos));
+    //     bt_rec = 0;
+    //   }
+    // }
   }
   for (auto& h : handles) h.get();  // make sure all async calls return
 }
@@ -275,7 +302,7 @@ void lasertag::spawn_threads() {
   m_threads.push_back(std::thread(&lasertag::t_read_i2c, this));
   //m_threads.push_back(std::thread(&lasertag::t_read_bt, this));  // only spawn if vest used
   m_threads.push_back(std::thread(&lasertag::t_read_tcp, this));
-  m_threads.push_back(std::thread(&lasertag::t_read_gpio, this));
+  //m_threads.push_back(std::thread(&lasertag::t_read_gpio, this));  // now handled by msp sending 's' via i2c
   printf("[LASERTAG] Done.\n");
   fflush(stdout);
 }
@@ -346,6 +373,14 @@ void lasertag::parse_cmd(std::string cmd) {
   if (key == "ci") {  // <ci:has_vest:id>
     m_player.set_vest(std::stoi(data.substr(0, 1)));
     m_player.set_ID(std::stoi(data.substr(2)));
+    std::stringstream ss;
+    ss << "vest" << m_player.get_ID();
+    m_bt_slave = ss.str();
+    if (m_player.get_vest())
+      bt_init();
+    // transmit ID to msp
+    m_i2c->writeByte(99);
+    m_i2c->writeByte(m_player.get_ID());
   } else if (key == "np") {  // <np:playername>
     m_player.set_name(data);
     write_name();
@@ -354,9 +389,9 @@ void lasertag::parse_cmd(std::string cmd) {
     std::string pos = data.substr(data.find(":") + 1);
     printf("[LASERTAG] Tagged player %s at %s\n", name.c_str(), pos.c_str());
     fflush(stdout);
-    // asynchronously draw on display so tcp communication can continue
     clear_tagged_pos();
     clear_tagged_name();
+    // asynchronously draw on display so tcp communication can continue
     handles.push_back(std::async(std::launch::async, &lasertag::dsp_write, this, m_dsp->maxX()/2 + 5, m_t_coord[1] + 5, pos, Terminal6x8, COLOR_WHITE));
     handles.push_back(std::async(std::launch::async, &lasertag::dsp_write, this, m_dsp->maxX()/2 + 5, m_t_coord[1] + 15, name, Terminal11x16, COLOR_WHITE));
   } else if (key == "hp") {  // <hp:hit_by>
@@ -365,10 +400,6 @@ void lasertag::parse_cmd(std::string cmd) {
     clear_hit_name();
     // asynchronously draw on display so tcp communication can continue
     handles.push_back(std::async(std::launch::async, &lasertag::dsp_write, this, m_t_coord[0] + 5, m_t_coord[1] + 15, data, Terminal11x16, COLOR_WHITE));
-  } else if (key == "ve") {  // <ve:vest_name>
-    m_bt_slave = data;
-    if (m_player.get_vest())
-      bt_init();
   } else {
     printf("[LASERTAG] TCP command not recognized.\n");
     fflush(stdout);

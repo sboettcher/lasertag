@@ -34,8 +34,8 @@ class Player {
     int get_ammo() {return m_ammo;}
     int get_max_ammo() {return m_full_ammo;}
     
-    void set_ID(int id) {m_id = id;}
-    int get_ID() {return m_id;}
+    void set_ID(int id) {m_id = (uint8_t) id;}
+    uint8_t get_ID() {return m_id;}
     
     void set_name(std::string name) {m_name = name;}
     std::string get_name() {return m_name;}
@@ -51,7 +51,7 @@ class Player {
   
   private:
     // member vars
-    int m_id;
+    uint8_t m_id;
     int m_score;
     int m_health;
     int m_full_health;

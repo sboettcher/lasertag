@@ -30,11 +30,8 @@ int main(int argc, char** argv) {
 
   lt.dsp_init();
   lt.i2c_init(6, 0x68);
-  lt.gpio_init(36);
   lt.tcp_init(argv[1]);
-
-  printf("\n");
-  fflush(stdout);
+  //lt.gpio_init(36);
 
   lt.spawn_threads();
   while (running == 1) {
