@@ -316,7 +316,7 @@ void lasertag::hit_register(int code, int pos) {
   }
 
   // write hit position to display
-  clear_hit();
+  clear_hit_pos();
   std::stringstream text;
   //text << code << " -> " << pos;
   if (pos < 0 || pos > 4) {
@@ -355,12 +355,14 @@ void lasertag::parse_cmd(std::string cmd) {
     printf("[LASERTAG] Tagged player %s at %s\n", name.c_str(), pos.c_str());
     fflush(stdout);
     // asynchronously draw on display so tcp communication can continue
-    clear_tagged();
+    clear_tagged_pos();
+    clear_tagged_name();
     handles.push_back(std::async(std::launch::async, &lasertag::dsp_write, this, m_dsp->maxX()/2 + 5, m_t_coord[1] + 5, pos, Terminal6x8, COLOR_WHITE));
     handles.push_back(std::async(std::launch::async, &lasertag::dsp_write, this, m_dsp->maxX()/2 + 5, m_t_coord[1] + 15, name, Terminal11x16, COLOR_WHITE));
   } else if (key == "hp") {  // <hp:hit_by>
     printf("[LASERTAG] Hit by %s \n", data.c_str());
     fflush(stdout);
+    clear_hit_name();
     // asynchronously draw on display so tcp communication can continue
     handles.push_back(std::async(std::launch::async, &lasertag::dsp_write, this, m_t_coord[0] + 5, m_t_coord[1] + 15, data, Terminal11x16, COLOR_WHITE));
   } else if (key == "ve") {  // <ve:vest_name>
@@ -395,20 +397,35 @@ void lasertag::bt_set_team_color(uint16_t color) {
  */
  
 //________________________________________________________________________________
-void lasertag::clear_hit() {
+void lasertag::clear_hit_pos() {
   if (!m_dsp_init)
     return;
   std::lock_guard<std::recursive_mutex> dsp_lock(m_mtx_dsp);
-  m_dsp->fillRectangle(m_t_coord[0]+1, m_t_coord[1]+1, m_dsp->maxX()/2-1, m_t_coord[3]-1, COLOR_BLACK);
+  m_dsp->fillRectangle(m_t_coord[0]+5, m_t_coord[1]+5, m_dsp->maxX()/2-1, m_t_coord[1]+5+8, COLOR_BLACK);
+}
+//________________________________________________________________________________
+void lasertag::clear_hit_name() {
+  if (!m_dsp_init)
+    return;
+  std::lock_guard<std::recursive_mutex> dsp_lock(m_mtx_dsp);
+  m_dsp->fillRectangle(m_t_coord[0]+5, m_t_coord[1]+15, m_dsp->maxX()/2-1, m_t_coord[1]+15+16, COLOR_BLACK);
 }
 
 //________________________________________________________________________________
-void lasertag::clear_tagged() {
+void lasertag::clear_tagged_pos() {
   if (!m_dsp_init)
     return;
   std::lock_guard<std::recursive_mutex> dsp_lock(m_mtx_dsp);
-  m_dsp->fillRectangle(m_dsp->maxX()/2+1, m_t_coord[1]+1, m_t_coord[2]-1, m_t_coord[3]-1, COLOR_BLACK);
+  m_dsp->fillRectangle(m_dsp->maxX()/2+5, m_t_coord[1]+5, m_t_coord[2]-1, m_t_coord[1]+5+8, COLOR_BLACK);
 }
+//________________________________________________________________________________
+void lasertag::clear_tagged_name() {
+  if (!m_dsp_init)
+    return;
+  std::lock_guard<std::recursive_mutex> dsp_lock(m_mtx_dsp);
+  m_dsp->fillRectangle(m_dsp->maxX()/2+5, m_t_coord[1]+15, m_t_coord[2]-1, m_t_coord[1]+15+16, COLOR_BLACK);
+}
+
 
 //________________________________________________________________________________
 void lasertag::dsp_write(int x, int y, std::string text, uint8_t* font, uint16_t color) {

@@ -84,8 +84,10 @@ class lasertag {
     void draw_ammo(int old_a, int new_a);
 
     // clear the corresponding text boxes on the display
-    void clear_hit();
-    void clear_tagged();
+    void clear_hit_pos();
+    void clear_hit_name();
+    void clear_tagged_pos();
+    void clear_tagged_name();
 
     // read from i2c, threaded
     void t_read_i2c();
@@ -99,8 +101,10 @@ class lasertag {
     // parse a command coming i.e. from the server and do the corresponding action
     void parse_cmd(std::string cmd);
 
+    // transmits the team color to the vest via bt
     void bt_set_team_color(uint16_t color);
 
+    // write name and score to dsp
     void write_name();
     void write_score();
 
