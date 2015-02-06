@@ -29,7 +29,7 @@ lasertag::~lasertag() {
  */
  
 //________________________________________________________________________________
-void lasertag::i2c_init(int bus, int address) {
+void lasertag::i2c_init(int bus) {
   // make sure i2c bus number is 1 or 6
   if (bus != 1 && bus != 6) {
     printf("\n[LASERTAG] Wrong i2c bus number!. Using bus 6.\n");
@@ -37,9 +37,13 @@ void lasertag::i2c_init(int bus, int address) {
     m_i2c_bus = bus;
   }
   m_i2c = new mraa::I2c(m_i2c_bus);
-  m_i2c->address(0x68);
+  m_i2c->address(I2C_SEND_MSP);
+  m_i2c->writeByte(101);  // 'e'
 
   m_i2c_init = true;
+
+  printf("[LASERTAG] init I2C\n");
+  fflush(stdout);
 }
 
 //________________________________________________________________________________
@@ -190,21 +194,28 @@ void lasertag::t_read_i2c() {
 
   std::vector<std::future<void>> handles;  // collect all handles for async calls
   while (m_active) {
-    if (m_i2c_init) {
-      // read from i2c
-      i2c_rec = i2c_read_int();
-      // filter out idle, error bytes
-      if (i2c_rec != 0 && i2c_rec != 255) {
-        if (i2c_rec == 83 || i2c_rec == 115) {  // 'S' or 's' for trigger
-          if (m_player.get_ammo() > 0) {
-            // decrement ammo on trigger activation
-            // asynchronously draw on display so tcp communication can continue
-            handles.push_back(std::async(std::launch::async, &lasertag::draw_ammo, this, m_player.get_health(), m_player.fired()));
-          }
-        } else {
-          // asynchronously call hitreg function so i2c communication can continue during
-          handles.push_back(std::async(std::launch::async, &lasertag::hit_register, this, i2c_rec, 4));
-          i2c_rec = 0;
+    if (!m_i2c_init)
+      continue;
+
+    // read from rec i2c
+    m_i2c->address(I2C_REC_MSP);
+    i2c_rec = i2c_read_int();
+    // filter out idle, error bytes
+    if (i2c_rec != 0 && i2c_rec != 255) {
+      // asynchronously call hitreg function so i2c communication can continue during
+      handles.push_back(std::async(std::launch::async, &lasertag::hit_register, this, i2c_rec, 4));
+    }
+
+    // read from send i2c
+    m_i2c->address(I2C_SEND_MSP);
+    i2c_rec = i2c_read_int();
+    if (i2c_rec == 115) {  // 's' for trigger
+      if (m_player.get_ammo() > 0) {
+        // decrement ammo on trigger activation
+        // asynchronously draw on display so tcp communication can continue
+        handles.push_back(std::async(std::launch::async, &lasertag::draw_ammo, this, m_player.get_ammo(), m_player.fired()));
+        if (m_player.get_ammo() == 0) {
+          m_i2c->writeByte(97);  // 'a'
         }
       }
     }
@@ -280,7 +291,7 @@ void lasertag::t_read_gpio() {
       if (m_player.get_ammo() > 0) {
         // decrement ammo on trigger activation
         // asynchronously draw on display so tcp communication can continue
-        handles.push_back(std::async(std::launch::async, &lasertag::draw_ammo, this, m_player.get_health(), m_player.fired()));
+        handles.push_back(std::async(std::launch::async, &lasertag::draw_ammo, this, m_player.get_ammo(), m_player.fired()));
       }
       usleep(100000);  // wait some time so tagger can't trigger continuously
     }
@@ -341,6 +352,10 @@ void lasertag::hit_register(int code, int pos) {
   if (m_player.get_health() > 0) {
     draw_health(m_player.get_health(), m_player.hit());
   }
+  if (m_player.get_health() == 0 && m_i2c_init) {
+    m_i2c->address(I2C_SEND_MSP);
+    m_i2c->writeByte(100);  // 'd'
+  }
 
   // write hit position to display
   clear_hit_pos();
@@ -369,6 +384,8 @@ void lasertag::parse_cmd(std::string cmd) {
 
   // get the command data
   std::string data = cmd.substr(cmd.find(":") + 1, cmd.find(">") - 1 - cmd.find(":"));
+  if (data == "")
+    return;
 
   if (key == "ci") {  // <ci:has_vest:id>
     m_player.set_vest(std::stoi(data.substr(0, 1)));
@@ -379,11 +396,27 @@ void lasertag::parse_cmd(std::string cmd) {
     if (m_player.get_vest())
       bt_init();
     // transmit ID to msp
-    m_i2c->writeByte(99);
-    m_i2c->writeByte(m_player.get_ID());
+    if (m_i2c_init) {
+      m_i2c->address(I2C_SEND_MSP);
+      m_i2c->writeByte(99);  // 'c'
+      m_i2c->writeByte(m_player.get_ID());
+    }
   } else if (key == "np") {  // <np:playername>
     m_player.set_name(data);
     write_name();
+  } else if (key == "ts") {  // <ts:teamcolor>
+    if (data == "red") {
+      m_player.set_color(COLOR_RED);
+    } else if (data == "green") {
+      m_player.set_color(COLOR_GREEN);
+    } else if (data == "blue") {
+      m_player.set_color(COLOR_BLUE);
+    } else if (data == "none") {
+      m_player.set_color(COLOR_WHITE);
+    }
+  } else if (key == "ps") {  // <ps:score>
+    m_player.set_score(std::stoi(data));
+    write_score();
   } else if (key == "hi") {  // <hi:tagged:pos>
     std::string name = data.substr(0, data.find(":"));
     std::string pos = data.substr(data.find(":") + 1);
@@ -400,12 +433,21 @@ void lasertag::parse_cmd(std::string cmd) {
     clear_hit_name();
     // asynchronously draw on display so tcp communication can continue
     handles.push_back(std::async(std::launch::async, &lasertag::dsp_write, this, m_t_coord[0] + 5, m_t_coord[1] + 15, data, Terminal11x16, COLOR_WHITE));
+  } else if (key == "at") {  // <at:tagger_active>
+    m_i2c->address(I2C_SEND_MSP);
+    if (data == "0") {
+      if (m_i2c_init)
+        m_i2c->writeByte(120);  // 'x'
+    } else if (data == "1") {
+      if (m_i2c_init)
+        m_i2c->writeByte(121);  // 'y'
+    }
   } else {
     printf("[LASERTAG] TCP command not recognized.\n");
     fflush(stdout);
   }
 
-  for (auto& h : handles) h.get();  // make sure all async calls return
+  //for (auto& h : handles) h.get();  // make sure all async calls return
 }
 
 
@@ -488,6 +530,14 @@ void lasertag::draw_health(int old_h, int new_h) {
   } else if (h_old < h_new) {
     m_dsp->fillRectangle(h_old, m_h_coord[1], h_new, m_h_coord[3], COLOR_RED);
   }
+
+  if (m_i2c_init) {
+    uint8_t led = 7 * perc_new;
+    if (led < 1)
+      led = 1;
+    m_i2c->address(I2C_SEND_MSP);
+    m_i2c->writeByte(48 + led);
+  }
 }
 
 //________________________________________________________________________________
@@ -507,6 +557,14 @@ void lasertag::draw_ammo(int old_a, int new_a) {
     m_dsp->fillRectangle(a_new, m_a_coord[1], a_old, m_a_coord[3], COLOR_BLACK);
   } else if (a_old < a_new) {
     m_dsp->fillRectangle(a_old, m_a_coord[1], a_new, m_a_coord[3], COLOR_GREEN);
+  }
+
+  if (m_i2c_init) {
+    uint8_t led = 7 * perc_new;
+    if (led < 1)
+      led = 1;
+    m_i2c->address(I2C_SEND_MSP);
+    m_i2c->writeByte(48 + led);
   }
 }
 

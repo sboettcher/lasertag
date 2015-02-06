@@ -27,6 +27,9 @@
 
 #define SERIAL_START_BYTE 0x7E
 
+#define I2C_SEND_MSP 0x61
+#define I2C_REC_MSP 0x68
+
 class lasertag {
   public:
     // constructor
@@ -34,8 +37,8 @@ class lasertag {
     // destructor
     ~lasertag();
 
-    // initialize i2c on bus and address
-    void i2c_init(int bus, int address);
+    // initialize i2c on bus
+    void i2c_init(int bus);
     // read uint8 from i2c
     uint8_t i2c_read_int();
 
