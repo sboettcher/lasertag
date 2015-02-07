@@ -30,9 +30,13 @@ class Player {
     
     // setter/getter
     int get_health() {return m_health;}
+    int set_health(int health);
     int get_max_health() {return m_full_health;}
+    int set_max_health(int health);
     int get_ammo() {return m_ammo;}
+    int set_ammo(int ammo);
     int get_max_ammo() {return m_full_ammo;}
+    int set_max_ammo(int ammo);
     
     void set_ID(int id) {m_id = (uint8_t) id;}
     uint8_t get_ID() {return m_id;}

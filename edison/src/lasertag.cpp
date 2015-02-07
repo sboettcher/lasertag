@@ -238,9 +238,13 @@ void lasertag::t_read_i2c() {
         // decrement ammo on trigger activation
         // asynchronously draw on display so tcp communication can continue
         handles.push_back(std::async(std::launch::async, &lasertag::draw_ammo, this, m_player.get_ammo(), m_player.fired()));
-        if (m_player.get_ammo() == 0) {
+        if (m_player.get_ammo() == 0)
           i2c_write_int(97, I2C_SEND_MSP);  // 'a'
-        }
+        // write current ammo to server
+        std::stringstream ss;
+        ss << "<as:" << m_player.get_ammo() << ">\n";
+        if (m_tcp_init && m_client->connected())
+          m_client->tcp_send(ss.str());
       }
     }
   }
@@ -361,6 +365,9 @@ void lasertag::join_threads() {
 
 //________________________________________________________________________________
 void lasertag::hit_register(int code, int pos) {
+  if (m_player.get_health() == 0)
+    return;
+
   // make sure there is only one execution of the function at a time
   std::lock_guard<std::recursive_mutex> hitreg_lock(m_mtx_hitreg);
   printf("[LASERTAG] Hit by %i at %i\n", code, pos);
@@ -418,6 +425,7 @@ void lasertag::parse_cmd(std::string cmd) {
     m_bt_slave = ss.str();
     if (m_player.get_vest()) {
       bt_init();
+      usleep(2000000);
       bt_set_team_color(m_player.get_color());
     }
     // transmit ID to msp
@@ -439,9 +447,13 @@ void lasertag::parse_cmd(std::string cmd) {
     } else if (data == "none") {
       m_player.set_color(COLOR_WHITE);
     }
+  } else if (key == "hs") {  // <hs:health>
+    draw_health(m_player.set_health(std::stoi(data)), m_player.get_health());
   } else if (key == "ps") {  // <ps:score>
     m_player.set_score(std::stoi(data));
     write_score();
+  } else if (key == "as") {  // <as:ammo>
+    draw_ammo(m_player.set_ammo(std::stoi(data)), m_player.get_ammo());
   } else if (key == "hi") {  // <hi:tagged:pos>
     std::string name = data.substr(0, data.find(":"));
     std::string pos = data.substr(data.find(":") + 1);
@@ -577,11 +589,6 @@ void lasertag::draw_ammo(int old_a, int new_a) {
   } else if (a_old < a_new) {
     m_dsp->fillRectangle(a_old, m_a_coord[1], a_new, m_a_coord[3], COLOR_GREEN);
   }
-
-  uint8_t led = 7 * perc_new;
-  if (led < 1)
-    led = 1;
-  i2c_write_int(48 + led, I2C_SEND_MSP);
 }
 
 //________________________________________________________________________________

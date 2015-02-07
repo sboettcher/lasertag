@@ -18,22 +18,22 @@ Player::Player() {
 // ___________________________________________________________________
 void Player::reload(int amount) {
   m_ammo += amount;
-  if (m_ammo > FULL_AMMO || amount < 0)
-    m_ammo = FULL_AMMO;
+  if (m_ammo > m_full_ammo || amount < 0)
+    m_ammo = m_full_ammo;
 }
 
 
 // ___________________________________________________________________
 void Player::refill_health(int amount) {
   m_health += amount;
-  if (m_health > FULL_HEALTH || amount < 0)
-    m_health = FULL_HEALTH;
+  if (m_health > m_full_health || amount < 0)
+    m_health = m_full_health;
 }
 
 
 // ___________________________________________________________________
 int Player::hit() {
-  m_health -= FULL_HEALTH * (HIT_LOST_PERCENT / 100.0);
+  m_health -= m_full_health * (HIT_LOST_PERCENT / 100.0);
   if (m_health < 0)
     m_health = 0;
   return m_health;
@@ -46,4 +46,30 @@ int Player::fired() {
   if (m_ammo < 0)
     m_ammo = 0;
   return m_ammo;
+}
+
+// ___________________________________________________________________
+int Player::set_health(int health) {
+  int tmp = m_health;
+  m_health = health;
+  return tmp;
+}
+// ___________________________________________________________________
+int Player::set_max_health(int health) {
+  int tmp = m_full_health;
+  m_full_health = health;
+  return tmp;
+}
+
+// ___________________________________________________________________
+int Player::set_ammo(int ammo) {
+  int tmp = m_ammo;
+  m_ammo = ammo;
+  return tmp;
+}
+// ___________________________________________________________________
+int Player::set_max_ammo(int ammo) {
+  int tmp = m_full_ammo;
+  m_full_ammo = ammo;
+  return tmp;
 }
