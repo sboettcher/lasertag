@@ -13,7 +13,7 @@ lasertag::lasertag()
   m_hit_pos[1] = "Back";
   m_hit_pos[2] = "Left";
   m_hit_pos[3] = "Right";
-  m_hit_pos[4] = "Tagger";
+  m_hit_pos[100] = "Tagger";
 
   m_reset_time = 5;
 }
@@ -49,8 +49,6 @@ void lasertag::i2c_init(int bus) {
   fflush(stdout);
 
   i2c_write_int(I2C_BOOT, I2C_SEND_MSP);
-  usleep(5000000);
-  i2c_write_int(I2C_NO_AMMO, I2C_SEND_MSP);
 }
 
 //________________________________________________________________________________
@@ -59,14 +57,14 @@ uint8_t lasertag::i2c_read_int(uint8_t a) {
     return 0;
 
   m_i2c->address(a);
-  //// read one integer from i2c bus and return it
-  //uint8_t rx_tx_buf[1];
-  //if (m_i2c->read(rx_tx_buf, 1) != 1) {
-  //  printf("[LASERTAG] i2c read error!\n");
-  //  fflush(stdout);
-  //}
-  //return rx_tx_buf[0];
-  return m_i2c->readByte();
+  // read one integer from i2c bus and return it
+  uint8_t rx_tx_buf[1];
+  if (m_i2c->read(rx_tx_buf, 1) != 1) {
+    printf("[LASERTAG] i2c read error!\n");
+    fflush(stdout);
+  }
+  return rx_tx_buf[0];
+  //return m_i2c->readByte();
 }
 //________________________________________________________________________________
 void lasertag::i2c_write_int(uint8_t i, uint8_t a) {
@@ -219,13 +217,13 @@ void lasertag::t_read_i2c() {
     if (!m_i2c_init)
       continue;
 
-    //// read from rec i2c
-    //i2c_rec = i2c_read_int(I2C_REC_MSP);
-    //// filter out idle, error bytes
-    //if (i2c_rec != 0 && i2c_rec != 255) {
-    //  // asynchronously call hitreg function so i2c communication can continue during
-    //  handles.push_back(std::async(std::launch::async, &lasertag::hit_register, this, i2c_rec, 4));
-    //}
+    // read from rec i2c
+    i2c_rec = i2c_read_int(I2C_REC_MSP);
+    // filter out idle, error bytes
+    if (i2c_rec != 0 && i2c_rec != 255) {
+      // asynchronously call hitreg function so i2c communication can continue during
+      handles.push_back(std::async(std::launch::async, &lasertag::hit_register, this, i2c_rec, 100));
+    }
 
     // read from send i2c
     i2c_rec = i2c_read_int(I2C_SEND_MSP);
@@ -329,7 +327,7 @@ void lasertag::spawn_threads() {
   printf("[LASERTAG] Spawning threads.\n");
   fflush(stdout);
   m_active = true;
-  //m_threads.push_back(std::thread(&lasertag::t_read_i2c, this));
+  m_threads.push_back(std::thread(&lasertag::t_read_i2c, this));
   //m_threads.push_back(std::thread(&lasertag::t_read_bt, this));  // only spawn if vest used
   m_threads.push_back(std::thread(&lasertag::t_read_tcp, this));
   //m_threads.push_back(std::thread(&lasertag::t_read_gpio, this));  // now handled by msp sending 's' via i2c
@@ -359,6 +357,9 @@ void lasertag::hit_register(int code, int pos) {
   if (m_player.get_health() == 0)
     return;
 
+  if (code == m_player.get_ID())
+    return;
+
   // make sure there is only one execution of the function at a time
   std::lock_guard<std::recursive_mutex> hitreg_lock(m_mtx_hitreg);
   printf("[LASERTAG] Hit by %i at %i\n", code, pos);
@@ -380,7 +381,7 @@ void lasertag::hit_register(int code, int pos) {
   clear_hit_pos();
   std::stringstream text;
   //text << code << " -> " << pos;
-  if (pos < 0 || pos > 4) {
+  if (m_hit_pos.count(pos) == 0) {
     text << "N/A";
   } else {
     text << m_hit_pos[pos];
