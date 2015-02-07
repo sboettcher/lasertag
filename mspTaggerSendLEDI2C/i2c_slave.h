@@ -7,8 +7,4 @@
 
 void slave_i2c_init(void (*SCallback)(), void (*TCallback)(unsigned char volatile *value), void (*RCallback)(unsigned char value), unsigned char slave_address);
 
-void inline i2cTxInterrupt(void);
-
-void i2cRxInterrupt(void);
-
 #endif

@@ -9,6 +9,25 @@
 // The adress under which this device should responde
 #define I2C_ADRESS 0x61
 
+#define COMMAND_LOW_AMMO 'a'
+#define COMMAND_RELOAD 'r'
+#define COMMAND_DEAD 'd'
+#define COMMAND_HEALTH 'h'
+#define COMMAND_HEALTH_1 '1'
+#define COMMAND_HEALTH_2 '2'
+#define COMMAND_HEALTH_3 '3'
+#define COMMAND_HEALTH_4 '4'
+#define COMMAND_HEALTH_5 '5'
+#define COMMAND_HEALTH_6 '6'
+#define COMMAND_HEALTH_7 '7'
+#define COMMAND_DEACTIVATE 'x'
+#define COMMAND_ACTIVATE 'y'
+#define COMMAND_SHOOT 's'
+#define COMMAND_BOOT 'b'
+#define COMMAND_READY 'e'
+#define COMMAND_CODE 'c'
+#define COMMAND_TEAM_COLOR 't'
+
 
 #define BITTIME 1000
 // IR TX PIN
@@ -19,8 +38,6 @@
 #define LSBFIRST 0
 // The Speed of the UARRT connection
 #define SERIALSPEED 9600
-// The code that is send over IR
-#define CODE 240
 // Smallest delay between two transmissions
 #define DELAY_BETWEEN_TWO_SENDS_MS 100
 // The clockSpeed in MHZ (CAUSION: needs to be changed in main as well)
@@ -31,21 +48,28 @@
 // The PWM periode
 #define PWM_PERIODE (CLK_SPEED*1000.0/PWM_FREQUZENCY)
 
+#define START_BYTE 0x7e
 
 volatile unsigned char i2cBuffer; // TODO durch ringbuffer ersetzen.
 
-int booted = 1; //TODO: 0;
+int booted = 0; //TODO: 0;
 int health = NUMB_LEDS;
 int canShoot = 1;
 int isDead = 0;
+int isActive = 1;
+int getCode = 0;
+int getColor = 0;
+// The code that is send over IR
+int CODE = 240;
+int transmissionCheck = 0;
 
 /*
  * Init the Ports
  */
 void initPorts() {
 	// Set LED1 to OUTPUT and to 0
-	P1DIR |= LED_PIN;
-	P1OUT &= ~LED_PIN;
+	P2DIR |= LED_PIN;
+	P2OUT &= ~LED_PIN;
 
 	// Set Push Button to INPUT and enable PULLUPS
 	P1DIR &= ~BUTTON_PIN;
@@ -227,44 +251,116 @@ void transmit_cb(unsigned char volatile *value) {
 }
 
 void receive_cb(unsigned char value) {
-	switch (value) {
-		// Low Ammo case
-		case 'a': {
-			canShoot = 0;
-			break;
-		}
-		case 'r': {
-			canShoot = 1;
-			showReloadPattern();
-			break;
-		}
-		case 'd': {
-			isDead = 1;
-			break;
-		}
-		case 'h': {
-			health = NUMB_LEDS;
-			isDead = 0;
-			showHealthPattern(health);
-			break;
-		}
-		case '-': {
-			health = health - 1;
-			break;
-		}
-		case 's': {
-			shoot();
-			break;
-		}
-		case 'b': {
-			booted = 1;
-			break;
-		}
-		case 'e': {
-			booted = 0;
-			break;
+	changed = 1;
+	if (getCode == 1) {
+		CODE = value;
+		getCode = 0;
+		transmissionCheck = 0;
+	} else if (getColor == 1) {
+		teamColor.red = value;
+		getColor++;
+	} else if (getColor == 2) {
+		teamColor.green = value;
+		getColor++;
+	} else if (getColor == 3) {
+		teamColor.blue = value;
+		showCurrentHealth(health);
+		getColor = 0;
+		transmissionCheck = 0;
+	} else {
+		if (!transmissionCheck) {
+			if (value == START_BYTE) {
+				transmissionCheck = 1;
+			}
+		} else {
+			switch (value) {
+				// Low Ammo case
+				case COMMAND_LOW_AMMO: {
+					canShoot = 0;
+					break;
+				}
+				case COMMAND_RELOAD: {
+					canShoot = 1;
+					break;
+				}
+				case COMMAND_DEAD: {
+					isDead = 1;
+					break;
+				}
+				case COMMAND_DEACTIVATE: {
+					isActive = 0;
+					break;
+				}
+				case COMMAND_ACTIVATE: {
+					isActive = 1;
+					break;
+				}
+				case COMMAND_HEALTH: {
+					health = NUMB_LEDS;
+					isDead = 0;
+					showHealthPattern(health);
+					break;
+				}
+				case COMMAND_HEALTH_1: {
+					health = 1;
+					showCurrentHealth(health);
+					break;
+				}
+				case COMMAND_HEALTH_2: {
+					health = 2;
+					showCurrentHealth(health);
+					break;
+				}
+				case COMMAND_HEALTH_3: {
+					health = 3;
+					showCurrentHealth(health);
+					break;
+				}
+				case COMMAND_HEALTH_4: {
+					health = 4;
+					showCurrentHealth(health);
+					break;
+				}
+				case COMMAND_HEALTH_5: {
+					health = 5;
+					showCurrentHealth(health);
+					break;
+				}
+				case COMMAND_HEALTH_6: {
+					health = 6;
+					showCurrentHealth(health);
+					break;
+				}
+				case COMMAND_HEALTH_7: {
+					health = 7;
+					showCurrentHealth(health);
+					break;
+				}
+				case COMMAND_SHOOT: {
+					shoot();
+					break;
+				}
+				case COMMAND_BOOT: {
+					booted = 0;
+					break;
+				}
+				case COMMAND_READY: {
+					booted = 1;
+					break;
+				}
+				case COMMAND_CODE: {
+					getCode = 1;
+					break;
+				}
+				case COMMAND_TEAM_COLOR: {
+					getColor = 1;
+					break;
+				}
+			}
+			transmissionCheck = 0;
 		}
 	}
+
 }
 
 void initI2C (void) {
@@ -287,18 +383,13 @@ int main(void) {
 	// Init the I2C lines
     initI2C();
 
-    // Init needed loop variables
-	int millis = 0;
-
     // Init LEDs to black
     sendAllLEDsOneColor(BLACK);
 
     // Show the boot up pattern at least once
     showBootPattern();
     while (!booted)	showBootPattern();
-	for (millis = 0; millis < 500; millis++) {
-			_delay_cycles(CLK_SPEED*1000);
-	}
+
 
 
 	// Do forever and for always

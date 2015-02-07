@@ -57,9 +57,9 @@ struct ledcolor RED = {255, 0, 0};
 struct ledcolor GREEN = {0, 255, 0};
 struct ledcolor BLUE = {0, 0, 255};
 
-struct ledcolor hitColor1 = {255, 0, 0};
-struct ledcolor hitColor2 = {0, 255, 0};
-struct ledcolor hitColor3 = {0, 0, 255};
+struct ledcolor hitColor1 = {255, 255, 255};
+struct ledcolor hitColor2 = {255, 255, 255};
+struct ledcolor hitColor3 = {255, 255, 255};
 
 struct ledcolor shootColor = {255, 0, 0};
 
@@ -76,272 +76,272 @@ int changed = 1;
 void sendColor(uint8_t R, uint8_t G, uint8_t B) {
     //_________________________GREEN____________________________
 	if ((G & BIT7) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((G & BIT6) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((G & BIT5) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((G & BIT4) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((G & BIT3) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((G & BIT2) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((G & BIT1) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((G & BIT0) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 
     //_________________________RED____________________________
 	if ((R & BIT7) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((R & BIT6) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((R & BIT5) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((R & BIT4) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((R & BIT3) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((R & BIT2) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((R & BIT1) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((R & BIT0) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 
 
     //_________________________BLUE____________________________
 	if ((B & BIT7) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((B & BIT6) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((B & BIT5) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((B & BIT4) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((B & BIT3) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((B & BIT2) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((B & BIT1) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 	if ((B & BIT0) != 0) {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ONE_LOW_DELAY);
 	} else {
-		P1OUT |= LED_PIN;
+		P2OUT |= LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
-		P1OUT &= ~LED_PIN;
+		P2OUT &= ~LED_PIN;
 		__delay_cycles(LOGICAL_ZERO_LOW_DELAY);
 	}
 
@@ -548,6 +548,9 @@ void showCurrentHealth(int health) {
 		for (state = 0; state < health; state++) {
 			ledColors[state] = teamColor;
 		}
+		for (state = health; state < 7; state++) {
+			ledColors[state] = BLACK;
+		}
 		sendAllLEDs();
 		changed = 0;
 	}
@@ -560,6 +563,12 @@ void showErrorPattern() {
 	fade(BLUE, BLACK, 1);
 }
 
+
+void setTeamColor(int R, int G, int B) {
+	teamColor.red = R;
+	teamColor.green = G;
+	teamColor.blue = B;
+}
 
 
 #endif /* LED_H_ */

@@ -29,7 +29,14 @@ void slave_i2c_init(void (*SCallback)(), void (*TCallback)(unsigned char volatil
 }
 
 
-void inline i2cTxInterrupt(void)
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+  #pragma vector = USCIAB0TX_VECTOR
+  __interrupt void usci_i2c_data_isr (void)
+#elif defined(__GNUC__)
+  void __attribute__ ((interrupt(USCIAB0TX_VECTOR))) usci_i2c_data_isr (void)
+#else
+  #error Compiler not supported!
+#endif
 {
   if (IFG2 & UCB0TXIFG)
     i2c_transmit_callback(&UCB0TXBUF);
@@ -38,7 +45,14 @@ void inline i2cTxInterrupt(void)
 }
 
 
-void inline i2cRxInterrupt(void)
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+  #pragma vector = USCIAB0RX_VECTOR
+  __interrupt void usci_i2c_state_isr (void)
+#elif defined(__GNUC__)
+  void __attribute__ ((interrupt(USCIAB0RX_VECTOR))) usci_i2c_state_isr (void)
+#else
+  #error Compiler not supported!
+#endif
 {
   UCB0STAT &= ~UCSTTIFG; // Clear start condition int flag
   i2c_start_callback();
