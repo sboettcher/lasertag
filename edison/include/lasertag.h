@@ -26,6 +26,7 @@
 #define TFT_RS_PIN 47
 
 #define SERIAL_START_BYTE 0x7E
+#define I2C_START_BYTE 0x7E
 
 #define I2C_SEND_MSP 0x61
 #define I2C_REC_MSP 0x68
@@ -39,8 +40,10 @@ class lasertag {
 
     // initialize i2c on bus
     void i2c_init(int bus);
-    // read uint8 from i2c
-    uint8_t i2c_read_int();
+    // read uint8 from i2c address
+    uint8_t i2c_read_int(uint8_t a);
+    // write start byte and uint8_t to i2c address
+    void i2c_write_int(uint8_t i, uint8_t a);
 
     // initializes some display stuff
     void dsp_init();
@@ -73,6 +76,7 @@ class lasertag {
     void set_bt_slave(std::string slave) {
       m_bt_slave = slave;
     }
+    void parse_cmd(std::string cmd);
 
   private:
     // register a hit, manage related stuff
@@ -102,7 +106,6 @@ class lasertag {
     void t_read_gpio();
 
     // parse a command coming i.e. from the server and do the corresponding action
-    void parse_cmd(std::string cmd);
 
     // transmits the team color to the vest via bt
     void bt_set_team_color(uint16_t color);
