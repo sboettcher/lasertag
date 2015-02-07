@@ -11,6 +11,9 @@
  * Variables and constant defines
  */
 
+#define IS_TAGGER_RECEIVER
+#define BUZZER BIT3
+
 // I2C
 #define I2C_BASE_ADRESS 0x60
 #define SERIAL_START_BYTE (char)0xFF
@@ -56,19 +59,23 @@ void initClocks (void) {
 void initIOPins (void) {
   P1SEL = 0x00;
   P1SEL2 = 0x00;
-  // Set P1.x as input.
-  P1DIR = 0x00 | LED_RED | LED_GREEN | LED_BLUE;
-  P1REN = 0x00;
-  P1OUT = 0x00;
-  // Enable interrupt on IR_RECEIVER_PIN on falling edge.
-  IR_ENABLE_INTERRUPT
-
-  // Enable pull-up on P2.0 P2.1 and P2.2.
   P2SEL = 0x00;
   P2SEL2 = 0x00;
-  P2DIR = 0x00;
-  P2REN = BIT0 | BIT1 | BIT2;
-  P2OUT = BIT0 | BIT1 | BIT2;
+  // Enable pull-up on P2.0 P2.1 and P2.2 or buzzer out on P2.3.
+  #ifdef IS_TAGGER_RECEIVER
+    P1DIR = 0x00;
+    P2DIR = BUZZER;
+  #elif
+    P1DIR = 0x00 | LED_RED | LED_GREEN | LED_BLUE;
+    P2DIR = 0x00;
+    P2REN = BIT0 | BIT1 | BIT2;
+    P2OUT = BIT0 | BIT1 | BIT2;
+  #endif
+  P1REN = 0x00;
+  P1OUT = 0x00;
+
+  // Enable interrupt on IR_RECEIVER_PIN on falling edge.
+  IR_ENABLE_INTERRUPT
 
   #ifdef DEBUG_UART
     // Activate UART on 1.1 / 1.2
@@ -86,12 +93,19 @@ void initIOPins (void) {
 
 void flashLed (unsigned char color1, unsigned char color2, char repetitions) {
   for (i = 0; i < repetitions; i++) {
-    P1OUT &= ~COLOR_WHITE; // first clear color and then set new color.
-    P1OUT |= color1;
-    __delay_cycles(FLASH_CYCLES);
-    P1OUT &= ~COLOR_WHITE;
-    P1OUT |= color2;
-    __delay_cycles(FLASH_CYCLES);
+    #ifdef IS_TAGGER_RECEIVER
+      P2OUT |= BUZZER;
+      __delay_cycles(FLASH_CYCLES);
+      P2OUT &= ~BUZZER;
+      __delay_cycles(FLASH_CYCLES);
+    #elif
+      P1OUT &= ~COLOR_WHITE; // first clear color and then set new color.
+      P1OUT |= color1;
+      __delay_cycles(FLASH_CYCLES);
+      P1OUT &= ~COLOR_WHITE;
+      P1OUT |= color2;
+      __delay_cycles(FLASH_CYCLES);
+    #endif
   }
 }
 
@@ -128,8 +142,12 @@ void receive_cb(unsigned char value) {
 
 void initI2C (void) {
   // I2C adress is determined by the 3 jumpers on P2.0 P2.1 P2.3.
-  char domeId = P2IN & 0x7;
-  slave_i2c_init(start_cb, transmit_cb, receive_cb, (I2C_BASE_ADRESS + domeId));
+  #ifdef IS_TAGGER_RECEIVER
+    slave_i2c_init(start_cb, transmit_cb, receive_cb, (0x68));
+  #elif
+    char domeId = P2IN & 0x7;
+    slave_i2c_init(start_cb, transmit_cb, receive_cb, (I2C_BASE_ADRESS + domeId));
+  #endif
 }
 
 /*
