@@ -32,7 +32,7 @@ lasertag::~lasertag() {
  
 //________________________________________________________________________________
 void lasertag::i2c_init(int bus) {
-  printf("[LASERTAG] init I2C on bus %d...", m_i2c_bus);
+  printf("[LASERTAG] init I2C on bus %d... ", m_i2c_bus);
   fflush(stdout);
 
   // make sure i2c bus number is 1 or 6
@@ -284,21 +284,6 @@ void lasertag::t_read_bt() {
       }
       bt_rec = 0;
     }
-
-    // if (m_bluetooth->available(0,1000)) {
-    //   // read byte from bluetooth serial
-    //   bt_rec = (uint8_t)m_bluetooth->serial_read();
-    //   // 255 indicates new hit, read next 2 bytes for code and position
-    //   if (bt_rec == SERIAL_START_BYTE) {
-    //     while (!m_bluetooth->available(0,1000));
-    //     code = (uint8_t)m_bluetooth->serial_read();
-    //     while (!m_bluetooth->available(0,1000));
-    //     pos = (uint8_t)m_bluetooth->serial_read();
-    //     // asynchronously call hitreg function so bt communication can continue during
-    //     handles.push_back(std::async(std::launch::async, &lasertag::hit_register, this, code, pos));
-    //     bt_rec = 0;
-    //   }
-    // }
   }
   for (auto& h : handles) h.get();  // make sure all async calls return
 }
@@ -402,7 +387,7 @@ void lasertag::hit_register(int code, int pos) {
   }
   dsp_write(m_t_coord[0] + 5, m_t_coord[1] + 5, text.str());
 
-  if (m_player.get_health() == 0 && m_i2c_init) {
+  if (m_player.get_health() == 0) {
     i2c_write_int(I2C_NO_HEALTH, I2C_SEND_MSP);
     reset_player();
   }
@@ -508,6 +493,8 @@ void lasertag::bt_set_team_color(uint16_t color) {
 
 //________________________________________________________________________________
 void lasertag::reset_player() {
+  printf("[LASERTAG] resetting player... ");
+  fflush(stdout);
   usleep(m_reset_time * 1000000);
   draw_health(m_player.refill_health(-1), m_player.get_max_health());
   draw_ammo(m_player.reload(-1), m_player.get_max_ammo());
@@ -515,6 +502,8 @@ void lasertag::reset_player() {
     i2c_write_int(I2C_FULL_HEALTH, I2C_SEND_MSP);
     i2c_write_int(I2C_FULL_AMMO, I2C_SEND_MSP);
   }
+  printf("[LASERTAG] Done.\n");
+  fflush(stdout);
 }
 
 
