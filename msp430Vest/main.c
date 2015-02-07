@@ -11,11 +11,13 @@
 
 #define I2C_BASE_ADRESS 0x60
 #define I2C_PRESCALE 160
-#define SERIAL_START_BYTE (char)0xFF
-#define SERIAL_STOP_BYTE (char)0xFE
+#define I2C_START_BYTE (char)0xFF
+#define I2C_STOP_BYTE (char)0xFE
 #define NUM_DOMES 4
-unsigned char i2cTxBuffer[4] = {SERIAL_START_BYTE, 0, 0, SERIAL_STOP_BYTE};
+unsigned char i2cTxBuffer[4] = {I2C_START_BYTE, 0, 0, I2C_STOP_BYTE};
 unsigned char i2cIn = 0;
+
+#define UART_START_BYTE (char)0x7E
 unsigned char uartRxCursor = 0;
 char uartIn = 0;
 
@@ -75,7 +77,7 @@ void setupBlueToothSlaveHC06() {
 }
 
 // Send 
-void sendIdAndColorToDomes(unsigned char color) {
+void sendIdAndColorToDomes (unsigned char color) {
   char i;
   i2cTxBuffer[1] = color;
   i2cTxBuffer[2] = vestId;
@@ -83,6 +85,18 @@ void sendIdAndColorToDomes(unsigned char color) {
     master_i2c_transmit_init(I2C_BASE_ADRESS + i, I2C_PRESCALE);
     while(!i2c_ready());
     master_i2c_transmit(4, i2cTxBuffer);
+    while(!i2c_ready());
+  }
+}
+
+void sendOutOfEnergy (unsigned char outOfEnergy) {
+  char i;
+  i2cTxBuffer[1] = outOfEnergy;
+  i2cTxBuffer[2] = I2C_STOP_BYTE;
+  for (i = 0; i < NUM_DOMES; i++) {
+    master_i2c_transmit_init(I2C_BASE_ADRESS + i, I2C_PRESCALE);
+    while(!i2c_ready());
+    master_i2c_transmit(3, i2cTxBuffer);
     while(!i2c_ready());
   }
 }
@@ -106,11 +120,17 @@ int main(void) {
       // serialWrite(uartIn);
       // serialPrintln("test");
 
-      if (uartIn == SERIAL_START_BYTE) {
+      if (uartIn == UART_START_BYTE) {
         uartRxCursor = 1;
       } else if (uartRxCursor == 1) {
-        sendIdAndColorToDomes((unsigned char) uartIn);
-        uartRxCursor = 0;
+        if (uartIn == 'd') {
+          sendOutOfEnergy(1);
+        } else if (uartIn == 'h') {
+          sendOutOfEnergy(0);
+        } else {
+          sendIdAndColorToDomes((unsigned char) uartIn);
+          uartRxCursor = 0;
+        }
       }
     }
 
@@ -124,7 +144,8 @@ int main(void) {
 
       // Send received hit codes that are different from 0 and the dome number.
       if (i2cIn != 0) {
-        serialWrite(SERIAL_START_BYTE);
+        // serialWrite(I2C_START_BYTE);
+        serialWrite(UART_START_BYTE);
         serialWrite((char) i2cIn);
         serialWrite(i);
       }
