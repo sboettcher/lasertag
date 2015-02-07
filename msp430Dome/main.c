@@ -28,7 +28,7 @@ volatile unsigned char outOfEnergy = 0;
 #define COLOR_WHITE 0x38
 #define COLOR_BLACK 0
 #define FLASH_CYCLES 2400000
-volatile unsigned char teamColor = COLOR_BLACK; // color is encoded by 0bBGR
+volatile unsigned char teamColor = COLOR_WHITE; // color is encoded by 0bBGR
 volatile unsigned char ownTaggerCode = 0;
 volatile char i;
 
@@ -140,7 +140,7 @@ int main(void) {
   initIOPins();
   __enable_interrupt();
   initI2C();
-  flashLed(COLOR_BLACK, COLOR_WHITE, 1);
+  flashLed(COLOR_WHITE, COLOR_BLACK, 1);
 
   while (1) {
     P1OUT &= ~COLOR_WHITE;

@@ -23,7 +23,7 @@ char uartIn = 0;
 
 // The vest id is used for the bluetooth name and is sent to the domes to avoid
 // getting hit by the own tagger.
-unsigned char vestId = 2;
+unsigned char vestId = 1;
 
 void initClocks (void) {
   // Stop Watchdog Timer
