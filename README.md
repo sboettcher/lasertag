@@ -89,7 +89,11 @@ This keeps the USB device from loading as a network interface.
 14. ~# configure_edison --wifi
 15. ~# reboot
 
-So far the standard WiFi configuration tool in step 14 has worked fine for me. After successful connection you can also log in via ssh.
+So far the standard WiFi configuration tool in step 14 has worked fine for me. After successful connection you can also log in via ssh. If not, try commenting the line **BindToDevice=usb0** in /lib/systemd/system/sshd.socket. Afterwards reload the systemd daemon:
+
+    systemctl daemon-reload
+
+and reboot.
 
 ###1.2 Package Repositories
 The Edison has no pre-configured package repository. To have access to some basic programs, follow the instructions [here](http://alextgalileo.altervista.org/edison-package-repo-configuration-instructions.html).  
@@ -147,3 +151,5 @@ Some important pin mappings for the project. Complete tables can be found [here]
 |    17-9    |    I2C-6-SDA    |                 |     8    |
 |    18-6    |    I2C-1-SCL    |                 |    19    |
 |    17-8    |    I2C-1-SDA    |                 |     7    |
+
+TFT_22_ILI9225 pin mappings [here](https://github.com/Nkawu/TFT_22_ILI9225/wiki)
