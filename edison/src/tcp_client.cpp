@@ -23,6 +23,9 @@ void tcp_client::tcp_connect(std::string ip) {
   if (m_socketFD < 0)
     error_exit("Error creating socket.");
 
+  printf("[TCP_CLIENT] Trying to resolve address %s\n", ip.c_str());
+  fflush(stdout);
+
   struct sockaddr_in server;
   struct hostent *host_info;
   unsigned long addr;
@@ -37,6 +40,9 @@ void tcp_client::tcp_connect(std::string ip) {
       error_exit("Unknown server.");
      memcpy((char *)&server.sin_addr, host_info->h_addr, host_info->h_length);
   }
+
+  printf("[TCP_CLIENT] Found!\n");
+  fflush(stdout);
 
   // set to IPv4 and port
   server.sin_family = AF_INET;

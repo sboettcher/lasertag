@@ -14,7 +14,7 @@
 
 #include <string>
 
-#define PORT 1234
+#define PORT 2000
 #define RCVBUFSIZE 8192
 
 class tcp_client {
