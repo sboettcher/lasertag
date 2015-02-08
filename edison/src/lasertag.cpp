@@ -398,6 +398,9 @@ void lasertag::hit_register(int code, int pos) {
 void lasertag::parse_cmd(std::string cmd) {
   std::vector<std::future<void>> handles;  // collect all handles for async calls
 
+  printf("%s\n", cmd.c_str());
+  fflush(stdout);
+
   if (cmd.find("<") == std::string::npos || cmd.find(">") == std::string::npos)
     return;
 
@@ -442,13 +445,18 @@ void lasertag::parse_cmd(std::string cmd) {
     } else if (data == "none") {
       m_player.set_color(COLOR_WHITE);
     }
+    bt_set_team_color(m_player.get_color());
   } else if (key == "hs") {  // <hs:health>
-    draw_health(m_player.set_health(std::stoi(data)), m_player.get_health());
+    int old = m_player.set_health(std::stoi(data));
+    draw_health(old, m_player.get_health());
   } else if (key == "ps") {  // <ps:score>
     m_player.set_score(std::stoi(data));
     write_score();
   } else if (key == "as") {  // <as:ammo>
-    draw_ammo(m_player.set_ammo(std::stoi(data)), m_player.get_ammo());
+    int old = m_player.set_ammo(std::stoi(data));
+    draw_ammo(old, m_player.get_ammo());
+  } else if (key == "ap") {  // <ap:ammo_per>
+    m_player.set_ammo_per(std::stoi(data));
   } else if (key == "hi") {  // <hi:tagged:pos>
     std::string name = data.substr(0, data.find(":"));
     std::string pos = data.substr(data.find(":") + 1);
@@ -472,7 +480,7 @@ void lasertag::parse_cmd(std::string cmd) {
       i2c_write_int(I2C_ACTIVATE, I2C_SEND_MSP);
     }
   } else {
-    printf("[LASERTAG] TCP command not recognized.\n");
+    printf("[LASERTAG] server command not recognized: %s\n", cmd.c_str());
     fflush(stdout);
   }
 
