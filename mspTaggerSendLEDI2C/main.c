@@ -83,7 +83,7 @@ void initPorts() {
 	P2SEL &= ~BIT7;
 	// Set output source to timer A
 	P2SEL |= IR_TX_PIN;
-
+/*
 	// PWM setup
 	// Set the PWM periode to 38kHz
 	TA0CCR0 = PWM_PERIODE;
@@ -93,7 +93,7 @@ void initPorts() {
 	TA0CCTL1 |= OUTMOD_7;
 	// Set the counter to "count up" to TA0CCR0 with clock input "SMCLK"
 	TA0CTL |= TASSEL_2 + MC_1;
-
+*/
 	// Disable Output for the moment
 	// Set output source to timer A
 	P2SEL &= ~IR_TX_PIN;
@@ -232,7 +232,7 @@ void shoot() {
 	sendCode(CODE);
 	i2cBuffer = 's';
 	// Display sending with LED on
-	for (i = 0; i < SHOOT_PATTERN_COUNT; i++) showShootPattern();
+	for (i = 0; i < SHOOT_PATTERN_COUNT; i++) startPatternTimer(SHOOT_PATTERN_DELAY, shootPattern);
 	// Wait so that no Burst can be sended
 	int millis = 0;
 	for (millis = 0; millis < DELAY_BETWEEN_TWO_SENDS_MS; millis++) {
@@ -298,7 +298,7 @@ void receive_cb(unsigned char value) {
 				case COMMAND_HEALTH: {
 					health = NUMB_LEDS;
 					isDead = 0;
-					showHealthPattern(health);
+					startPatternTimer(HEALTH_PATTERN_DELAY, healthPattern);
 					break;
 				}
 				case COMMAND_HEALTH_1: {
@@ -374,8 +374,12 @@ void initI2C (void) {
  */
 int main(void) {
     WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
-	// Set clock to 16 MHz
-	INIT_CLK()
+	// Set clock to 16 MHz, activate VLO and dividers
+    BCSCTL1 = CALBC1_16MHZ | DIVA_0; // set main clk to 16 mhz, Bit6 = 0 -> low frequency mode, ACLK without divider
+    DCOCTL  = CALDCO_16MHZ; // set main clk to 16 mhz
+    BCSCTL2 = DIVS_0; // SMCLK = clk / 1, SMCLK source is VLOCLK
+    BCSCTL3 = LFXT1S_2; // select VLOCLK as low osc clock
+
 
 	// Init the Ports and the timers
     initPorts();
@@ -387,9 +391,9 @@ int main(void) {
     sendAllLEDsOneColor(BLACK);
 
     // Show the boot up pattern at least once
-    showBootPattern();
-    while (!booted)	showBootPattern();
-
+    startPatternTimer(500, bootPattern);
+    while (!booted);
+    stopPatternTimer();
 
 
 	// Do forever and for always
@@ -397,9 +401,9 @@ int main(void) {
     	if (!booted) {
     		showErrorPattern();
     	} else if (isDead) {
-    		showDeadPattern();
+    		startPatternTimer(DEAD_PATTERN_DELAY, deadPattern);
     	} else if (!canShoot) {
-    		showLowAmmoPattern();
+    		startPatternTimer(LOW_AMMO_PATTERN_DELAY, lowAmmoPattern);
     	} else {
     		showCurrentHealth(health);
     		// If Push Button pressed
