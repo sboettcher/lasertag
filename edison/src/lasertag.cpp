@@ -457,6 +457,8 @@ void lasertag::parse_cmd(std::string cmd) {
     draw_ammo(old, m_player.get_ammo());
   } else if (key == "ap") {  // <ap:ammo_per>
     m_player.set_ammo_per(std::stoi(data));
+  } else if (key == "hd") {  // <hd:health_decrease>
+    m_player.set_health_per(std::stoi(data));
   } else if (key == "hi") {  // <hi:tagged:pos>
     std::string name = data.substr(0, data.find(":"));
     std::string pos = data.substr(data.find(":") + 1);

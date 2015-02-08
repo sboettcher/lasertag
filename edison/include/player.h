@@ -27,6 +27,11 @@ class Player {
     // If Player fires tagger he will loose 1 ammunition
     // returns old value
     int fired();
+
+    // If Player tags someone increment score
+    // returns old value
+    int scored();
+
     
     // setter/getter
     int get_health() {return m_health;}
@@ -38,8 +43,8 @@ class Player {
     int get_max_ammo() {return m_full_ammo;}
     int set_max_ammo(int ammo);
 
-    void set_health_per(int health_per) {m_health_lost_perc = health_per;}
-    void set_ammo_per(int ammo_per) {m_ammo_lost_perc = ammo_per;}
+    void set_health_per(int health_per) {m_health_lost_per = health_per;}
+    void set_ammo_per(int ammo_per) {m_ammo_lost_per = ammo_per;}
     
     void set_ID(int id) {m_id = (uint8_t) id;}
     uint8_t get_ID() {return m_id;}
@@ -67,8 +72,9 @@ class Player {
     uint16_t m_color;
     std::string m_name;
     bool m_vest;
-    int m_health_lost_perc;
-    int m_ammo_lost_perc;
+    int m_health_lost_per;
+    int m_ammo_lost_per;
+    int m_score_per;
 };
 
 #endif

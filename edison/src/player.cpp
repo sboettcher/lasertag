@@ -12,8 +12,8 @@ Player::Player() {
   m_full_health = 0;
   m_full_ammo = 0;
   m_vest = false;
-  m_health_lost_perc = 10;
-  m_ammo_lost_perc = 10;
+  m_health_lost_per = 10;
+  m_ammo_lost_per = 10;
 }
 
 
@@ -40,7 +40,8 @@ int Player::refill_health(int amount) {
 // ___________________________________________________________________
 int Player::hit() {
   int tmp = m_health;
-  m_health -= m_full_health * (m_health_lost_perc / 100.0);
+  //m_health -= m_full_health * (m_health_lost_perc / 100.0);
+  m_health -= m_health_lost_per;
   if (m_health < 0)
     m_health = 0;
   return tmp;
@@ -50,11 +51,22 @@ int Player::hit() {
 // ___________________________________________________________________
 int Player::fired() {
   int tmp = m_ammo;
-  m_ammo -= m_full_ammo * (m_ammo_lost_perc / 100.0);
+  //m_ammo -= m_full_ammo * (m_ammo_lost_perc / 100.0);
+  m_ammo -= m_ammo_lost_per;
   if (m_ammo < 0)
     m_ammo = 0;
   return tmp;
 }
+
+
+// ___________________________________________________________________
+int Player::scored() {
+  int tmp = m_score;
+  m_score += m_score_per;
+  return tmp;
+}
+
+
 
 // ___________________________________________________________________
 int Player::set_health(int health) {
