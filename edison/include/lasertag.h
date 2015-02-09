@@ -123,6 +123,8 @@ class lasertag {
     // write name and score to dsp
     void write_name();
     void write_score();
+    // clear name, write info string instead, block number of seconds
+    void write_info(std::string info, int sec);
 
     // reset health/ammo after certain amount of time
     void reset_health();

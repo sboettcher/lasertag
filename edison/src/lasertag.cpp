@@ -434,6 +434,9 @@ void lasertag::parse_cmd(std::string cmd) {
   } else if (key == "np") {  // <np:playername>
     m_player.set_name(data);
     write_name();
+  } else if (key == "in") {
+    write_info(data, 3);
+    write_name();
   } else if (key == "ts") {  // <ts:teamcolor>
     if (data == "red") {
       m_player.set_color(COLOR_RED);
@@ -645,4 +648,20 @@ void lasertag::write_score() {
   uint8_t tmp = m_dsp->setFont(Terminal12x16);
   m_dsp->drawText(10, 31, std::to_string(m_player.get_score()), COLOR_WHITE);
   m_dsp->setFont(&tmp);
+}
+
+//________________________________________________________________________________
+void lasertag::write_info(std::string info, int sec) {
+  if (!m_dsp_init)
+    return;
+  std::lock_guard<std::recursive_mutex> dsp_lock(m_mtx_dsp);
+
+  m_dsp->fillRectangle(10, 10, m_dsp->maxX()-10, 26, COLOR_BLACK);
+  uint8_t tmp = m_dsp->setFont(Terminal6x8);
+  m_dsp->drawText(10, 10, info.substr(0, 26));
+  if (info.size() > 26)
+    m_dsp->drawText(10, 18, info.substr(26, 26));
+  m_dsp->setFont(&tmp);
+
+  usleep(sec * 1000000);
 }
