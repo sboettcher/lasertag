@@ -34,12 +34,6 @@ int main(int argc, char** argv) {
   //lt.gpio_init(36);
 
   lt.spawn_threads();
-
-  //usleep(1000000);
-  //lt.parse_cmd("<ts:red>");
-  //lt.parse_cmd("<ci:1:2>");
-  //lt.parse_cmd("<np:test>");
-  //lt.parse_cmd("<ps:9001>");
   while (running == 1) {
   }
   lt.join_threads();

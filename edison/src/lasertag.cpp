@@ -72,9 +72,12 @@ void lasertag::i2c_write_int(uint8_t i, uint8_t a, bool start) {
     return;
 
   m_i2c->address(a);
-  if (start)
-    m_i2c->writeByte(I2C_START_BYTE);
-  m_i2c->writeByte(i);
+  if (start) {
+    while(m_i2c->writeByte(I2C_START_BYTE) != MRAA_SUCCESS);
+    usleep(100000);
+  }
+  while(m_i2c->writeByte(i) != MRAA_SUCCESS);
+  usleep(100000);
   return;
 }
 
@@ -432,6 +435,10 @@ void lasertag::parse_cmd(std::string cmd) {
     if (m_i2c_init) {
       i2c_write_int(I2C_PLAYER_CODE, I2C_SEND_MSP);
       i2c_write_int(m_player.get_ID(), I2C_SEND_MSP, false);
+      //i2c_write_int(0xFF, I2C_REC_MSP, false);
+      //i2c_write_int(0x00, I2C_REC_MSP, false);
+      //i2c_write_int(m_player.get_ID(), I2C_REC_MSP, false);
+      //i2c_write_int(0xFE, I2C_REC_MSP, false);
     }
   } else if (key == "np") {  // <np:playername>
     m_player.set_name(data);
@@ -543,6 +550,8 @@ void lasertag::reset_health() {
   usleep(m_reset_time * 1000000);
   if (m_i2c_init) {
     i2c_write_int(I2C_FULL_HEALTH, I2C_SEND_MSP);
+    i2c_write_int(I2C_FULL_HEALTH, I2C_SEND_MSP);
+    i2c_write_int(I2C_FULL_HEALTH, I2C_SEND_MSP);
   }
   draw_health(m_player.refill_health(-1), m_player.get_max_health());
   // write current health to server
@@ -559,6 +568,8 @@ void lasertag::reset_ammo() {
   fflush(stdout);
   usleep(m_reset_time * 1000000);
   if (m_i2c_init) {
+    i2c_write_int(I2C_FULL_AMMO, I2C_SEND_MSP);
+    i2c_write_int(I2C_FULL_AMMO, I2C_SEND_MSP);
     i2c_write_int(I2C_FULL_AMMO, I2C_SEND_MSP);
   }
   draw_ammo(m_player.reload(-1), m_player.get_max_ammo());
