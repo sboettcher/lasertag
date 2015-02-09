@@ -125,7 +125,8 @@ class lasertag {
     void write_score();
 
     // reset health/ammo after certain amount of time
-    void reset_player();
+    void reset_health();
+    void reset_ammo();
 
     
     //________________________________________________________________________________

@@ -7,13 +7,13 @@ Player::Player() {
   m_id = -1;
   m_score = 0;
   m_color = 65535;  // COLOR_WHITE
-  m_health = 0;
-  m_ammo = 0;
-  m_full_health = 0;
-  m_full_ammo = 0;
+  m_health = 7;
+  m_ammo = 10;
+  m_full_health = 10;
+  m_full_ammo = 10;
   m_vest = false;
-  m_health_lost_per = 10;
-  m_ammo_lost_per = 10;
+  m_health_lost_per = 1;
+  m_ammo_lost_per = 1;
 }
 
 

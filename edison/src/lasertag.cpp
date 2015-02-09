@@ -227,13 +227,11 @@ void lasertag::t_read_i2c() {
 
     // read from send i2c
     i2c_rec = i2c_read_int(I2C_SEND_MSP);
-    if (i2c_rec != 0) {
-      printf("recieved %d\n", i2c_rec);
-      fflush(stdout);
-    }
+    //if (i2c_rec != 0) {
+    //  printf("recieved %d\n", i2c_rec);
+    //  fflush(stdout);
+    //}
     if (i2c_rec == I2C_TRIGGER) {
-      printf("recieved s\n");
-      fflush(stdout);
       if (m_player.get_ammo() > 0) {
         // decrement ammo on trigger activation
         int old = m_player.fired();
@@ -246,10 +244,11 @@ void lasertag::t_read_i2c() {
           m_client->tcp_send(ss.str());
         if (m_player.get_ammo() == 0) {
           i2c_write_int(I2C_NO_AMMO, I2C_SEND_MSP);
-          handles.push_back(std::async(std::launch::async, &lasertag::reset_player, this));
+          handles.push_back(std::async(std::launch::async, &lasertag::reset_ammo, this));
         }
       }
     }
+    usleep(1000);
   }
   for (auto& h : handles) h.get();  // make sure all async calls return
 }
@@ -357,8 +356,8 @@ void lasertag::hit_register(int code, int pos) {
   if (m_player.get_health() == 0)
     return;
 
-  if (code == m_player.get_ID())
-    return;
+  //if (code == m_player.get_ID())
+  //  return;
 
   // make sure there is only one execution of the function at a time
   std::lock_guard<std::recursive_mutex> hitreg_lock(m_mtx_hitreg);
@@ -390,7 +389,7 @@ void lasertag::hit_register(int code, int pos) {
 
   if (m_player.get_health() == 0) {
     i2c_write_int(I2C_NO_HEALTH, I2C_SEND_MSP);
-    reset_player();
+    reset_health();
   }
 }
 
@@ -503,17 +502,27 @@ void lasertag::bt_set_team_color(uint16_t color) {
 
 
 //________________________________________________________________________________
-void lasertag::reset_player() {
-  printf("[LASERTAG] resetting player... ");
+void lasertag::reset_health() {
+  printf("[LASERTAG] resetting health... ");
   fflush(stdout);
   usleep(m_reset_time * 1000000);
-  draw_health(m_player.refill_health(-1), m_player.get_max_health());
-  draw_ammo(m_player.reload(-1), m_player.get_max_ammo());
   if (m_i2c_init) {
     i2c_write_int(I2C_FULL_HEALTH, I2C_SEND_MSP);
+  }
+  draw_health(m_player.refill_health(-1), m_player.get_max_health());
+  printf("Done.\n");
+  fflush(stdout);
+}
+//________________________________________________________________________________
+void lasertag::reset_ammo() {
+  printf("[LASERTAG] resetting ammo... ");
+  fflush(stdout);
+  usleep(m_reset_time * 1000000);
+  if (m_i2c_init) {
     i2c_write_int(I2C_FULL_AMMO, I2C_SEND_MSP);
   }
-  printf("[LASERTAG] Done.\n");
+  draw_ammo(m_player.reload(-1), m_player.get_max_ammo());
+  printf("Done.\n");
   fflush(stdout);
 }
 
@@ -570,8 +579,6 @@ void lasertag::dsp_write(int x, int y, std::string text, uint8_t* font, uint16_t
 
 //________________________________________________________________________________
 void lasertag::draw_health(int old_h, int new_h) {
-  if (!m_dsp_init)
-    return;
   std::lock_guard<std::recursive_mutex> dsp_lock(m_mtx_dsp);
 
   // calculate the correct horizontal coordinates for the rectangle start and end point
@@ -580,17 +587,20 @@ void lasertag::draw_health(int old_h, int new_h) {
   int h_old = ((m_h_coord[2] - m_h_coord[0]) * perc_old) + m_h_coord[0];
   int h_new = ((m_h_coord[2] - m_h_coord[0]) * perc_new) + m_h_coord[0];
 
+  uint8_t led = 7 * perc_new;
+  if (led < 1)
+    led = 1;
+  i2c_write_int(48 + led, I2C_SEND_MSP);
+
+  if (!m_dsp_init)
+    return;
+
   // black if decrement, color if increment
   if (h_old > h_new) {
     m_dsp->fillRectangle(h_new, m_h_coord[1], h_old, m_h_coord[3], COLOR_BLACK);
   } else if (h_old < h_new) {
     m_dsp->fillRectangle(h_old, m_h_coord[1], h_new, m_h_coord[3], COLOR_RED);
   }
-
-  uint8_t led = 7 * perc_new;
-  if (led < 1)
-    led = 1;
-  i2c_write_int(48 + led, I2C_SEND_MSP);
 }
 
 //________________________________________________________________________________
