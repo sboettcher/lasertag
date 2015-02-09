@@ -33,7 +33,7 @@
 // IR TX PIN
 #define IR_TX_PIN BIT6
 // Push Button Pin
-#define BUTTON_PIN BIT3
+#define BUTTON_PIN BIT4
 // LSB (1) or MSB (0) first
 #define LSBFIRST 0
 // The Speed of the UARRT connection
@@ -281,6 +281,7 @@ void receive_cb(unsigned char value) {
 				}
 				case COMMAND_RELOAD: {
 					canShoot = 1;
+					startPattern(RELOAD_PATTERN);
 					break;
 				}
 				case COMMAND_DEAD: {
@@ -298,7 +299,7 @@ void receive_cb(unsigned char value) {
 				case COMMAND_HEALTH: {
 					health = NUMB_LEDS;
 					isDead = 0;
-					startPatternTimer(HEAL_PATTERN_DELAY, healPattern);
+					startPattern(HEAL_PATTERN);
 					break;
 				}
 				case COMMAND_HEALTH_1: {
@@ -407,7 +408,7 @@ int main(void) {
     	} else {
     		startPattern(HEALTH_PATTERN);
     		// If Push Button pressed
-        	while (!(P1IN & BUTTON_PIN)) {
+        	while (!(P1IN & BUTTON_PIN) && canShoot == 1) {
         		shoot();
     		}
     	}

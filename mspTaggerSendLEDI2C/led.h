@@ -11,7 +11,7 @@
 #define NULL 0
 
 #define CLK_SPEED 16 // The clockSpeed in MHZ (CAUTION: needs to be changed in main as well)
-#define BUTTON_PIN BIT3 // Push Button Pin
+#define BUTTON_PIN BIT4 // Push Button Pin
 #define LED_PIN BIT0 // LED Pin
 #define SHOOT_PATTERN_DELAY 30 // Shoot pattern delay
 #define SHOOT_PATTERN_LENGTH 7 // number of pattern elements
@@ -19,11 +19,11 @@
 #define BOOT_PATTERN_DELAY 500 // Boot pattern delay
 #define BOOT_PATTERN_LENGTH 7 // number of pattern elements
 #define HIT_PATTERN_DELAY 150 // Hit pattern delay
-#define RELOAD_PATTERN_DELAY 300 // Reload pattern delay
+#define RELOAD_PATTERN_DELAY 200 // Reload pattern delay
 #define RELOAD_PATTERN_LENGTH 7 // Reload pattern length
 #define AMMO_PATTERN_DELAY 300 // Reload pattern delay
 #define DEAD_PATTERN_DELAY 300 // Reload pattern delay
-#define HEAL_PATTERN_DELAY 300 // Health pattern delay
+#define HEAL_PATTERN_DELAY 200 // Health pattern delay
 #define HEAL_PATTERN_LENGTH 7 // Health pattern length
 #define LOW_AMMO_PATTERN_DELAY 300 // Delay between LED updates for low ammo pattern
 #define LOW_AMMO_PATTERN_LENGTH 1 // Consists only of blinking
@@ -60,19 +60,19 @@ typedef struct {
 LedColor ledColors[NUMB_LEDS];
 
 LedColor BLACK = {0, 0, 0};
-LedColor RED = {255, 0, 0};
-LedColor GREEN = {0, 255, 0};
-LedColor BLUE = {0, 0, 255};
+LedColor RED = {50, 0, 0};
+LedColor GREEN = {0, 50, 0};
+LedColor BLUE = {0, 0, 50};
 
-LedColor hitColor1 = {255, 255, 255};
-LedColor hitColor2 = {255, 255, 255};
-LedColor hitColor3 = {255, 255, 255};
+LedColor hitColor1 = {50, 50, 50};
+LedColor hitColor2 = {50, 50, 50};
+LedColor hitColor3 = {50, 50, 50};
 
-LedColor shootColor = {255, 0, 0};
-LedColor bootColor = {255, 255, 255};
-LedColor teamColor = {0, 255, 0};
-LedColor deadColor = {255, 0, 0};
-LedColor lowAmmoColor = {255, 0, 255};
+LedColor shootColor = {50, 0, 0};
+LedColor bootColor = {50, 50, 50};
+LedColor teamColor = {0, 50, 0};
+LedColor deadColor = {50, 0, 0};
+LedColor lowAmmoColor = {50, 0, 50};
 
 typedef enum
 {
@@ -83,6 +83,7 @@ typedef enum
 	DEAD_PATTERN,
 	LOW_AMMO_PATTERN,
 	HEAL_PATTERN,
+	RELOAD_PATTERN,
 	HEALTH_PATTERN,
 	ERROR_PATTERN
 } PATTERN_TYPE;
@@ -394,7 +395,7 @@ void stopPatternTimer()
 
 void startPattern(PATTERN_TYPE type)
 {
-	if (type == curPatternType || curPatternType == HIT_PATTERN) // do not overwrite hit pattern
+	if (type == curPatternType || curPatternType == HIT_PATTERN || curPatternType == HEAL_PATTERN || curPatternType == RELOAD_PATTERN) // do not overwrite hit/heal/reload pattern
 		return;
 	else
 	{
@@ -415,11 +416,19 @@ void startPattern(PATTERN_TYPE type)
 		case DEAD_PATTERN:
 			startPatternTimer(DEAD_PATTERN_DELAY, deadPattern);
 			break;
+		case HEAL_PATTERN:
+			startPatternTimer(HEAL_PATTERN_DELAY, healPattern);
+			break;
+		case RELOAD_PATTERN:
+			startPatternTimer(RELOAD_PATTERN_DELAY, reloadPattern);
+			break;
 		case HEALTH_PATTERN:
+			stopPatternTimer();
 			showCurrentHealth(health);
 			break;
 		case ERROR_PATTERN:
 		default:
+			stopPatternTimer();
 			showErrorPattern();
 		}
 		curPatternType = type;
