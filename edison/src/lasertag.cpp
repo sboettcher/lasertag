@@ -67,12 +67,13 @@ uint8_t lasertag::i2c_read_int(uint8_t a) {
   //return m_i2c->readByte();
 }
 //________________________________________________________________________________
-void lasertag::i2c_write_int(uint8_t i, uint8_t a) {
+void lasertag::i2c_write_int(uint8_t i, uint8_t a, bool start) {
   if (!m_i2c_init)
     return;
 
   m_i2c->address(a);
-  m_i2c->writeByte(I2C_START_BYTE);
+  if (start)
+    m_i2c->writeByte(I2C_START_BYTE);
   m_i2c->writeByte(i);
   return;
 }
@@ -356,8 +357,8 @@ void lasertag::hit_register(int code, int pos) {
   if (m_player.get_health() == 0)
     return;
 
-  //if (code == m_player.get_ID())
-  //  return;
+  if (code == m_player.get_ID())
+    return;
 
   // make sure there is only one execution of the function at a time
   std::lock_guard<std::recursive_mutex> hitreg_lock(m_mtx_hitreg);
@@ -406,6 +407,8 @@ void lasertag::parse_cmd(std::string cmd) {
   // command structure: <key:data>
   // get the command key
   std::string key = cmd.substr(cmd.find("<") + 1, cmd.find(":") - 1);
+  if (key.find("!") != std::string::npos)
+    key = key.substr(key.find("!"), 1);
   if (key == "")
     return;
 
@@ -423,19 +426,18 @@ void lasertag::parse_cmd(std::string cmd) {
     if (m_player.get_vest()) {
       bt_init();
       usleep(2000000);
-      bt_set_team_color(m_player.get_color());
+      set_team_color(m_player.get_color());
     }
     // transmit ID to msp
     if (m_i2c_init) {
-      m_i2c->address(I2C_SEND_MSP);
-      m_i2c->writeByte(I2C_PLAYER_CODE);
-      m_i2c->writeByte(m_player.get_ID());
+      i2c_write_int(I2C_PLAYER_CODE, I2C_SEND_MSP);
+      i2c_write_int(m_player.get_ID(), I2C_SEND_MSP, false);
     }
   } else if (key == "np") {  // <np:playername>
     m_player.set_name(data);
     write_name();
   } else if (key == "in") {
-    write_info(data, 3);
+    write_info(data, 2);
     write_name();
   } else if (key == "ts") {  // <ts:teamcolor>
     if (data == "red") {
@@ -447,7 +449,8 @@ void lasertag::parse_cmd(std::string cmd) {
     } else if (data == "none") {
       m_player.set_color(COLOR_WHITE);
     }
-    bt_set_team_color(m_player.get_color());
+    set_team_color(m_player.get_color());
+    write_name();
   } else if (key == "hs") {  // <hs:health>
     int old = m_player.set_health(std::stoi(data));
     draw_health(old, m_player.get_health());
@@ -477,6 +480,12 @@ void lasertag::parse_cmd(std::string cmd) {
     clear_hit_name();
     // asynchronously draw on display so tcp communication can continue
     handles.push_back(std::async(std::launch::async, &lasertag::dsp_write, this, m_t_coord[0] + 5, m_t_coord[1] + 15, data, Terminal11x16, COLOR_WHITE));
+  } else if (key == "hv") {  // <hv:tagged_name>
+    printf("[LASERTAG] Tagged player %sn", data.c_str());
+    fflush(stdout);
+    clear_tagged_name();
+    // asynchronously draw on display so tcp communication can continue
+    handles.push_back(std::async(std::launch::async, &lasertag::dsp_write, this, m_dsp->maxX()/2 + 5, m_t_coord[1] + 15, data, Terminal11x16, COLOR_WHITE));
   } else if (key == "at") {  // <at:tagger_active>
     if (data == "0") {
       i2c_write_int(I2C_DEACTIVATE, I2C_SEND_MSP);
@@ -493,13 +502,36 @@ void lasertag::parse_cmd(std::string cmd) {
 
 
 //________________________________________________________________________________
-void lasertag::bt_set_team_color(uint16_t color) {
-  m_bluetooth->serial_write(SERIAL_START_BYTE);
-  switch (color) {
-    case COLOR_RED: m_bluetooth->serial_write(1); break;
-    case COLOR_GREEN: m_bluetooth->serial_write(2); break;
-    case COLOR_BLUE: m_bluetooth->serial_write(4); break;
-    case COLOR_WHITE: m_bluetooth->serial_write(7); break;
+void lasertag::set_team_color(uint16_t color) {
+  if (m_bt_init) {
+    m_bluetooth->serial_write(SERIAL_START_BYTE);
+    switch (color) {
+      case COLOR_RED: m_bluetooth->serial_write(1); break;
+      case COLOR_GREEN: m_bluetooth->serial_write(2); break;
+      case COLOR_BLUE: m_bluetooth->serial_write(4); break;
+      case COLOR_WHITE: m_bluetooth->serial_write(7); break;
+    }
+  }
+  if (m_i2c_init) {
+    i2c_write_int(I2C_TEAM_COLOR, I2C_SEND_MSP);
+    switch (color) {
+      case COLOR_RED: i2c_write_int(I2C_COLOR_BRIGHT, I2C_SEND_MSP, false);
+                      i2c_write_int(0, I2C_SEND_MSP, false);
+                      i2c_write_int(0, I2C_SEND_MSP, false);
+                      break;
+      case COLOR_GREEN: i2c_write_int(0, I2C_SEND_MSP, false);
+                        i2c_write_int(I2C_COLOR_BRIGHT, I2C_SEND_MSP, false);
+                        i2c_write_int(0, I2C_SEND_MSP, false);
+                        break;
+      case COLOR_BLUE: i2c_write_int(0, I2C_SEND_MSP, false);
+                       i2c_write_int(0, I2C_SEND_MSP, false);
+                       i2c_write_int(I2C_COLOR_BRIGHT, I2C_SEND_MSP, false);
+                       break;
+      case COLOR_WHITE: i2c_write_int(I2C_COLOR_BRIGHT, I2C_SEND_MSP, false);
+                        i2c_write_int(I2C_COLOR_BRIGHT, I2C_SEND_MSP, false);
+                        i2c_write_int(I2C_COLOR_BRIGHT, I2C_SEND_MSP, false);
+                        break;
+    }
   }
 }
 
@@ -513,6 +545,11 @@ void lasertag::reset_health() {
     i2c_write_int(I2C_FULL_HEALTH, I2C_SEND_MSP);
   }
   draw_health(m_player.refill_health(-1), m_player.get_max_health());
+  // write current health to server
+  std::stringstream ss;
+  ss << "<hs:" << m_player.get_health() << ">\n";
+  if (m_tcp_init && m_client->connected())
+    m_client->tcp_send(ss.str());
   printf("Done.\n");
   fflush(stdout);
 }
@@ -525,6 +562,11 @@ void lasertag::reset_ammo() {
     i2c_write_int(I2C_FULL_AMMO, I2C_SEND_MSP);
   }
   draw_ammo(m_player.reload(-1), m_player.get_max_ammo());
+  // write current ammo to server
+  std::stringstream ss;
+  ss << "<as:" << m_player.get_ammo() << ">\n";
+  if (m_tcp_init && m_client->connected())
+    m_client->tcp_send(ss.str());
   printf("Done.\n");
   fflush(stdout);
 }

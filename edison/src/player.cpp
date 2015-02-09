@@ -8,9 +8,9 @@ Player::Player() {
   m_score = 0;
   m_color = 65535;  // COLOR_WHITE
   m_health = 7;
-  m_ammo = 10;
+  m_ammo = 25;
   m_full_health = 10;
-  m_full_ammo = 10;
+  m_full_ammo = 25;
   m_vest = false;
   m_health_lost_per = 1;
   m_ammo_lost_per = 1;

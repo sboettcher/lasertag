@@ -40,6 +40,9 @@
 #define I2C_FULL_AMMO 114  // 'r'
 #define I2C_ACTIVATE 121  // 'y'
 #define I2C_DEACTIVATE 120  // 'x'
+#define I2C_TEAM_COLOR 116  // 't'
+
+#define I2C_COLOR_BRIGHT 50
 
 class lasertag {
   public:
@@ -53,7 +56,7 @@ class lasertag {
     // read uint8 from i2c address
     uint8_t i2c_read_int(uint8_t a);
     // write start byte and uint8_t to i2c address
-    void i2c_write_int(uint8_t i, uint8_t a);
+    void i2c_write_int(uint8_t i, uint8_t a, bool start = true);
 
     // initializes some display stuff
     void dsp_init();
@@ -118,7 +121,7 @@ class lasertag {
     // parse a command coming i.e. from the server and do the corresponding action
 
     // transmits the team color to the vest via bt
-    void bt_set_team_color(uint16_t color);
+    void set_team_color(uint16_t color);
 
     // write name and score to dsp
     void write_name();
