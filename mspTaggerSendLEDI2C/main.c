@@ -298,7 +298,7 @@ void receive_cb(unsigned char value) {
 				case COMMAND_HEALTH: {
 					health = NUMB_LEDS;
 					isDead = 0;
-					startPatternTimer(HEALTH_PATTERN_DELAY, healthPattern);
+					startPatternTimer(HEAL_PATTERN_DELAY, healPattern);
 					break;
 				}
 				case COMMAND_HEALTH_1: {
@@ -391,7 +391,7 @@ int main(void) {
     sendAllLEDsOneColor(BLACK);
 
     // Show the boot up pattern at least once
-    startPatternTimer(500, bootPattern);
+    startPattern(BOOT_PATTERN);
     while (!booted);
     stopPatternTimer();
 
@@ -399,13 +399,13 @@ int main(void) {
 	// Do forever and for always
     while(1) {
     	if (!booted) {
-    		showErrorPattern();
+    		startPattern(ERROR_PATTERN);
     	} else if (isDead) {
-    		startPatternTimer(DEAD_PATTERN_DELAY, deadPattern);
+    		startPattern(DEAD_PATTERN);
     	} else if (!canShoot) {
-    		startPatternTimer(LOW_AMMO_PATTERN_DELAY, lowAmmoPattern);
+    		startPattern(LOW_AMMO_PATTERN);
     	} else {
-    		showCurrentHealth(health);
+    		startPattern(HEALTH_PATTERN);
     		// If Push Button pressed
         	while (!(P1IN & BUTTON_PIN)) {
         		shoot();

@@ -8,6 +8,8 @@
 #ifndef LED_H_
 #define LED_H_
 
+#define NULL 0
+
 #define CLK_SPEED 16 // The clockSpeed in MHZ (CAUTION: needs to be changed in main as well)
 #define BUTTON_PIN BIT3 // Push Button Pin
 #define LED_PIN BIT0 // LED Pin
@@ -21,8 +23,8 @@
 #define RELOAD_PATTERN_LENGTH 7 // Reload pattern length
 #define AMMO_PATTERN_DELAY 300 // Reload pattern delay
 #define DEAD_PATTERN_DELAY 300 // Reload pattern delay
-#define HEALTH_PATTERN_DELAY 300 // Health pattern delay
-#define HEALTH_PATTERN_LENGTH 7 // Health pattern length
+#define HEAL_PATTERN_DELAY 300 // Health pattern delay
+#define HEAL_PATTERN_LENGTH 7 // Health pattern length
 #define LOW_AMMO_PATTERN_DELAY 300 // Delay between LED updates for low ammo pattern
 #define LOW_AMMO_PATTERN_LENGTH 1 // Consists only of blinking
 #define DEAD_PATTERN_LENGTH 1 // Consists only of blinking
@@ -47,14 +49,13 @@ volatile int patternDelay = 0;
 volatile int patternRestart = 0;
 int (*patternFunction)() = NULL;
 
-extern int health;
+extern int health; // get the player health from the main file
 
 typedef struct {
 	uint8_t red;
 	uint8_t green;
 	uint8_t blue;
 } LedColor;
-
 
 LedColor ledColors[NUMB_LEDS];
 
@@ -69,23 +70,28 @@ LedColor hitColor3 = {255, 255, 255};
 
 LedColor shootColor = {255, 0, 0};
 LedColor bootColor = {255, 255, 255};
-LedColor teamColor = {255, 0, 255};
+LedColor teamColor = {0, 255, 0};
 LedColor deadColor = {255, 0, 0};
-LedColor lowAmmoColor = {255, 255, 0};
+LedColor lowAmmoColor = {255, 0, 255};
 
 typedef enum
 {
+	OFF,
 	BOOT_PATTERN,
+	HIT_PATTERN,
 	SHOOT_PATTERN,
 	DEAD_PATTERN,
 	LOW_AMMO_PATTERN,
+	HEAL_PATTERN,
+	HEALTH_PATTERN,
 	ERROR_PATTERN
 } PATTERN_TYPE;
+volatile PATTERN_TYPE curPatternType = OFF;
 
 int changed = 1;
 
 // sets the LED stripe pin to HIGH to transmit a logical one
-void ledSendLogOne()
+inline void ledSendLogOne()
 {
 	P2OUT |= LED_PIN;
 	__delay_cycles(LOGICAL_ONE_HIGH_DELAY);
@@ -94,7 +100,7 @@ void ledSendLogOne()
 }
 
 // sets the LED stripe pin to HIGH to transmit a logical zero
-void ledSendLogZero()
+inline void ledSendLogZero()
 {
 	P2OUT |= LED_PIN;
 	__delay_cycles(LOGICAL_ZERO_HIGH_DELAY);
@@ -107,24 +113,26 @@ void sendColor(uint8_t R, uint8_t G, uint8_t B) {
 	int i;
 	uint8_t mask = BIT0;
 	for (i = 7; i >= 0; --i)
-	{
-		if (G & mask) {
+		if (G & (mask << i)) {
 			ledSendLogOne();
 		} else {
 			ledSendLogZero();
 		}
-		if (R & mask) {
+
+	for (i = 7; i >= 0; --i)
+		if (R & (mask << i)) {
 			ledSendLogOne();
 		} else {
 			ledSendLogZero();
 		}
-		if (B & mask) {
+
+	for (i = 7; i >= 0; --i)
+		if (B & (mask << i)) {
 			ledSendLogOne();
 		} else {
 			ledSendLogZero();
 		}
-		mask <<= 1;
-	}
+
 }
 
 // apply the values in ledColors to the leds
@@ -248,12 +256,19 @@ int hitPattern()
 		sendAllLEDsOneColor(hitColor1);
 		break;
 	case 1:
-		sendAllLEDsOneColor(hitColor2);
+		sendAllLEDsOneColor(BLACK);
 		break;
 	case 2:
+		sendAllLEDsOneColor(hitColor2);
+		break;
+	case 3:
+		sendAllLEDsOneColor(BLACK);
+		break;
+	case 4:
 		sendAllLEDsOneColor(hitColor3);
 		break;
 	default:
+		sendAllLEDsOneColor(BLACK);
 		return 0;
 	}
 
@@ -276,20 +291,19 @@ int reloadPattern()
 }
 
 
-int healthPattern()
+int healPattern()
 {
-	if (patternState > HEALTH_PATTERN_LENGTH - health)
+	if (patternState > HEAL_PATTERN_LENGTH - health)
 	{
-		sendAllLEDsOneColor(BLACK);
-		return 0;
+		patternState = 0;
 	}
 
+	sendAllLEDsOneColor(BLACK);
 	int i = 0;
-	for (; i < health; ++i)
+	for (; i < health; ++i) // show health
 		ledColors[i] = teamColor;
 
-	for (i = health; i < NUMB_LEDS; ++i)
-		ledColors[patternState] = teamColor;
+	ledColors[health + patternState] = teamColor; // missing health is animated
 
 	sendAllLEDs();
 
@@ -299,13 +313,14 @@ int healthPattern()
 
 int lowAmmoPattern()
 {
-	if (patternState >= LOW_AMMO_PATTERN_LENGTH)
+	if (patternState > LOW_AMMO_PATTERN_LENGTH)
 	{
 		sendAllLEDsOneColor(BLACK);
 		patternState = 0;
 	}
 	else
-		sendAllLEDsOneColor(lowAmmoColor);
+		//sendAllLEDsOneColor(lowAmmoColor);
+		sendAllLEDsOneColor(BLUE);
 
 	return 1;
 }
@@ -313,7 +328,7 @@ int lowAmmoPattern()
 
 int deadPattern()
 {
-	if (patternState >= DEAD_PATTERN_LENGTH)
+	if (patternState > DEAD_PATTERN_LENGTH)
 	{
 		sendAllLEDsOneColor(BLACK);
 		patternState = 0;
@@ -339,6 +354,7 @@ void showCurrentHealth(int health) {
 		changed = 0;
 	}
 }
+
 
 void showErrorPattern() {
 	fade(BLACK, RED, 1);
@@ -378,19 +394,35 @@ void stopPatternTimer()
 
 void startPattern(PATTERN_TYPE type)
 {
-	switch(type)
+	if (type == curPatternType || curPatternType == HIT_PATTERN) // do not overwrite hit pattern
+		return;
+	else
 	{
-	case BOOT_PATTERN:
-		// stuff
-	case SHOOT_PATTERN:
-		// stuff
-	case LOW_AMMO_PATTERN:
-		// stuff
-	case DEAD_PATTERN:
-		// stuff
-	case ERROR_PATTERN:
-	default:
-		// everything that goes wrong
+		switch(type)
+		{
+		case BOOT_PATTERN:
+			startPatternTimer(BOOT_PATTERN_DELAY, bootPattern);
+			break;
+		case HIT_PATTERN:
+			startPatternTimer(HIT_PATTERN_DELAY, hitPattern);
+			break;
+		case SHOOT_PATTERN:
+			startPatternTimer(SHOOT_PATTERN_DELAY, shootPattern);
+			break;
+		case LOW_AMMO_PATTERN:
+			startPatternTimer(LOW_AMMO_PATTERN_DELAY, lowAmmoPattern);
+			break;
+		case DEAD_PATTERN:
+			startPatternTimer(DEAD_PATTERN_DELAY, deadPattern);
+			break;
+		case HEALTH_PATTERN:
+			showCurrentHealth(health);
+			break;
+		case ERROR_PATTERN:
+		default:
+			showErrorPattern();
+		}
+		curPatternType = type;
 	}
 
 }
@@ -408,14 +440,15 @@ void startPattern(PATTERN_TYPE type)
 {
 	  if (patternRestart) // the pattern function is not done
 	  {
-		  startPatternTimer(patternDelay, patternFunction); // so start it again
 		  patternState++;
+		  startPatternTimer(patternDelay, patternFunction); // so start it again
 	  }
 	  else // pattern done, reset state and cancel timer
 	  {
 		  patternState = 0;
 		  sendAllLEDsOneColor(BLACK);
 		  stopPatternTimer();
+		  curPatternType = OFF;
 	  }
 
 	  // remove interrupt flag
