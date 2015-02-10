@@ -111,6 +111,7 @@ inline void ledSendLogZero()
 
 // goes through the bits of the RGB value and toggles the output pin accordingly
 void sendColor(uint8_t R, uint8_t G, uint8_t B) {
+
 	int i;
 	uint8_t mask = BIT0;
 	for (i = 7; i >= 0; --i)
@@ -294,6 +295,18 @@ int reloadPattern()
 
 int healPattern()
 {
+	if (patternState >= HEAL_PATTERN_LENGTH)
+	{
+		allLEDsOneColor(BLACK);
+		return 0;
+	}
+
+	ledColors[patternState] = teamColor;
+	sendAllLEDs();
+
+	return 1;
+
+	/* DISABLED BECAUSE HEALING IS INSTANT RIGHT NOW, DOES NOT WORK
 	if (patternState > HEAL_PATTERN_LENGTH - health)
 	{
 		patternState = 0;
@@ -309,6 +322,7 @@ int healPattern()
 	sendAllLEDs();
 
 	return 1;
+	*/
 }
 
 
@@ -399,6 +413,7 @@ void startPattern(PATTERN_TYPE type)
 		return;
 	else
 	{
+		sendAllLEDsOneColor(BLACK);
 		switch(type)
 		{
 		case BOOT_PATTERN:

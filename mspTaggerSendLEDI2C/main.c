@@ -39,7 +39,7 @@
 // The Speed of the UARRT connection
 #define SERIALSPEED 9600
 // Smallest delay between two transmissions
-#define DELAY_BETWEEN_TWO_SENDS_MS 100
+#define DELAY_BETWEEN_TWO_SENDS_MS 800
 // The clockSpeed in MHZ (CAUSION: needs to be changed in main as well)
 #define CLK_SPEED 16
 #define INIT_CLK() BCSCTL1 = CALBC1_16MHZ; DCOCTL = CALDCO_16MHZ;
@@ -63,6 +63,9 @@ int getColor = 0;
 int CODE = 240;
 int transmissionCheck = 0;
 
+// save button state for edge detection (it is called BUTTEN!)
+int shootButtenOldState = 0;
+
 /*
  * Init the Ports
  */
@@ -83,7 +86,7 @@ void initPorts() {
 	P2SEL &= ~BIT7;
 	// Set output source to timer A
 	P2SEL |= IR_TX_PIN;
-/*
+
 	// PWM setup
 	// Set the PWM periode to 38kHz
 	TA0CCR0 = PWM_PERIODE;
@@ -93,7 +96,7 @@ void initPorts() {
 	TA0CCTL1 |= OUTMOD_7;
 	// Set the counter to "count up" to TA0CCR0 with clock input "SMCLK"
 	TA0CTL |= TASSEL_2 + MC_1;
-*/
+
 	// Disable Output for the moment
 	// Set output source to timer A
 	P2SEL &= ~IR_TX_PIN;
@@ -232,7 +235,8 @@ void shoot() {
 	sendCode(CODE);
 	i2cBuffer = 's';
 	// Display sending with LED on
-	for (i = 0; i < SHOOT_PATTERN_COUNT; i++) startPatternTimer(SHOOT_PATTERN_DELAY, shootPattern);
+	//for (i = 0; i < SHOOT_PATTERN_COUNT; i++) startPatternTimer(SHOOT_PATTERN_DELAY, shootPattern);
+	startPattern(SHOOT_PATTERN);
 	// Wait so that no Burst can be sended
 	int millis = 0;
 	for (millis = 0; millis < DELAY_BETWEEN_TWO_SENDS_MS; millis++) {
@@ -251,6 +255,10 @@ void transmit_cb(unsigned char volatile *value) {
 }
 
 void receive_cb(unsigned char value) {
+	if (value == START_BYTE) {
+		transmissionCheck = 1;
+		return;
+	}
 	changed = 1;
 	if (getCode == 1) {
 		CODE = value;
@@ -268,98 +276,92 @@ void receive_cb(unsigned char value) {
 		getColor = 0;
 		transmissionCheck = 0;
 	} else {
-		if (!transmissionCheck) {
-			if (value == START_BYTE) {
-				transmissionCheck = 1;
+		switch (value) {
+			// Low Ammo case
+			case COMMAND_LOW_AMMO: {
+				canShoot = 0;
+				break;
 			}
-		} else {
-			switch (value) {
-				// Low Ammo case
-				case COMMAND_LOW_AMMO: {
-					canShoot = 0;
-					break;
-				}
-				case COMMAND_RELOAD: {
-					canShoot = 1;
-					startPattern(RELOAD_PATTERN);
-					break;
-				}
-				case COMMAND_DEAD: {
-					isDead = 1;
-					break;
-				}
-				case COMMAND_DEACTIVATE: {
-					isActive = 0;
-					break;
-				}
-				case COMMAND_ACTIVATE: {
-					isActive = 1;
-					break;
-				}
-				case COMMAND_HEALTH: {
-					health = NUMB_LEDS;
-					isDead = 0;
-					startPattern(HEAL_PATTERN);
-					break;
-				}
-				case COMMAND_HEALTH_1: {
-					health = 1;
-					showCurrentHealth(health);
-					break;
-				}
-				case COMMAND_HEALTH_2: {
-					health = 2;
-					showCurrentHealth(health);
-					break;
-				}
-				case COMMAND_HEALTH_3: {
-					health = 3;
-					showCurrentHealth(health);
-					break;
-				}
-				case COMMAND_HEALTH_4: {
-					health = 4;
-					showCurrentHealth(health);
-					break;
-				}
-				case COMMAND_HEALTH_5: {
-					health = 5;
-					showCurrentHealth(health);
-					break;
-				}
-				case COMMAND_HEALTH_6: {
-					health = 6;
-					showCurrentHealth(health);
-					break;
-				}
-				case COMMAND_HEALTH_7: {
-					health = 7;
-					showCurrentHealth(health);
-					break;
-				}
-				case COMMAND_SHOOT: {
-					shoot();
-					break;
-				}
-				case COMMAND_BOOT: {
-					booted = 0;
-					break;
-				}
-				case COMMAND_READY: {
-					booted = 1;
-					break;
-				}
-				case COMMAND_CODE: {
-					getCode = 1;
-					break;
-				}
-				case COMMAND_TEAM_COLOR: {
-					getColor = 1;
-					break;
-				}
+			case COMMAND_RELOAD: {
+				canShoot = 1;
+				startPattern(RELOAD_PATTERN);
+				break;
 			}
-			transmissionCheck = 0;
+			case COMMAND_DEAD: {
+				isDead = 1;
+				break;
+			}
+			case COMMAND_DEACTIVATE: {
+				isActive = 0;
+				break;
+			}
+			case COMMAND_ACTIVATE: {
+				isActive = 1;
+				break;
+			}
+			case COMMAND_HEALTH: {
+				health = NUMB_LEDS;
+				isDead = 0;
+				startPattern(HEAL_PATTERN);
+				break;
+			}
+			case COMMAND_HEALTH_1: {
+				health = 1;
+				showCurrentHealth(health);
+				break;
+			}
+			case COMMAND_HEALTH_2: {
+				health = 2;
+				showCurrentHealth(health);
+				break;
+			}
+			case COMMAND_HEALTH_3: {
+				health = 3;
+				showCurrentHealth(health);
+				break;
+			}
+			case COMMAND_HEALTH_4: {
+				health = 4;
+				showCurrentHealth(health);
+				break;
+			}
+			case COMMAND_HEALTH_5: {
+				health = 5;
+				showCurrentHealth(health);
+				break;
+			}
+			case COMMAND_HEALTH_6: {
+				health = 6;
+				showCurrentHealth(health);
+				break;
+			}
+			case COMMAND_HEALTH_7: {
+				health = 7;
+				showCurrentHealth(health);
+				break;
+			}
+			case COMMAND_SHOOT: {
+				shoot();
+				break;
+			}
+			case COMMAND_BOOT: {
+				booted = 0;
+				break;
+			}
+			case COMMAND_READY: {
+				booted = 1;
+				break;
+			}
+			case COMMAND_CODE: {
+				getCode = 1;
+				break;
+			}
+			case COMMAND_TEAM_COLOR: {
+				getColor = 1;
+				break;
+			}
 		}
+		transmissionCheck = 0;
 	}
 
 }
@@ -408,7 +410,7 @@ int main(void) {
     	} else {
     		startPattern(HEALTH_PATTERN);
     		// If Push Button pressed
-        	while (!(P1IN & BUTTON_PIN) && canShoot == 1) {
+        	while (!(P1IN & BUTTON_PIN) && canShoot == 1 && isActive) {
         		shoot();
     		}
     	}
