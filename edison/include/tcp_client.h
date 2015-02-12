@@ -1,4 +1,4 @@
-// Copyright 2014 Sebastian Boettcher
+// Copyright 2015 Sebastian Boettcher
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,7 +25,7 @@ class tcp_client {
     void error_exit(std::string errorMessage);
 
     // connect to server with ip or host name
-    void tcp_connect(std::string ip);
+    bool tcp_connect(std::string ip);
 
     // send a string to the server
     void tcp_send(std::string s);

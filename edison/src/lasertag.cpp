@@ -182,9 +182,8 @@ void lasertag::bt_init() {
 //________________________________________________________________________________
 void lasertag::tcp_init(std::string address) {
   m_client = new tcp_client;
-  m_client->tcp_connect(address);
-  
-  m_tcp_init = true;
+  if (m_client->tcp_connect(address))
+    m_tcp_init = true;
 }
 
 //________________________________________________________________________________

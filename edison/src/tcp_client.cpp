@@ -1,4 +1,4 @@
-// Copyright 2014 Sebastian Boettcher
+// Copyright 2015 Sebastian Boettcher
 
 #include <string>
 
@@ -14,10 +14,10 @@ tcp_client::~tcp_client() {
 
 void tcp_client::error_exit(std::string errorMessage) {
   fprintf(stderr, "[TCP_CLIENT] %s: %s\n", errorMessage.c_str(), strerror(errno));
-  exit(EXIT_FAILURE);
+  //exit(EXIT_FAILURE);
 }
 
-void tcp_client::tcp_connect(std::string ip) {
+bool tcp_client::tcp_connect(std::string ip) {
   // create socket
   m_socketFD = socket(AF_INET, SOCK_STREAM, 0);
   if (m_socketFD < 0)
@@ -36,9 +36,11 @@ void tcp_client::tcp_connect(std::string ip) {
     memcpy((char *)&server.sin_addr, &addr, sizeof(addr));
   } else {
     host_info = gethostbyname(ip.c_str());
-    if (NULL == host_info)
+    if (NULL == host_info) {
       error_exit("Unknown server.");
-     memcpy((char *)&server.sin_addr, host_info->h_addr, host_info->h_length);
+      return false;
+    }
+    memcpy((char *)&server.sin_addr, host_info->h_addr, host_info->h_length);
   }
 
   printf("[TCP_CLIENT] Found!\n");
@@ -51,12 +53,15 @@ void tcp_client::tcp_connect(std::string ip) {
   // connect to server
   printf("[TCP_CLIENT] Connecting to server @ %s\n", ip.c_str());
   fflush(stdout);
-  if(connect(m_socketFD, (struct sockaddr*)&server, sizeof(server)) < 0)
+  if(connect(m_socketFD, (struct sockaddr*)&server, sizeof(server)) < 0) {
     error_exit("Could not connect to server!");
+    return false;
+  }
   printf("[TCP_CLIENT] Connected!\n");
   fflush(stdout);
 
   m_connected = true;
+  return true;
 }
 
 void tcp_client::tcp_send(std::string s) {
