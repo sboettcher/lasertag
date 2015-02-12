@@ -74,10 +74,10 @@ void lasertag::i2c_write_int(uint8_t i, uint8_t a, bool start) {
   m_i2c->address(a);
   if (start) {
     while(m_i2c->writeByte(I2C_START_BYTE) != MRAA_SUCCESS);
-    usleep(100000);
+    usleep(100000);  // TODO: test if really necessary
   }
   while(m_i2c->writeByte(i) != MRAA_SUCCESS);
-  usleep(100000);
+  usleep(100000);  // TODO: test if really necessary
   return;
 }
 
@@ -410,8 +410,11 @@ void lasertag::parse_cmd(std::string cmd) {
   // command structure: <key:data>
   // get the command key
   std::string key = cmd.substr(cmd.find("<") + 1, cmd.find(":") - 1);
+
+  // filter leading exclamation point from key that the server might send
   if (key.find("!") != std::string::npos)
     key = key.substr(key.find("!"), 1);
+
   if (key == "")
     return;
 
@@ -428,7 +431,7 @@ void lasertag::parse_cmd(std::string cmd) {
     m_bt_slave = ss.str();
     if (m_player.get_vest()) {
       bt_init();
-      usleep(2000000);
+      usleep(2000000);  // 2 sec wait for safety, might not be needed
       set_team_color(m_player.get_color());
     }
     // transmit ID to msp
@@ -479,6 +482,7 @@ void lasertag::parse_cmd(std::string cmd) {
     clear_tagged_pos();
     clear_tagged_name();
     // asynchronously draw on display so tcp communication can continue
+    // TODO: check for string length, should fit in box
     handles.push_back(std::async(std::launch::async, &lasertag::dsp_write, this, m_dsp->maxX()/2 + 5, m_t_coord[1] + 5, pos, Terminal6x8, COLOR_WHITE));
     handles.push_back(std::async(std::launch::async, &lasertag::dsp_write, this, m_dsp->maxX()/2 + 5, m_t_coord[1] + 15, name, Terminal11x16, COLOR_WHITE));
   } else if (key == "hp") {  // <hp:hit_by>
@@ -486,12 +490,14 @@ void lasertag::parse_cmd(std::string cmd) {
     fflush(stdout);
     clear_hit_name();
     // asynchronously draw on display so tcp communication can continue
+    // TODO: check for string length, should fit in box
     handles.push_back(std::async(std::launch::async, &lasertag::dsp_write, this, m_t_coord[0] + 5, m_t_coord[1] + 15, data, Terminal11x16, COLOR_WHITE));
   } else if (key == "hv") {  // <hv:tagged_name>
     printf("[LASERTAG] Tagged player %sn", data.c_str());
     fflush(stdout);
     clear_tagged_name();
     // asynchronously draw on display so tcp communication can continue
+    // TODO: check for string length, should fit in box
     handles.push_back(std::async(std::launch::async, &lasertag::dsp_write, this, m_dsp->maxX()/2 + 5, m_t_coord[1] + 15, data, Terminal11x16, COLOR_WHITE));
   } else if (key == "at") {  // <at:tagger_active>
     if (data == "0") {
@@ -504,6 +510,9 @@ void lasertag::parse_cmd(std::string cmd) {
     fflush(stdout);
   }
 
+  // this doesn't make sense here since parse_cmd should return as quickly as possible (don't block caller),
+  // so we can't wait for the longer display draw functions to return.
+  // Can we still somehow make sure all async called functions return?
   //for (auto& h : handles) h.get();  // make sure all async calls return
 }
 
@@ -521,6 +530,7 @@ void lasertag::set_team_color(uint16_t color) {
   }
   if (m_i2c_init) {
     i2c_write_int(I2C_TEAM_COLOR, I2C_SEND_MSP);
+    // send RGB values
     switch (color) {
       case COLOR_RED: i2c_write_int(I2C_COLOR_BRIGHT, I2C_SEND_MSP, false);
                       i2c_write_int(0, I2C_SEND_MSP, false);
@@ -548,6 +558,7 @@ void lasertag::reset_health() {
   printf("[LASERTAG] resetting health... ");
   fflush(stdout);
   usleep(m_reset_time * 1000000);
+  // make sure send msp actually gets the command (send 3x, kind of a hack...)
   if (m_i2c_init) {
     i2c_write_int(I2C_FULL_HEALTH, I2C_SEND_MSP);
     i2c_write_int(I2C_FULL_HEALTH, I2C_SEND_MSP);
@@ -567,6 +578,7 @@ void lasertag::reset_ammo() {
   printf("[LASERTAG] resetting ammo... ");
   fflush(stdout);
   usleep(m_reset_time * 1000000);
+  // make sure send msp actually gets the command (send 3x, kind of a hack...)
   if (m_i2c_init) {
     i2c_write_int(I2C_FULL_AMMO, I2C_SEND_MSP);
     i2c_write_int(I2C_FULL_AMMO, I2C_SEND_MSP);

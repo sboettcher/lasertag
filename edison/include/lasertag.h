@@ -85,11 +85,9 @@ class lasertag {
     tcp_client* tcp() {
       return m_client;
     }
-
     void set_bt_slave(std::string slave) {
       m_bt_slave = slave;
     }
-    void parse_cmd(std::string cmd);
 
   private:
     // register a hit, manage related stuff
@@ -119,6 +117,7 @@ class lasertag {
     void t_read_gpio();
 
     // parse a command coming i.e. from the server and do the corresponding action
+    void parse_cmd(std::string cmd);
 
     // transmits the team color to the vest via bt
     void set_team_color(uint16_t color);
