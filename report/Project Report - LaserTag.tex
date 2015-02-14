@@ -1,0 +1,71 @@
+\input{settings.tex} % Importiere die Einstellungen aus der Präambel
+% hier beginnt der eigentliche Inhalt
+
+\begin{document}
+\pagenumbering{Roman} % große Römische Seitenummerierung
+\pagestyle{empty}
+
+% Titelseite
+\clearscrheadings\clearscrplain
+
+
+
+\begin{center}
+\begin{Huge}
+Embedded Systems Group\\
+\vspace{-2mm}
+Computer Science Department\\
+\vspace{3mm}
+\end{Huge}{\Large Faculty of Engineering}\\
+\vspace{3mm}
+{\Large Albert-Ludwigs-University Freiburg}\\
+\vspace{8mm}
+%\includegraphics[width=10cm]{images/PaM.png}\\
+\vspace{8mm}
+\begin{Large}
+Labcourse: Wearable Computing Systems\\
+WS 14/15\\
+\vspace{8mm}
+\end{Large}
+\begin{Huge}
+Project: LaserTag\\
+\vspace{8mm}
+\end{Huge}
+\begin{Large}
+Project Report\\
+\end{Large}
+\vspace{50mm}
+\begin{tabular}{ll}
+Sebastian Böttcher &  boettchers@tf.uni-freiburg.de\\
+Jan Kühn &  kuehnj@tf.uni-freiburg.de\\
+Marc Pfeifer &  pfeiferm@tf.uni-freiburg.de\\
+Johannes Scherle &  scherlej@tf.uni-freiburg.de\\
+Jonas Schlagenauf &  schlagenaufj@tf.uni-freiburg.de\\
+Benjamin Völker & voelkerb@tf.uni-freiburg.de \\
+\end{tabular}
+
+
+\end{center}
+\thispagestyle{empty}
+\clearpage
+
+
+\pagestyle{useheadings} % normale Kopf- und Fußzeilen für den Rest
+%% wenn neues Kapitel kommt bitte keine riesigen abstände
+\renewcommand*{\chapterheadstartvskip}{\vspace{-2cm}}
+
+\tableofcontents
+
+\pagenumbering{arabic} % ab jetzt die normale arabische Nummerierung
+\include{Introduction}
+\include{SystemOverview}
+\include{InfraredCommunication}
+\include{CAD}
+\include{Vest}
+\include{TaggerEdison}
+\include{TaggerArduino}
+\include{Server}
+
+
+
+\end{document}
