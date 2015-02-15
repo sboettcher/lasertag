@@ -1,10 +1,19 @@
+/*
+ * Copyright: Universität Freiburg, 2015
+ * Author: Marc Pfeifer <pfeiferm@tf.uni-freiburg.de>
+ *
+ * A Arduino firmware which is able to send special codes via an infrared LED.
+ */
+
 #define TXPin 3      // Pin for the sending-LED.
 #define bitTime 10000    // Sending-Time for each bit. Whole sending-time = 8.5 * bitTime.
 
 #define BUTTON_PIN  2
 boolean old_button = false;
 
-// ToDo.
+/*
+ * Setup a timer for the 38kHz modulation of the IR signal.
+ */
 void setupTimer() {
   // Setup Timer2 so that there is a PWM-signal with 38kHz and 
   // duty-cycle of 50% on pin 3.
@@ -13,18 +22,26 @@ void setupTimer() {
   OCR2A = 210; // -> Divide clock at output B by 210 -> 1/2 cycle = 76 kHz -> 1 cycle = 38 kHz
 }
 
+/*
+ * Send a one/high.
+ */
 void startSending() {
   // Activate the clock.
   // TCCR2B = _BV(CS20);  // No clock-divider -> 16MHz
   TCCR2B = TCCR2B | B00000001;  // No clock-divider -> 16MHz
 }
 
+/*
+ * Send a zero/low.
+ */
 void stopSending() {
   // Deactivate the clock.
   TCCR2B = TCCR2B & B11111000;
 }
 
-// ToDo.
+/*
+ * Send a given code.
+ */
 void sendCode(int Code){
   // Start transmitting with an rising edge.
   startSending();
@@ -73,7 +90,9 @@ void setup(){
   delay(1000);
 }
 
-// Main-loop.
+/*
+ * Main loop. Is only used for test propose at the moment.
+ */
 void loop(){
   if (!digitalRead(BUTTON_PIN) && !old_button) {
     sendCode(1);

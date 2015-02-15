@@ -1,12 +1,23 @@
-#include <SPI.h>
-// #include <MFRC522.h>
+/*
+ * Copyright: Universität Freiburg, 2015
+ * Author: Marc Pfeifer <pfeiferm@tf.uni-freiburg.de>
+ *
+ * Based on code from the MFRC522 arduino library, writen by Dr.Leong, Miguel Balboa, Søren Thing Andersen and Tom Clement.
+ * (https://github.com/miguelbalboa/rfid)
+ *
+ * A minimal arduino firmware to read only the uid of an MIRFARE tag with an MFRC522-RFID-reader.
+ */
 
+#include <SPI.h>
+
+// Struct for the UID.
 struct Uid {
-  byte size;			// Number of bytes in the UID. 4, 7 or 10.
-  byte uidByte[10];
-  byte sak;			// The SAK (Select acknowledge) byte returned from the PICC after successful selection.
+  byte size;			    // Number of bytes in the UID. 4, 7 or 10.
+  byte uidByte[10];   // The UID as bytes.
+  byte sak;			      // The SAK (Select acknowledge) byte returned from the PICC after successful selection.
 };
 
+// All needed defines.
 #define RST_PIN	9
 #define SS_PIN 10
 #define PICC_CMD_REQA 0x26
@@ -46,51 +57,58 @@ struct Uid {
 #define PCD_SoftReset 0x0F
 #define TxControlReg 0x14 << 1
 
+// The UID.
 Uid uid;
 
+/*
+ * The setup method. Initializes everything.
+ */
 void setup() {
   Serial.begin(9600);		// Initialize serial communications with the PC
   SPI.begin();			// Init SPI bus
   Serial.println("Hallo!");
-  initSPI();	
+  initSPI();	// Init the SPI connection to the reader.
   PCD_Init();	                // Init MFRC522
   Serial.println("Scan PICC to see UID");
 }
 
+/*
+ * The main loop. Checks for new card, selects one and prints the UID. 
+ */
 void loop() {
-  // delay(1000);
   // Look for new cards
-  // PCD_WriteRegister(CollReg, 0x01);
-  // PCD_ReadRegister(CollReg);
   if ( !PICC_IsNewCardPresent()) {
     return;
   }
-  // Serial.println("Card found!");
   // Select one of the cards
   if ( !PICC_ReadCardSerial()) {
     return;
   }
+  // Print the UID.
   printCardID();
 }
   
-
+/*
+ * Initialization of the SPI communication with the reader.
+ */
 void initSPI() {
-  // Set the chipSelectPin as digital output, do not select the slave yet
-  // _chipSelectPin = SS_PIN;
+  // Set the chipSelectPin as digital output, do not select the slave yet.
   pinMode(SS_PIN, OUTPUT);
   digitalWrite(SS_PIN, HIGH);	
   // Set the resetPowerDownPin as digital output, do not reset or power down.
-  // _resetPowerDownPin = resetPowerDownPin;
   pinMode(RST_PIN, OUTPUT);
   digitalWrite(RST_PIN, LOW);
   // Set SPI bus to work with MFRC522 chip.
   setSPIConfig();
 }
 
+/*
+ * Initialization of the reader.
+ */
 void PCD_Init() {
   if (digitalRead(RST_PIN) == LOW) {	//The MFRC522 chip is in power down mode.
     digitalWrite(RST_PIN, HIGH);		// Exit power down mode. This triggers a hard reset.
-    // Section 8.8.2 in the datasheet says the oscillator start-up time is the start up time of the crystal + 37,74�s. Let us be generous: 50ms.
+    // Section 8.8.2 in the datasheet says the oscillator start-up time is the start up time of the crystal + 37,74µs. Let us be generous: 50ms.
     delay(50);
   } else { // Perform a soft reset
     PCD_Reset();
@@ -99,14 +117,17 @@ void PCD_Init() {
   // f_timer = 13.56 MHz / (2*TPreScaler+1) where TPreScaler = [TPrescaler_Hi:TPrescaler_Lo].
   // TPrescaler_Hi are the four low bits in TModeReg. TPrescaler_Lo is TPrescalerReg.
   PCD_WriteRegister(TModeReg, 0x80);			// TAuto=1; timer starts automatically at the end of the transmission in all communication modes at all speeds
-  PCD_WriteRegister(TPrescalerReg, 0xA9);		// TPreScaler = TModeReg[3..0]:TPrescalerReg, ie 0x0A9 = 169 => f_timer=40kHz, ie a timer period of 25�s.
+  PCD_WriteRegister(TPrescalerReg, 0xA9);		// TPreScaler = TModeReg[3..0]:TPrescalerReg, ie 0x0A9 = 169 => f_timer=40kHz, ie a timer period of 25µs.
   PCD_WriteRegister(TReloadRegH, 0x03);		// Reload timer with 0x3E8 = 1000, ie 25ms before timeout.
   PCD_WriteRegister(TReloadRegL, 0xE8);
   PCD_WriteRegister(TxASKReg, 0x40);		// Default 0x00. Force a 100 % ASK modulation independent of the ModGsPReg register setting
   PCD_WriteRegister(ModeReg, 0x3D);		// Default 0x3F. Set the preset value for the CRC coprocessor for the CalcCRC command to 0x6363 (ISO 14443-3 part 6.2.4)
   PCD_AntennaOn();						// Enable the antenna driver pins TX1 and TX2 (they were disabled by the reset)
-} // End PCD_Init()
+}
 
+/*
+ * Resets the reader.
+ */
 void PCD_Reset() {
   PCD_WriteRegister(CommandReg, PCD_SoftReset);	// Issue the SoftReset command.
   // The datasheet does not mention how long the SoftRest command takes to complete.
@@ -117,46 +138,56 @@ void PCD_Reset() {
   while (PCD_ReadRegister(CommandReg) & (1<<4)) {
     // PCD still restarting - unlikely after waiting 50ms, but better safe than sorry.
   }
-} // End PCD_Reset()
+}
 
+/*
+ * Activate the antenna of the reader.
+ */
 void PCD_AntennaOn() {
   byte value = PCD_ReadRegister(TxControlReg);
   if ((value & 0x03) != 0x03) {
     PCD_WriteRegister(TxControlReg, value | 0x03);
   }
-} // End PCD_AntennaOn()
+}
 
+/*
+ * Configure the SPI communication.
+ */
 void setSPIConfig() {
   SPI.setBitOrder(MSBFIRST);
   SPI.setDataMode(SPI_MODE0);
 }
 
+/*
+ * Check if a new tag is availavle.
+ */
 bool PICC_IsNewCardPresent() {
   byte bufferATQA[2];
   byte bufferSize = sizeof(bufferATQA);
   byte result = PICC_RequestA(bufferATQA, &bufferSize);
-  // Serial.print("result = ");
-  // Serial.println(result);
   return (result == STATUS_OK || result == STATUS_COLLISION);
 }
 
+/*
+ * Request something at the reader.
+ */
 byte PICC_RequestA(byte *bufferATQA, byte *bufferSize) {
   return PICC_REQA_or_WUPA(PICC_CMD_REQA, bufferATQA, bufferSize);
 }
 
+/*
+ * Request something at the reader.
+ */
 byte PICC_REQA_or_WUPA( byte command, byte *bufferATQA, byte *bufferSize) {
   byte validBits;
   byte status;	
   if (bufferATQA == NULL || *bufferSize < 2) {	// The ATQA response is 2 bytes long.
 	return STATUS_NO_ROOM;
   }
-  // Serial.println("H1");
   PCD_ClearRegisterBitMask(CollReg, 0x80);		// ValuesAfterColl=1 => Bits received after collision are cleared.
   PCD_ReadRegister(CollReg);
   validBits = 7;									// For REQA and WUPA we need the short frame format - transmit only 7 bits of the last (and only) byte. TxLastBits = BitFramingReg[2..0]
   status = PCD_TransceiveData(&command, 1, bufferATQA, bufferSize, &validBits);
-  // Serial.print("Status: ");
-  // Serial.println(status);
   if (status != STATUS_OK) {
     return status;
   }
@@ -166,34 +197,34 @@ byte PICC_REQA_or_WUPA( byte command, byte *bufferATQA, byte *bufferSize) {
   return STATUS_OK;
 }
 
+/*
+ * Clears the bit mask.
+ */
 void PCD_ClearRegisterBitMask(byte reg, byte mask) {
-  // Serial.print("Clear Register: ");
-  // Serial.print(reg);
-  // Serial.print(" with Mask: ");
-  // Serial.println(mask);
   byte tmp;
   tmp = PCD_ReadRegister(reg);
   PCD_WriteRegister(reg, tmp & (~mask));		// clear bit mask
 }
 
+/*
+ * Read a given register in the reader.
+ */
 byte PCD_ReadRegister(byte reg) {
 	byte value;
 	digitalWrite(SS_PIN, LOW);			// Select slave
 	SPI.transfer(0x80 | (reg & 0x7E));			// MSB == 1 is for reading. LSB is not used in address. Datasheet section 8.1.2.3.
 	value = SPI.transfer(0);					// Read the value back. Send 0 to stop reading.
 	digitalWrite(SS_PIN, HIGH);			// Release slave again
-        // Serial.print("Value of Register: ");
-        // Serial.print(reg);
-        // Serial.print(" is: ");
-        // Serial.println(value);
 	return value;
 }
 
+/*
+ * Read a given register in the reader.
+ */
 void PCD_ReadRegister(byte reg, byte count, byte *values, byte rxAlign) {
 	if (count == 0) {
 		return;
 	}
-	//Serial.print("Reading "); 	Serial.print(count); Serial.println(" bytes from register.");
 	byte address = 0x80 | (reg & 0x7E);		// MSB == 1 is for reading. LSB is not used in address. Datasheet section 8.1.2.3.
 	byte index = 0;							// Index in values array.
 	digitalWrite(SS_PIN, LOW);		// Select slave
@@ -218,15 +249,21 @@ void PCD_ReadRegister(byte reg, byte count, byte *values, byte rxAlign) {
 	}
 	values[index] = SPI.transfer(0);			// Read the final byte. Send 0 to stop reading.
 	digitalWrite(SS_PIN, HIGH);			// Release slave again
-} // End PCD_ReadRegister()
+}
 
+/*
+ * Write a given register in the reader.
+ */
 void PCD_WriteRegister(byte reg, byte value) {
 	digitalWrite(SS_PIN, LOW);		// Select slave
 	SPI.transfer(reg & 0x7E);	        // MSB == 0 is for writing. LSB is not used in address. Datasheet section 8.1.2.3.
 	SPI.transfer(value);
 	digitalWrite(SS_PIN, HIGH);		// Release slave again
-} // End PCD_WriteRegister()
+}
 
+/*
+ * Write a given register in the reader.
+ */
 void PCD_WriteRegister(	byte reg, byte count, byte *values) {
 	digitalWrite(SS_PIN, LOW);		// Select slave
 	SPI.transfer(reg & 0x7E);				// MSB == 0 is for writing. LSB is not used in address. Datasheet section 8.1.2.3.
@@ -234,14 +271,19 @@ void PCD_WriteRegister(	byte reg, byte count, byte *values) {
 		SPI.transfer(values[index]);
 	}
 	digitalWrite(SS_PIN, HIGH);		// Release slave again
-} // End PCD_WriteRegister()
+}
 
+/*
+ * Communicates with the tag.
+ */
 byte PCD_TransceiveData( byte *sendData, byte sendLen, byte *backData, byte *backLen, byte *validBits) {
 	byte waitIRq = 0x30;		// RxIRq and IdleIRq
 	return PCD_CommunicateWithPICC(PCD_Transceive, waitIRq, sendData, sendLen, backData, backLen, validBits, 0, false);
-} // End PCD_TransceiveData()
+}
 
-
+/*
+ * Communicates with the tag.
+ */
 byte PCD_CommunicateWithPICC(byte command, byte waitIRq, byte *sendData, byte sendLen, byte *backData, byte *backLen, byte *validBits, byte rxAlign, bool checkCRC) {
 	byte n, _validBits;
 	unsigned int i;
@@ -324,14 +366,20 @@ byte PCD_CommunicateWithPICC(byte command, byte waitIRq, byte *sendData, byte se
 	}
 	
 	return STATUS_OK;
-} // End PCD_CommunicateWithPICC()
+}
 
+/*
+ * Sets a register bis mask.
+ */
 void PCD_SetRegisterBitMask(byte reg, byte mask) { 
 	byte tmp;
 	tmp = PCD_ReadRegister(reg);
 	PCD_WriteRegister(reg, tmp | mask);			// set bit mask
-} // End PCD_SetRegisterBitMask()
+}
 
+/*
+ * Calculates the CRC-checksum.
+ */
 byte PCD_CalculateCRC(byte *data, byte length, byte *result) {
 	PCD_WriteRegister(CommandReg, PCD_Idle);		// Stop any active command.
 	PCD_WriteRegister(DivIrqReg, 0x04);				// Clear the CRCIRq interrupt request bit
@@ -357,17 +405,20 @@ byte PCD_CalculateCRC(byte *data, byte length, byte *result) {
 	result[0] = PCD_ReadRegister(CRCResultRegL);
 	result[1] = PCD_ReadRegister(CRCResultRegH);
 	return STATUS_OK;
-} // End PCD_CalculateCRC()
+}
 
+/*
+ * Select a tag.
+ */
 bool PICC_ReadCardSerial() {
   byte result = PICC_Select(0);
   return (result == STATUS_OK);
-} // End PICC_ReadCardSerial()
+}
 
-
-
-// byte PICC_Select(Uid *uid, byte validBits) {
-  byte PICC_Select(byte validBits) {
+/*
+ * Select a tag.
+ */
+byte PICC_Select(byte validBits) {
   bool uidComplete;
   bool selectDone;
   bool useCascadeTag;
@@ -557,8 +608,11 @@ bool PICC_ReadCardSerial() {
   // Set correct uid->size
   uid.size = 3 * cascadeLevel + 1;
   return STATUS_OK;
-} // End PICC_Select()
+}
 
+/*
+ * Print out the UID of tag.
+ */
 void printCardID() {
   Serial.print("Card UID:");
   for (byte i = 0; i < uid.size; i++) {
