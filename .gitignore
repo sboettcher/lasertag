@@ -39,3 +39,11 @@ msp430Dome/lnk_msp430g2553.cmd
 
 # misc
 *~
+
+# Tex
+*.aux
+*.bbl
+*.blg
+*.log
+*.synctex
+*.toc
