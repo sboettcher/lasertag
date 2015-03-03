@@ -1,7 +1,7 @@
 % --------------------------------------------------
 % --------------------------------------------------
 \chapter{Tagger - Edison}
-This variant of the tagger uses an Intel Edison development platform as its main computing component, in combination with two printed circuit boards with one TI MSP430G2553 microcontroller each. The Edison's main function therein is to run the control program that connects to the MSPs via $\text{I}^2\text{C}$, to the server via its onboard WiFi stack, and to the vest via an additional Grove Serial Bluetooth module.\\
+This variant of the tagger uses an Intel Edison development platform as its main computing component, in combination with two printed circuit boards with one TI MSP430G2553 microcontroller each. The Edison's main function therein is to run the control program that connects to the MSPs via \isqc, to the server via its onboard Wi-Fi stack, and to the vest via an additional Grove Serial Bluetooth module (UART communication).\\
 Furthermore, the necessary peripherals include a \US{2.2}{\inch} TFT display, three IR reciever sensors, an IR diode, and two LED color stripes, all mounted in the tagger casing. To power all components, the tagger also includes a \SI{8}{\volt} battery pack in its grip.\\
 \figref{fig:tag_ed_structure} shows the internal structure and connection of the components.
 
@@ -23,9 +23,63 @@ The tagger casing consists of two grip halves and two corpus halves screwed toge
 \end{figure}
 
 \section{Intel Edison}
-\subsection{Hardware}
+The Intel Edison is a development platform featuring a \SI{500}{\mega\hertz} dual-core CPU SoC with integrated Wi-Fi and Bluetooth connectivity. It has a multitude of external interfaces like GPIO, \isqc, SPI and UART. This section gives a brief overview of the system, for more detailed information visit the projects GitHub page at\todo{ref/footnote}.
+
 \subsection{Software}
+The controlling program that runs on the edison on startup is exclusively written in C++ and uses the Intel IoT developer library MRAA for all I/O functions\todo{ref}. The programs main functions are controlling the display on the tagger, connecting to the vest via bluetooth, and connecting to the server via TCP. Furthermore it provides the \isqc~master for the MSPs in the tagger. Once these connections are made, the program spawns several threads to listen for incoming communications:
+
+\begin{itemize}
+	\item \textbf{Send MSP:} The MSP that handles the triggering of the IR diode to send the tagging code transmits a trigger signal whenever it fires. Upon recieving this signal, the Edison decrements the available ammunition by a set amount and draws the information on the display. It also transmits the current amount of ammunition to the server via the TCP connection. Whenever the ammunition reaches zero, it enters a reloading routine during which triggering is not allowed. To enforce this, a specific \isqc~ signal is sent back to the MSP.
+	\item \textbf{Recieve MSP:} The tagger itself includes three IR sensors that are connected to a MSP in the same way the vest is set up. Whenever an IR tagging code is recieved, the MSP transfers the code to the Edison via \isqc. A hit registering routine then sends this code to the server to prompt for the tagging players name, decreases the current player health, and displays the information on the display. If the health goes down to zero, it is reset in the same way the ammunition is reloaded (see above).
+	\item \textbf{Vest:} Whenever the vest is hit by an IR tagging code, the vests master MSP sends the code and the hit position via the bluetooth connection to the Edison. It is handled analogous to the recieve MSP hit registration (see above).
+	\item \textbf{Server:} The server communicates with the taggers via a Wi-Fi TCP connection. A command protocol was implemented to ensure easy and effective messaging on both sides. See \todo{ref to sec/tab in server chapter?} for more information.
+\end{itemize}
+
+\subsection{Display}
+The display used in this tagger is a \US{2.2}{\inch} TFT LCD with a resolution of 176x220 pixels and a ILI9225 driver chip. It is used to display information about the players current status like health, ammunition and points. Additionally, it displays the names of the players that last hit this player and that this player hit last\todo{wat? redo...}. It is connected to the Edison via a SPI interface and two additional lines (register select and reset) that are driven by two GPIO pins on the Edison. After initializing the display, which includes clearing and drawing an initial layout of the status information, the controlling program on the Edison must make sure that only one write operation on the display happens at the same time. This is mostly handled by lock guards in the code whenever diplay functions are called. \figref{fig:tag_ed_dsp} shows an example of how the status information is displayed.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.75\textwidth]{images/placeholder.png}\\
+\caption[Edison Tagger Display]{Example of the initial drawing on the display when the game starts.}
+\label{fig:tag_ed_dsp}
+\end{figure}
+
+%\subsection{Bluetooth}
+%The tagger connects to the vest using an external bluetooth module that communicates via UART with the Edison. It is part of the Grove sensor kit\todo{ref}. 
+
+\subsection{Problems}
+As the Intel Edison is a relatively new platform with a September 2014 release date, some problems in varying areas emerged during the projects development. For reference, the OS version used for the project is \textit{Rel-1-Maint-WW42}.
+
+The most immediately recognizable problem is the very slow draw rate of the display, which is mostly explained by a known software bug in the used OS version of the Edison that results in a slow SPI transfer rate and long pauses between every SPI write cycle. The problem could be avoided by using a different display that doesn't connect via SPI, or Intel releasing a fix for this bug. For time limitation reasons neither solution was applicable in this project, so the current version of the tagger suffers from a slow display and longer than usual wait times whenever an event that changes the players status occurs. Since the controlling program on the Edison is threaded, gameplay functions don't immediately suffer from this problem.
+
+From the beginning of the project each tagger was supposed to have an integrated RFID reader that could be used for various gameplay functions. However since the available reader only has a SPI interface, this posed a problem in combination with the display that also has an SPI interface. The Edison only has one SPI controller, with two chip select lines. The second CS however currently cannot be used due to another OS software bug. A similar RFID module that uses a \isqc interface did not arrive in time, and another simpler RFID module that uses a UART interface could not be used because that is already reserved for the bluetooth module.
+
+The current version of the tagger uses an external bluetooth module from the Grove sensor kit \todo{ref} to connect to the vest. Initially this was supposed to be done with the Edison onboard bluetooth stack, but the used software version did not support the needed bluetooth protocol, so the external module was used.
+
+
 
 \section{Send PCB}
 
 \section{Recieve PCB}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

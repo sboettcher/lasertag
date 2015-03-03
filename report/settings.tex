@@ -100,16 +100,16 @@
 \def\equation{\@hyper@itemfalse\saved@equation}
 \makeatother 
 
-
+\usepackage{todonotes}
 
 % Eigene Befehle %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 % Matrix
 \newcommand{\mat}[1]{
       {\textbf{#1}}
 }
-\newcommand{\todo}[1]{
-      {\colorbox{red}{ TODO: #1 }}
-}
+%\newcommand{\todo}[1]{
+%      {\colorbox{red}{ TODO: #1 }}
+%}
 \newcommand{\todotext}[1]{
       {\color{red} TODO: #1} \normalfont
 }
@@ -174,3 +174,5 @@
 \newcommand\tabref[1]{Table~{\ref{#1}}}
 \newcommand\secref[1]{Section~{\ref{#1}}}
 \newcommand\eqnref[1]{Equation~{\eqref{#1}}}
+
+\newcommand{\isqc}[0]{{$\text{I}^2\text{C}$}}
