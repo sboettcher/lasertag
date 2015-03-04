@@ -3,6 +3,67 @@
 Repository for the [Wearable Computing Lab Course 2014](http://praktikum.ese.uni-freiburg.de/)  
 University of Freiburg  
 
+##0. TODO
+3D-Druck:
+- 6 Gehäuse + Deckel
+- Westen-Master drucken
+- Laser-Dioden Enclousure
+- Korpus für Edison 
+- Korpus für Arduino Tagger 
+
+CAD: 
+- Westen-Master CAD Design (Platine + Blutooth-Modul + Schaltregler + Akku)
+- Laser-Dioden Enclousure
+- Korpus für Edison 
+- Korpus für Arduino Tagger
+
+Weste:
+- Bestellung bei ESE-Lehrstuhl abholen
+- Bei Obi 5 Kugeln kaufen
+- Westen mit Domes bestücken
+
+Server:
+- Fertigstellen + testen
+
+Tagger Edison:
+- Main Platine auf der alles Zusammenläuft (als Lochraster) fertigen
+- Code Edison fertigstellen und testen
+- I2C RFID Reader oder SPI-I2C Converter Arduino
+- Sende- und Empfangs-MSP über I2C (Code + testen)
+- Tagger zusammenbauen
+- LED-Stripe mit Timer 
+- Reichweite Wifi testen
+
+Tagger Arduino:
+- Wifi Modul auf SmartNet programmieren
+- Verbindung zu Server testen
+- Reichweite Wifi testen
+
+Allgemein:
+- Berechnen ob Strahlung gefährlich ist
+
+Präsentation:
+- Poster designen, drucken
+- Dokumentieren (Bilder + Text)
+
+
+
+###0.1 ToBuy für 2 Westen-Tagger-Sets:
+
+- 12x MSP
+- 1x HC-06 Bluetooth
+- 2-3x RFID-Reader
+- 4x Plastik-Kugel
+- 2x Weste
+- 4x Akku
+- 5m Kabel für Domes
+- Klettband
+- 1x Edison inkl. kleines Breakout-Board
+- 1-2x Abzugsschalter
+- kleine Schrumpfschläuche
+- 2x Ein-/Aus-Schalter
+
+
 ##1. Edison
 ###1.1 Image Installation and Preparation
 Installation instructions for getting the Intel Edison to work with the **Mini** Breakout board and a pre-built Yocto image.  
@@ -28,7 +89,11 @@ This keeps the USB device from loading as a network interface.
 14. ~# configure_edison --wifi
 15. ~# reboot
 
-So far the standard WiFi configuration tool in step 14 has worked fine for me. After successful connection you can also log in via ssh.
+So far the standard WiFi configuration tool in step 14 has worked fine for me. After successful connection you can also log in via ssh. If not, try commenting the line **BindToDevice=usb0** in /lib/systemd/system/sshd.socket. Afterwards reload the systemd daemon:
+
+    systemctl daemon-reload
+
+and reboot.
 
 ###1.2 Package Repositories
 The Edison has no pre-configured package repository. To have access to some basic programs, follow the instructions [here](http://alextgalileo.altervista.org/edison-package-repo-configuration-instructions.html).  
@@ -52,7 +117,7 @@ In the cloned upm repo:
     cmake .. -DCMAKE_INSTALL_PREFIX:PATH=/usr
     make
 
-###1.3 Other Stuff
+###1.3 Partition Size Problem
 I had a problem where the root partition of the Edison was 100% full at some point. This was mostly due to a lot of system boot logs (>100MB) still saved in **/var/log/journal**.  
 A good fix for this would be to increase the size of the root partition (standard is 500MB), which is possible, but requires to rebuild the image, by hand, from scratch, and then re-flashing the Edison.  
 What I ended up doing was simply limiting the size of the kept logs, after deleting all current saved logs.  
@@ -65,3 +130,26 @@ What I ended up doing was simply limiting the size of the kept logs, after delet
     Storage=none
 
 No logs will be kept but the root partition won't fill up again. Might try to change this to *volatile*, which temporarily saves the current system log in /run/log/journal.
+
+###1.4 Pin Mappings
+Some important pin mappings for the project. Complete tables can be found [here](https://github.com/intel-iot-devkit/mraa/blob/master/docs/edison.md) and in the breakout board hardware guide (see dropbox).
+
+| Edison Pin | Edison Function |   Description   | MRAA # |
+|:----------:|:---------------:|:---------------:|:--------:|
+|    19-1    |      V_SYS      | 3.15-4.5V input |    28    |
+|    19-2    |      V_OUT      |   3.3V output   |    29    |
+|    19-3    |       GND       |       GND       |    30    |
+|    17-10   |     SPI-5-CS    |    Display CS   |     9    |
+|    17-11   |    SPI-5-CLK    |   Display CLK   |    10    |
+|    17-12   |    SPI-5-MOSI   |   Display SDI   |    11    |
+|    18-11   |    SPI-5-MISO   |                 |    24    |
+|    19-5    |     GPIO-46     |   Display RST   |    32    |
+|    20-6    |     GPIO-49     |    Display RS   |    47    |
+|    18-13   |     UART1-RX    |   BT Module TX  |    26    |
+|    19-8    |     UART1-TX    |   BT Module RX  |    35    |
+|    17-7    |    I2C-6-SCL    |                 |     6    |
+|    17-9    |    I2C-6-SDA    |                 |     8    |
+|    18-6    |    I2C-1-SCL    |                 |    19    |
+|    17-8    |    I2C-1-SDA    |                 |     7    |
+
+TFT_22_ILI9225 pin mappings [here](https://github.com/Nkawu/TFT_22_ILI9225/wiki)
