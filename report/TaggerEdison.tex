@@ -2,12 +2,12 @@
 % --------------------------------------------------
 \chapter{Tagger - Edison}
 This variant of the tagger uses an Intel Edison development platform as its main computing component, in combination with two printed circuit boards with one TI MSP430G2553 microcontroller each. The Edison's main function therein is to run the control program that connects to the MSPs via \isqc, to the server via its onboard Wi-Fi stack, and to the vest via an additional Grove Serial Bluetooth module (UART communication).\\
-Furthermore, the necessary peripherals include a \US{2.2}{\inch} TFT display, three IR reciever sensors, an IR diode, and two LED color stripes, all mounted in the tagger casing. To power all components, the tagger also includes a \SI{8}{\volt} battery pack in its grip.\\
+Furthermore, the necessary peripherals include a \US{2.2}{\inch} TFT display, three IR reciever sensors, an IR diode, and two LED color stripes, all mounted in the tagger casing. To power all components, the tagger also includes a \SI{8}{\volt} battery pack in its grip.
 \figref{fig:tag_ed_structure} shows the internal structure and connection of the components.
 
 \begin{figure}[h!]
 \centering
-\includegraphics[width=0.75\textwidth]{images/placeholder.png}\\
+\includegraphics[width=0.75\textwidth]{images/edison_tagger_struct.pdf}\\
 \caption[Edison Tagger Structure]{Internal structure of the tagger with Edison, send/recieve PCBs, other elements and wiring.}
 \label{fig:tag_ed_structure}
 \end{figure}
@@ -53,7 +53,7 @@ As the Intel Edison is a relatively new platform with a September 2014 release d
 
 The most immediately recognizable problem is the very slow draw rate of the display, which is mostly explained by a known software bug in the used OS version of the Edison that results in a slow SPI transfer rate and long pauses between every SPI write cycle. The problem could be avoided by using a different display that doesn't connect via SPI, or Intel releasing a fix for this bug. For time limitation reasons neither solution was applicable in this project, so the current version of the tagger suffers from a slow display and longer than usual wait times whenever an event that changes the players status occurs. Since the controlling program on the Edison is threaded, gameplay functions don't immediately suffer from this problem.
 
-From the beginning of the project each tagger was supposed to have an integrated RFID reader that could be used for various gameplay functions. However since the available reader only has a SPI interface, this posed a problem in combination with the display that also has an SPI interface. The Edison only has one SPI controller, with two chip select lines. The second CS however currently cannot be used due to another OS software bug. A similar RFID module that uses a \isqc interface did not arrive in time, and another simpler RFID module that uses a UART interface could not be used because that is already reserved for the bluetooth module.
+From the beginning of the project each tagger was supposed to have an integrated RFID reader that could be used for various gameplay functions. However since the available reader only has a SPI interface, this posed a problem in combination with the display that also has an SPI interface. The Edison only has one SPI controller, with two chip select lines. The second CS however currently cannot be used due to another OS software bug. A similar RFID module that uses a \isqc~interface did not arrive in time, and another simpler RFID module that uses a UART interface could not be used because that is already reserved for the bluetooth module.
 
 The current version of the tagger uses an external bluetooth module from the Grove sensor kit \todo{ref} to connect to the vest. Initially this was supposed to be done with the Edison onboard bluetooth stack, but the used software version did not support the needed bluetooth protocol, so the external module was used.
 
@@ -61,9 +61,21 @@ The current version of the tagger uses an external bluetooth module from the Gro
 
 \section{Send PCB}
 
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.75\textwidth]{images/placeholder.png}\\
+\caption[Send PCB]{TODO: Send PCB design.}
+\label{fig:tag_ed_send}
+\end{figure}
+
 \section{Recieve PCB}
 
-
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.75\textwidth]{images/placeholder.png}\\
+\caption[Recieve PCB]{TODO: Recieve PCB design.}
+\label{fig:tag_ed_rec}
+\end{figure}
 
 
 
